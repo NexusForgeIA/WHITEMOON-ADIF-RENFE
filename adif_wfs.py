@@ -196,11 +196,13 @@ def _grid(ways):
     g = {}
     for w in ways:
         seen = set()
-        for x, y in w["p"]:
-            c = (int(x // 5), int(y // 5))
-            if c not in seen:
-                seen.add(c)
-                g.setdefault(c, []).append(w)
+        for (x1, y1), (x2, y2) in zip(w["p"], w["p"][1:]):   # todas las celdas que cruza cada segmento, no solo los vértices
+            n = max(1, int(math.hypot(x2 - x1, y2 - y1) // 2.5) + 1)
+            for i in range(n + 1):
+                c = (int((x1 + (x2 - x1) * i / n) // 5), int((y1 + (y2 - y1) * i / n) // 5))
+                if c not in seen:
+                    seen.add(c)
+                    g.setdefault(c, []).append(w)
     _grid_cache.clear()
     _grid_cache[k] = g
     return g
