@@ -151,13 +151,19 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 .chip.bad{border-color:var(--stop);color:#ff9aa4;text-decoration:line-through}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12384f;border:1px solid var(--acc);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;z-index:99;max-width:min(560px,90vw);display:none}
 @media(max-width:1100px){body{height:auto;grid-template-columns:1fr;grid-template-rows:auto}#chain{grid-row:auto}#mapwrap{height:max(560px,78vh)}#ovl{max-height:34%}#log{grid-column:1}#cabins{grid-column:1}}
+#toasts{position:fixed;top:64px;right:14px;z-index:60;display:flex;flex-direction:column;gap:8px;max-width:360px}
+.toast{background:#142130;border:1px solid #3a4a5c;border-left:6px solid #d9b84a;border-radius:8px;padding:9px 12px;color:#e8eef5;font-size:13px;cursor:pointer;box-shadow:0 6px 18px #0008}
+.toast.RESTRICT{border-left-color:#e07b2f}.toast.STOP{border-left-color:#e04040}.toast.SYS{border-left-color:#8a6de0}
+.toast b{display:block;font-size:12px;letter-spacing:.04em;margin-bottom:2px}
 </style>
 </head>
 <body>
+<div id="toasts" aria-live="polite"></div>
 <header>
   <h1>RAIL<span>GUARD</span></h1><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
   <div id="banner" class="banner"></div><div id="pbanner"></div>
   <button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
+  <button id="ntb" class="sysb" style="border-color:#6b5a2b;color:#ffe9a8" title="Avisos en pantalla, sonido y notificación del navegador cuando aparece un peligro nuevo o un sistema falla">🔔 Avisos: no</button>
   <button id="fullb" class="sysb" style="border-color:#2b6cb0;color:#cfe6ff" title="Abre a pantalla completa retrasos, cola del operador, peligros, previsión y avisos">⤢ Ver todo</button>
   <button id="abb" class="sysb" style="border-color:#3a4a5c;color:#d6e1ec" title="Qué datos son reales, qué es simulado y qué límites tiene este sistema">ℹ Alcance y fuentes</button>
   <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas de seguridad</button>
@@ -255,7 +261,7 @@ function render(){
   $('mode').textContent=S.mode==='sim'?'SIMULACIÓN sobre captura real':'EN VIVO';$('mode').className='pill '+S.mode;
   $('clock').textContent=fmt(S.now)+' · ciclo '+S.cycle;
   const b=$('banner');b.style.display=S.degraded?'block':'none';if(S.degraded)b.textContent='⚠ '+S.degraded;
-  renderOuts(S.outages||[]);renderForecast();renderDelays();renderTV();
+  renderOuts(S.outages||[]);renderForecast();renderDelays();renderTV();try{notifyCheck()}catch(e){}
   const k=S.kpi,ks=$('kpis');ks.replaceChildren(...[['trains','trenes'],['clear','libres'],['caution','precaución'],['restrict','restringidos'],['stop','STOP']].map(([a,l])=>h('div','kpi',null,[h('b',null,k[a]),h('small',null,l)])));
   // cadena
   const bars=$('bars');bars.replaceChildren();
@@ -465,13 +471,16 @@ function chainChips(g,t){
   return h('div','chips',null,kids)}
 function renderHazards(){
   const hz=$('hz');hz.replaceChildren();const gs=groupHazards();
-  if(!gs.length){hz.appendChild(h('div','empty','Sin peligros detectados.'));return}
+  if(!gs.length){hz.appendChild(h('div','empty','Sin peligros detectados.'));{const l=llBox();if(l)hz.appendChild(l)}return}
   const by={};S.trains.forEach(t=>by[t.n]=t);
   gs.slice(0,30).forEach(g=>{const t=by[g.n],sev=['','CAUTION','RESTRICT','STOP'][g.sev];
     const main=g.hz.slice().sort((a,b)=>(SEVN[b.sev]||0)-(SEVN[a.sev]||0))[0];
     hz.appendChild(h('div','hzc '+sev,null,[h('div','t',null,[h('em',null,sev),h('span',null,'Tren '+g.n)]),h('div','m',main.msg+(g.hz.length>1?'  (+'+(g.hz.length-1)+' más)':'')),chainChips(g,t),
       h('div','a',null,[h('b',null,'Aplicado: '),document.createTextNode(ACTION[t?t.cmd:'NONE'])])]))});
-  if(gs.length>30)hz.appendChild(h('div','empty','… y '+(gs.length-30)+' trenes más con avisos.'))}
+  if(gs.length>30)hz.appendChild(h('div','empty','… y '+(gs.length-30)+' trenes más con avisos.'));{const l=llBox();if(l)hz.appendChild(l)}}
+function llBox(){const L=S.learned_limits||[];if(!L.length)return null;
+  const nm=c=>{const s=(S.stations||[]).find(x=>x.c===c);return s?s.n:c};
+  return h('div','empty',null,[h('b',null,'Limitaciones probables (aprendidas de la flota, no oficiales): '),document.createTextNode(L.slice(0,6).map(x=>nm(x.seg[0])+'↔'+nm(x.seg[1])+' · ~'+x.median+' km/h (ref. '+x.ref+') · '+x.n+' trenes').join(' | ')+(L.length>6?' … +'+(L.length-6):''))])}
 const DLY_MIN=5;   // umbral de «retraso» (min): criterio habitual de puntualidad; ajustable
 function renderDelays(){
   const all=S.trains||[],L=all.filter(t=>(t.ret||0)>=DLY_MIN).sort((a,b)=>b.ret-a.ret),n=L.length;
@@ -480,6 +489,31 @@ function renderDelays(){
   $('dlsum').textContent=n?n+' de '+all.length+' trenes con ≥ '+DLY_MIN+' min · máximo '+fmtDelay(L[0].ret)+' · media '+avg+' min':'Ningún tren con ≥ '+DLY_MIN+' min de retraso ('+all.length+' trenes). Retraso según el feed de Renfe; los trenes sin dato cuentan como a tiempo.';
   $('dll').replaceChildren(...L.map(t=>{const r=h('div','dr'+(t.ret>=30?' m3':t.ret>=15?' m2':''),null,[h('b',null,t.n),h('span','w',(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'hacia '+t.to:''))+(t.dest?' · destino '+t.dest:'')),h('span','d','+'+fmtDelay(t.ret))]);
     r.onclick=()=>{if(FULL)setFull(false);sel=t.n;$('mt').value=t.n;openCard(t.n);draw()};return r}))}
+
+// ── Notificaciones locales (en pantalla, sonido y navegador). Nada sale del navegador: no se envían correos ni mensajes. ──
+let NTF=false,ntSeen=null,ntSys=null;
+try{NTF=localStorage.getItem('rg_ntf')==='1'}catch(e){}
+function ntLabel(){const b=$('ntb');if(b)b.textContent='🔔 Avisos: '+(NTF?'sí':'no')}
+function beep(sev){try{const A=window.__ac||(window.__ac=new (window.AudioContext||window.webkitAudioContext)());const o=A.createOscillator(),g=A.createGain();o.frequency.value=sev==='STOP'?880:660;g.gain.value=.08;o.connect(g);g.connect(A.destination);o.start();o.stop(A.currentTime+(sev==='STOP'?.5:.25))}catch(e){}}
+function toast(sev,title,msg,train){const bx=$('toasts');if(!bx)return;const d=h('div','toast '+sev,null,[h('b',null,title),document.createTextNode(msg)]);
+  d.onclick=()=>{d.remove();if(train){sel=train;$('mt').value=train;openCard(train);draw()}};bx.prepend(d);while(bx.children.length>4)bx.lastChild.remove();setTimeout(()=>d.remove(),sev==='CAUTION'?7000:15000)}
+function osNotify(title,msg){try{if(window.Notification&&Notification.permission==='granted')new Notification(title,{body:msg,tag:title+msg})}catch(e){}}
+function notifyCheck(){
+  const hz=S.hazards||[],cur=new Set(hz.map(x=>x.barrier+'|'+x.code+'|'+x.trains.join(',')));
+  const sysNow=(S.degraded?'D:'+S.degraded:'')+'|'+(S.barriers||[]).filter(b=>b.status==='FAULT').map(b=>b.id).join(',');
+  const bad=hz.filter(x=>x.sev==='RESTRICT'||x.sev==='STOP').length;
+  document.title=(bad?'('+bad+') ':'')+'RailGuard';
+  if(ntSeen===null){ntSeen=cur;ntSys=sysNow;return}   // primera carga: no se avisa de lo que ya estaba
+  if(NTF){
+    hz.filter(x=>!ntSeen.has(x.barrier+'|'+x.code+'|'+x.trains.join(','))).sort((a,b)=>(SEVN[b.sev]||0)-(SEVN[a.sev]||0)).slice(0,4).forEach(x=>{
+      const t='['+x.barrier+'] '+x.sev+' · tren '+x.trains.join(', ');toast(x.sev,t,x.msg,x.trains[0]);
+      if(x.sev!=='CAUTION'){beep(x.sev);osNotify(t,x.msg)}});
+    if(sysNow!==ntSys&&sysNow!=='|'){toast('SYS','SISTEMA',(S.degraded||'Barrera en fallo: '+(S.barriers||[]).filter(b=>b.status==='FAULT').map(b=>b.id).join(', ')));beep('RESTRICT');osNotify('RailGuard · sistema',S.degraded||'Barrera en fallo')}
+  }
+  ntSeen=cur;ntSys=sysNow}
+$('ntb')&&($('ntb').onclick=async()=>{NTF=!NTF;try{localStorage.setItem('rg_ntf',NTF?'1':'0')}catch(e){}
+  if(NTF){beep('CAUTION');try{if(window.Notification&&Notification.permission==='default')await Notification.requestPermission()}catch(e){}}ntLabel()});
+ntLabel();
 let fcTab=false,avTab=false;
 let FULL=false;
 function drawAv(C,AL){const bx=$('av');bx.replaceChildren(h('div',null,'Avisos oficiales de Renfe para Cercanías/Rodalies. Informativo: no interviene en la seguridad.'));bx.firstChild.id='fcnote';

@@ -33,6 +33,7 @@ import os
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 
+import fleet_profile
 import proximity
 
 NONE, CAUTION, RESTRICT, STOP = 0, 1, 2, 3
@@ -148,6 +149,7 @@ class Ctx:
         k = cfg["km_per_px"]
         self.st = {c: (s["x"] * k, s["y"] * k) for c, s in est.items()}
         self.atp = {}
+        self.profile = None
         self.line_of = lambda seg: None
 
     def persist(self, key, cond):
@@ -342,12 +344,44 @@ def b0_atp(c: Ctx):
     return out
 
 
+def bp_profile(c: Ctx):
+    """Perfil aprendido de la flota: desvíos respecto a los trenes previos y patrones de exceso. SOLO asesora (CAUTION)."""
+    out = []
+    prof = c.profile
+    if prof is None:
+        return out
+    k = c.cfg["km_per_px"]
+    for t in c.trains:
+        if not t.moving or t.kmh > c.cfg["speed_implausible_kmh"] or (c.now_ms - t.ts) / 1000 > c.cfg["stale_s"]:
+            continue
+        loc = fleet_profile.locate(c.est, k, t.ant, t.sig, t.x, t.y) if t.ant and t.sig else None
+        if not loc:
+            continue
+        seg, b, _ = loc
+        key = (seg, b, c.vmax(t))
+        grp = prof.group(key, c.now_ms, skip=t.n)
+        if len(grp) >= fleet_profile.MIN_TRAINS:
+            m = fleet_profile.median(grp)
+            dev = t.kmh > m * fleet_profile.DEV_FAST and t.kmh - m >= fleet_profile.DEV_MIN_ABS
+            if c.persist(("PROFILE", t.n), dev) >= 2:
+                out.append(Hazard("BP", CAUTION, (t.n,), t.undirected(), "FLEET_DEVIATION",
+                                  f"{t.kmh:.0f} km/h aquí; los {len(grp)} trenes previos pasaron a ~{m:.0f} km/h (¿limitación temporal no conocida?)",
+                                  {"kmh": round(t.kmh), "median": round(m), "n": len(grp)}))
+            ref = c.vmax(t)
+            if c.persist(("PROFILE_OVER", t.n), m > ref * fleet_profile.OVER_REF) >= 2:
+                out.append(Hazard("BP", CAUTION, (t.n,), t.undirected(), "FLEET_OVER_REF",
+                                  f"Patrón sistemático: la flota pasa aquí a ~{m:.0f} km/h, sobre el límite de referencia {ref:.0f}", {"median": round(m), "ref": round(ref)}))
+        prof.learn(key, t.n, t.ts, t.kmh)
+    return out
+
+
 BARRIERS = {
     "B0": ("ATP de a bordo (LZB/ETCS/ASFA)", "Barrera externa del tren: se contrasta su estado y velocidad supervisada", b0_atp),
     "B1": ("Integridad de datos", "Caducidad, saltos imposibles, posiciones duplicadas", b1_integrity),
     "B2": ("Velocidad y frenado", "Envolvente por línea/producto y curva de frenado", b2_speed),
     "B3": ("Separación de bloques", "Distancia de frenado + margen, vía única", b3_block),
     "B4": ("Predicción de conflicto", "Tiempo hasta alcance (TTC) y convergencia", b4_predict),
+    "BP": ("Perfil aprendido de la flota", "Desvío respecto a los trenes previos y limitaciones probables (solo asesora)", bp_profile),
 }
 
 
@@ -362,6 +396,7 @@ class Engine:
         self.now_ms = 0
         self.prev = {}
         self.streak = {}
+        self.profile = fleet_profile.Profile()
         self.trains: list[Train] = []
         self.hazards: list[Hazard] = []
         self.state: dict[str, dict] = {}     # B5: orden vigente por tren
@@ -418,7 +453,7 @@ class Engine:
             self.log("SYS", "Feed recuperado")
 
         ctx = Ctx(self.trains, self.est, self.cfg, now_ms, self.prev, self.streak)
-        ctx.atp, ctx.line_of = self.atp, self.line_of
+        ctx.atp, ctx.line_of, ctx.profile = self.atp, self.line_of, self.profile
         for t in self.trains:
             if t.undirected():
                 self.seen_segs.add(t.undirected())
@@ -512,6 +547,9 @@ class Engine:
         self.locked = locked
 
     # ---- líneas, ATP y proximidad ----
+    def _ref_of(self, key):
+        return key[2]
+
     def set_lines(self, corridors):
         self.lines = corridors
         for c in self.lines:
@@ -731,6 +769,7 @@ class Engine:
                          "seg": ctx_name(self.est, h.seg), "msg": h.msg, "code": h.code} for h in sorted(self.hazards, key=lambda h: -h.sev)],
             "locked": [ctx_name(self.est, s) for s in getattr(self, "locked", ())],
             "locked_pairs": [list(s) for s in getattr(self, "locked", ())],
+            "learned_limits": self.profile.probable_limits(self.now_ms, self._ref_of)[:40],
             "operator": self.operator_queue(),
             "events": list(self.events)[:60],
             "guard": {**self.guard, "pending": len(self.pending_rearm)},

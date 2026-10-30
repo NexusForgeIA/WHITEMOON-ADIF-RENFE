@@ -63,3 +63,14 @@ Implicaciones para RailGuard (límites honestos):
 - Las LTV (limitaciones temporales de velocidad) no están en nuestros datos: un tren legítimamente lento o rápido por una LTV puede parecer anómalo o pasar desapercibido.
 - Un rebase de la autorización (modo TR, freno de emergencia) no es observable desde GPS público.
 - Nuestros umbrales siguen siendo propios, no oficiales; los valores de la tabla son solo contexto.
+
+### Capa BP: perfil de velocidad aprendido de la flota (asesora)
+- `fleet_profile.py` + barrera `BP`: agrupa velocidades por tramo, punto kilométrico (≈1 km) y clase de tren, con los trenes de las últimas 6 h (mínimo 4 trenes distintos).
+- Avisa (solo CAUTION) si un tren supera >125 % la mediana del grupo (y +20 km/h), y si el patrón de la flota supera el límite de referencia (para no normalizar un exceso sistemático).
+- Publica «limitaciones probables» (mediana < 70 % del límite de referencia) con el nº de trenes que las sostienen. No son datos oficiales.
+- Nunca restringe por sí sola ni relaja B2/B3/B4. Una limitación nueva tarda en aprenderse. Balizas y señales laterales no están en ningún feed público.
+- No asume modo SR al pasar de alta velocidad a convencional: según la FN-27 la transición es a Nivel 0 + ASFA, y el modo real de cada tren es desconocido.
+
+### Notificaciones
+- Botón «🔔 Avisos» (cabecera): toast en pantalla, sonido y notificación del navegador ante peligros nuevos (STOP/RESTRICT con sonido; CAUTION solo toast), degradado del supervisor y fallo de barrera. El título de la pestaña muestra el nº de peligros graves.
+- Son locales al navegador. No se envían correos ni mensajes a nadie; un canal externo (correo, Slack, SMS) requiere decidir destinatarios y autorización.
