@@ -198,6 +198,22 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 #dm .row:hover{background:#eaf2fa}#dm .row.CAUTION{border-left-color:#e0a800}#dm .row.RESTRICT{border-left-color:#e8710a}#dm .row.STOP{border-left-color:#d32f2f}
 #dm .row b{min-width:62px}#dm .row span{flex:1;font-size:12.5px}#dm .row i{font-style:normal;font-size:11px;color:#2b6cb0;white-space:nowrap}
 #dm .none{color:#5b6f82;margin-top:10px}
+
+/* Sin barras de scroll toscas: finas y discretas; listas resumidas con «ver todo» */
+*{scrollbar-width:thin;scrollbar-color:#2c3e5299 transparent}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#2c3e5299;border-radius:3px}::-webkit-scrollbar-track{background:transparent}
+.bar p{display:none}.bar{padding:5px 9px}.bar .n{display:inline-block;margin:0 10px 0 0;font-size:11px}.bar::after{display:none}
+.chain .arrow{font-size:0;height:6px;line-height:0}.chain .arrow::before{content:"";display:block;width:2px;height:6px;background:#2c3e52;margin:0 auto}
+.more{display:block;width:100%;text-align:center;padding:7px;border-radius:8px;border:1px dashed #2b6cb0;background:transparent;color:#9fcbff;font-weight:600;cursor:pointer;margin-top:6px;font-size:12px}
+.more:hover{background:#12304f}
+
+/* Pantallas bajas: una sola barra de scroll de la página (sin paneles con scroll propio) */
+@media(min-width:1101px) and (max-height:900px){
+  body{height:auto;min-height:100vh;grid-template-rows:52px auto minmax(620px,auto) auto}
+  .panel,#chain,#log,#cabins{overflow:visible;max-height:none}
+  #right{overflow:visible;min-height:0}#right .panel{flex:none;max-height:none}
+  #mapwrap{height:760px;min-height:620px;align-self:start}
+}
 </style>
 </head>
 <body>
@@ -337,7 +353,7 @@ function render(){
   // peligros
   renderHazards();renderActing();
   // log
-  const lg=$('log');lg.replaceChildren(h('h2',null,'Registro de eventos (auditoría: data/events.jsonl)'),...S.events.map(e=>h('div',e.kind,null,[h('span','k',fmt(e.t)),h('span','k',e.kind),document.createTextNode(e.msg)])));
+  const lg=$('log');lg.replaceChildren(h('h2',null,'Registro de eventos (auditoría: data/events.jsonl)'),...S.events.slice(0,FULL?60:7).map(e=>h('div',e.kind,null,[h('span','k',fmt(e.t)),h('span','k',e.kind),document.createTextNode(e.msg)])),...(FULL?[]:[moreBtn('Ver el registro completo ›',logModal)]));
   aux();draw();try{enhance()}catch(e){console.error(e)}
 }
 
@@ -521,11 +537,11 @@ function renderHazards(){
   const hz=$('hz');hz.replaceChildren();const gs=groupHazards();
   if(!gs.length){hz.appendChild(h('div','empty','Sin peligros detectados.'));{const l=llBox();if(l)hz.appendChild(l)}return}
   const by={};S.trains.forEach(t=>by[t.n]=t);
-  gs.slice(0,30).forEach(g=>{const t=by[g.n],sev=['','CAUTION','RESTRICT','STOP'][g.sev];
+  gs.slice(0,FULL?30:3).forEach(g=>{const t=by[g.n],sev=['','CAUTION','RESTRICT','STOP'][g.sev];
     const main=g.hz.slice().sort((a,b)=>(SEVN[b.sev]||0)-(SEVN[a.sev]||0))[0];
     hz.appendChild(h('div','hzc '+sev,null,[h('div','t',null,[h('em',null,sev),h('span',null,'Tren '+g.n)]),h('div','m',main.msg+(g.hz.length>1?'  (+'+(g.hz.length-1)+' más)':'')),chainChips(g,t),
       h('div','a',null,[h('b',null,'Aplicado: '),document.createTextNode(ACTION[t?t.cmd:'NONE'])])]))});
-  if(gs.length>30)hz.appendChild(h('div','empty','… y '+(gs.length-30)+' trenes más con avisos.'));{const l=llBox();if(l)hz.appendChild(l)}}
+  if(!FULL&&gs.length>3)hz.appendChild(moreBtn('Ver los '+gs.length+' trenes con peligros ›',()=>kpiModal('trains','Trenes con peligros activos',t=>t.cmd!=='NONE')));if(FULL&&gs.length>30)hz.appendChild(h('div','empty','… y '+(gs.length-30)+' trenes más con avisos.'));{const l=llBox();if(l)hz.appendChild(l)}}
 function llBox(){const L=S.learned_limits||[];if(!L.length)return null;
   const nm=c=>{const s=(S.stations||[]).find(x=>x.c===c);return s?s.n:c};
   return h('div','empty',null,[h('b',null,'Limitaciones probables (aprendidas de la flota, no oficiales): '),document.createTextNode(L.slice(0,6).map(x=>nm(x.seg[0])+'↔'+nm(x.seg[1])+' · ~'+x.median+' km/h (ref. '+x.ref+') · '+x.n+' trenes').join(' | ')+(L.length>6?' … +'+(L.length-6):''))])}
@@ -535,8 +551,8 @@ function renderDelays(){
   $('dln').textContent='('+n+')';
   const avg=n?Math.round(L.reduce((s,t)=>s+t.ret,0)/n):0;
   $('dlsum').textContent=n?n+' de '+all.length+' trenes con ≥ '+DLY_MIN+' min · máximo '+fmtDelay(L[0].ret)+' · media '+avg+' min':'Ningún tren con ≥ '+DLY_MIN+' min de retraso ('+all.length+' trenes). Retraso según el feed de Renfe; los trenes sin dato cuentan como a tiempo.';
-  $('dll').replaceChildren(...L.map(t=>{const r=h('div','dr'+(t.ret>=30?' m3':t.ret>=15?' m2':''),null,[h('b',null,t.n),h('span','w',(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'hacia '+t.to:''))+(t.dest?' · destino '+t.dest:'')),h('span','d','+'+fmtDelay(t.ret))]);
-    r.onclick=()=>focusTrain(t.n);return r}))}
+  const LV=FULL?L:L.slice(0,4);$('dll').replaceChildren(...LV.map(t=>{const r=h('div','dr'+(t.ret>=30?' m3':t.ret>=15?' m2':''),null,[h('b',null,t.n),h('span','w',(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'hacia '+t.to:''))+(t.dest?' · destino '+t.dest:'')),h('span','d','+'+fmtDelay(t.ret))]);
+    r.onclick=()=>focusTrain(t.n);return r}),...(!FULL&&n>4?[moreBtn('Ver los '+n+' trenes con retraso ›',()=>kpiDelay())]:[]))}
 
 // ── Notificaciones locales (en pantalla, sonido y navegador). Nada sale del navegador: no se envían correos ni mensajes. ──
 let NTF=false,ntSeen=null,ntSys=null,ntLast={},ntBeep=0;
@@ -610,8 +626,8 @@ function showDM(title,sub,rows,foot){const d=$('dm');if(!d)return;
 const SEVL={NONE:'libre',CAUTION:'precaución',RESTRICT:'restringido',STOP:'STOP'};
 function trainRows(f){return (S.trains||[]).filter(f).sort((a,b)=>(CABR[b.cmd]-CABR[a.cmd])||(b.ret-a.ret)).map(t=>{const hz=(S.hazards||[]).filter(x=>x.trains.includes(t.n));
   return{main:t.n,sev:t.cmd,text:(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'→ '+t.to:''))+' · '+t.kmh+' km/h'+(t.ret>=5?' · +'+t.ret+' min':'')+(hz.length?' · '+hz[0].msg:'')}})}
-function kpiModal(key,label){const f={trains:()=>true,clear:t=>t.cmd==='NONE',caution:t=>t.cmd==='CAUTION',restrict:t=>t.cmd==='RESTRICT',stop:t=>t.cmd==='STOP'}[key]||(()=>true);
-  const rows=trainRows(key==='trains'?()=>true:f);showDM(label+' ('+rows.length+')','Pulse un tren para verlo en el mapa. Estado según la orden vigente de RailGuard.',rows)}
+function kpiModal(key,label,f0){const f=f0||{trains:()=>true,clear:t=>t.cmd==='NONE',caution:t=>t.cmd==='CAUTION',restrict:t=>t.cmd==='RESTRICT',stop:t=>t.cmd==='STOP'}[key]||(()=>true);
+  const rows=trainRows(f0?f0:(key==='trains'?()=>true:f));showDM(label+' ('+rows.length+')','Pulse un tren para verlo en el mapa. Estado según la orden vigente de RailGuard.',rows)}
 function barrierModal(x){
   if(x.id==='B6'){showDM('B6 · Operador','Reconoce, decide la recuperación y autoriza el rearme. Nunca es la última defensa.',(S.operator||[]).map(it=>({main:String(it.train||it.tn||it.n||'—'),sev:'RESTRICT',text:it.msg||it.title||it.why||'En cola del operador',fn:()=>{closeDM();const q=document.getElementById('queue');q&&q.scrollIntoView({behavior:'smooth'})},go:'ver cola ›'})));return}
   if(x.id==='B5'){showDM('B5 · Enclavamiento','Ejecuta, bloquea y exige prueba para liberar. Trenes con orden vigente:',trainRows(t=>t.cmd!=='NONE'));return}
@@ -639,6 +655,13 @@ function ssLine(D,l){
   const box=document.querySelector('#dm .box');if(box){const b=h('button','x','‹ Volver a las líneas');b.style.marginTop='10px';b.onclick=openSS;box.appendChild(b);
     box.querySelectorAll('.row').forEach((r,i)=>{r.style.cursor='default';const k=Object.keys(l.facts)[i];const b0=r.querySelector('b');if(k&&b0){b0.textContent=k;b0.style.minWidth='130px';b0.style.fontSize='12px'}})}}
 $('ssb')&&($('ssb').onclick=openSS);
+
+function moreBtn(txt,fn){const b=h('button','more',txt);b.onclick=ev=>{ev.stopPropagation();fn()};return b}
+function kpiDelay(){const rows=(S.trains||[]).filter(t=>(t.ret||0)>=DLY_MIN).sort((a,b)=>b.ret-a.ret).map(t=>({main:t.n,sev:t.ret>=30?'RESTRICT':'CAUTION',text:(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'→ '+t.to:''))+(t.dest?' · destino '+t.dest:'')+' · +'+fmtDelay(t.ret)}));
+  showDM('Trenes con retraso ('+rows.length+')','Retraso ≥ '+DLY_MIN+' min según el feed de Renfe. Pulse uno para verlo en el mapa.',rows)}
+function logModal(){const rows=(S.events||[]).map(e=>{const m=(e.msg||'').match(/\b(T-\d+|\d{5})\b/g)||[];const tr=m.find(n=>(S.trains||[]).some(t=>t.n===n));
+  return{main:fmt(e.t),sev:e.kind==='HAZARD'?'RESTRICT':e.kind==='CLEAR'||e.kind==='RELEASE'?'NONE':'CAUTION',text:e.kind+' · '+e.msg,go:tr?'ver tren ›':'',fn:tr?()=>focusTrain(tr):()=>{}}});
+  showDM('Registro de eventos','Auditoría (data/events.jsonl). Los más recientes primero.',rows)}
 let fcTab=false,avTab=false;
 let FULL=false;
 function drawAv(C,AL){const bx=$('av');bx.replaceChildren(h('div',null,'Avisos oficiales de Renfe para Cercanías/Rodalies. Informativo: no interviene en la seguridad.'));bx.firstChild.id='fcnote';
