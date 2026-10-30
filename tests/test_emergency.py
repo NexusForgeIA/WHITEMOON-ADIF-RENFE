@@ -32,3 +32,15 @@ def test_refresh_con_opener_falso(tmp_path):
     s = e.api()
     assert s["ready"] and s["status"]["gc"] == 2 and s["status"]["cr"] == 1
     assert em.Emergency(str(tmp_path / "c.json")).items      # persiste en caché
+
+
+def test_resultados_parciales_visibles_durante_la_descarga(tmp_path):
+    visto = []
+    e = em.Emergency(str(tmp_path / "p.json"))
+    def op(ep, q):
+        visto.append((len(e.items), e.status.get("state")))
+        return {"elements": EL[:3]}
+    e.open = op
+    e.refresh()
+    assert visto[0][0] == 0 and any(n > 0 for n, _ in visto[1:])      # a partir de la 2.ª zona ya hay datos que dibujar
+    assert visto[-1][1] == "cargando" and e.status["state"] == "oficial-osm"

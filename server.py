@@ -821,7 +821,7 @@ def main():
         LTV.start()
     if a.source == "renfe" and os.environ.get("RG_EMG", "1") != "0":
         EMG = Emergency(os.path.join(ROOT, "data", "emergency_cache.json"))
-        threading.Timer(180, EMG.start).start()     # tras la carga inicial de infraestructura, para no saturar Overpass
+        threading.Timer(20, EMG.start).start()
 
     def loop(fn, period):
         while True:

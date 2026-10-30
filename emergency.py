@@ -95,8 +95,8 @@ class Emergency:
             return json.load(r)
 
     def refresh(self):
-        els, failed = [], 0
-        for b in tiles():
+        els, failed, total = [], 0, sum(1 for _ in tiles())
+        for n, b in enumerate(tiles(), 1):
             ok = False
             for ep in ENDPOINTS:
                 try:
@@ -107,13 +107,20 @@ class Emergency:
                     self.status["last_error"] = repr(ex)[:100]
                     time.sleep(2)
             failed += not ok
+            part = parse(els)
+            with self.lock:       # los resultados parciales ya se pueden dibujar mientras se descarga el resto
+                if part:
+                    self.items = part
+                self.status = {**self.status, "state": "cargando", "tiles_done": n, "tiles_total": total, "n": len(self.items), "failed_tiles": failed}
+            print(f"[emergencia] tesela {n}/{total} · {len(self.items)} recursos · fallidas {failed}", flush=True)
         items = parse(els)
         if not items:
             raise RuntimeError("Overpass no devolvió recursos de emergencia")
         with self.lock:
             self.items = items
             self.status = {"state": "oficial-osm", "fetched": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "n": len(items),
-                           "gc": sum(i["k"] == "gc" for i in items), "cr": sum(i["k"] == "cr" for i in items), "failed_tiles": failed}
+                           "gc": sum(i["k"] == "gc" for i in items), "cr": sum(i["k"] == "cr" for i in items), "failed_tiles": failed,
+                           "tiles_done": total, "tiles_total": total}
         try:
             os.makedirs(os.path.dirname(self.cache) or ".", exist_ok=True)
             json.dump({"fetched": self.status["fetched"], "items": items}, open(self.cache, "w", encoding="utf-8"), separators=(",", ":"))
