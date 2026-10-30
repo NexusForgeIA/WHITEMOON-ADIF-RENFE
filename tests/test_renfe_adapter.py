@@ -160,3 +160,12 @@ def test_train_detail_has_schedule_delay_and_position_text():
     assert (d["dest_sched"], d["dest_est"]) == ("15:16", "16:24")      # 15:16 + 68 min
     assert d["next"] == {"name": "Ourense", "sched": "14:30", "est": "15:38"}
     assert d["where"] == "Entre Madrid y Ourense"
+
+
+def test_entity_without_stop_id_does_not_break_the_feed_or_the_detail():
+    g = gtfs_zip({"11111": ("AVE", ["S1", "S3", "S2"])})
+    e = ent("11111", 41.0, -3.2, None)
+    e["vehicle"].pop("stopId")
+    f = feed_with([(T0, [e, ent("22222", 41.0, -3.0, "S3")])], gtfs=g)
+    _, tr = f.fetch()
+    assert len(tr) == 2 and "11111" in f.detail

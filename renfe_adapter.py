@@ -152,7 +152,7 @@ class RenfeFeed:
         return out
 
     def _nm(self, sid):
-        return (self.est.get(sid) or {}).get("n") or sid
+        return str((self.est.get(sid) or {}).get("n") or sid or "?")
 
     def _detail(self, label, info, sig, ant, status, delay_s):
         """Ficha del tren: horarios del GTFS + retraso del feed. Solo lo que se sabe; el resto queda a None."""
@@ -237,7 +237,10 @@ class RenfeFeed:
                 ant, ori, des, prod = st["ant"] or sig, None, None, 0
             if status == "STOPPED_AT":
                 ant = sig
-            self.detail[label] = self._detail(label, info, sig, ant, status, delays.get(trip_id))
+            try:   # la ficha es informativa: un fallo aquí NUNCA debe tumbar la lectura de posiciones
+                self.detail[label] = self._detail(label, info, sig, ant, status, delays.get(trip_id))
+            except Exception:
+                self.detail[label] = {"n": label}
             k = kmh / 3600
             trains.append({"n": label, "p": prod, "x": x, "y": y, "kmh": round(kmh, 1),
                            "vx": st["ux"] * k if kmh > 1 else 0.0, "vy": st["uy"] * k if kmh > 1 else 0.0,
