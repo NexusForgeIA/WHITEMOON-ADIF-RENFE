@@ -477,10 +477,10 @@ function draw(){
       if(z>3){cx.fillStyle='#ffd9a8';cx.fillText(i.kmh,x,y-8)}});cx.restore()}
   if(EMD&&$('lem')&&$('lem').checked){const u=S.unit_km||1,z=V.z,W=cv.clientWidth,H=cv.clientHeight,big=z>=2;cx.save();
     EMD.forEach(i=>{const [x,y]=T(i.x/u,i.y/u);i._p=x;i._q=y;if(x<-12||y<-12||x>W+12||y>H+12)return;
-      if(!big){cx.fillStyle=i.k==='gc'?'#2fbf71':'#ff5d6c';cx.globalAlpha=.8;cx.fillRect(x-1.5,y-1.5,3,3);return}
+      if(!big){cx.fillStyle=i.k==='gc'?'#1e5bff':'#5aa9ff';cx.globalAlpha=.9;cx.beginPath();cx.arc(x,y,2,0,6.3);cx.fill();return}
       cx.globalAlpha=1;const r=big&&z>=4?8:6;
-      if(i.k==='gc'){cx.fillStyle='#1f7a4d';cx.strokeStyle='#d9f7e6';cx.lineWidth=1.4;cx.beginPath();cx.rect(x-r,y-r,2*r,2*r);cx.fill();cx.stroke();cx.fillStyle='#fff';cx.font='700 '+(r+2)+'px system-ui';cx.textAlign='center';cx.fillText('G',x,y+r/2.2)}
-      else{cx.fillStyle='#fff';cx.strokeStyle='#c4121f';cx.lineWidth=1.4;cx.beginPath();cx.arc(x,y,r,0,6.3);cx.fill();cx.stroke();cx.fillStyle='#d3202e';const a=r*.62,b=r*.2;cx.fillRect(x-b,y-a,2*b,2*a);cx.fillRect(x-a,y-b,2*a,2*b)}
+      if(i.k==='gc'){cx.fillStyle='#1e5bff';cx.strokeStyle='#fff';cx.lineWidth=1.6;cx.beginPath();cx.arc(x,y,r,0,6.3);cx.fill();cx.stroke();cx.fillStyle='#fff';cx.font='700 '+(r+2)+'px system-ui';cx.textAlign='center';cx.fillText('G',x,y+r/2.2)}
+      else{cx.fillStyle='#5aa9ff';cx.strokeStyle='#fff';cx.lineWidth=1.6;cx.beginPath();cx.arc(x,y,r,0,6.3);cx.fill();cx.stroke();cx.fillStyle='#fff';const a=r*.62,b=r*.2;cx.fillRect(x-b,y-a,2*b,2*a);cx.fillRect(x-a,y-b,2*a,2*b)}
       if(EMS&&EMS.n===i.id){cx.strokeStyle='#ffd24a';cx.lineWidth=2.2;cx.beginPath();cx.arc(x,y,r+5,0,6.3);cx.stroke()}});
     cx.restore()}
   // líneas de alta velocidad (AVE): halo claro + nombre sobre el trazado
@@ -601,7 +601,7 @@ function openPoi(i){EMS={n:i.id};cardN=null;clearInterval(cardTimer);
   [row('Dirección',i.a),row('Teléfono',i.t),tn?row('Tren más cercano',tn.t.n+' · '+fkm(tn.d)):null].forEach(r=>r&&kids.push(r));
   if(i.w){const a=h('a',null,'Sitio web');a.href=/^https?:\/\//.test(i.w)?i.w:'https://'+i.w;a.target='_blank';a.rel='noopener noreferrer';a.style.cssText='display:block;margin-top:6px;color:#8cc8ff';kids.push(a)}
   kids.push(h('div','al','Datos de OpenStreetMap (no oficiales; pueden faltar o estar desfasados). Solo informativo: RailGuard no avisa ni moviliza a nadie. En una emergencia, 112.'));
-  card.replaceChildren(...kids);card.style.borderLeftColor=i.k==='gc'?'#1f7a4d':'#d3202e';card.hidden=false;draw()}
+  card.replaceChildren(...kids);card.style.borderLeftColor=i.k==='gc'?'#1e5bff':'#5aa9ff';card.hidden=false;draw()}
 let LTVD=null,LTVI={};
 function loadLtv(){fetch('/api/ltv',{cache:'no-store'}).then(r=>r.json()).then(j=>{LTVD=j.items&&j.items.length?j.items:null;LTVI=j;const e=$('ltn');if(e)e.textContent=LTVD?'('+LTVD.length+')':'';if(typeof draw==='function')draw()}).catch(()=>{})}
 loadLtv();setInterval(loadLtv,600000);
