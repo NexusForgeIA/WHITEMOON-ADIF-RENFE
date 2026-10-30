@@ -3,7 +3,9 @@
  "source": "Anejo nº 10 · Estudio Informativo conexión LAV Madrid–Sevilla / Córdoba–Málaga (Almodóvar del Río)",
  "lines": [
   {
-   "id": "mad-sev", "name": "LAV Madrid – Sevilla", "kind": "Alta velocidad",
+   "id": "mad-sev",
+   "name": "LAV Madrid – Sevilla",
+   "kind": "Alta velocidad",
    "summary": "LZB como protección principal y ASFA de respaldo. Sin ETCS.",
    "facts": {
     "Vía y energía": "Doble vía, ancho 1.435 mm, 1×25 kV 50 Hz. Velocidad máxima 300 km/h (220–250 km/h en el entorno de Almodóvar del Río).",
@@ -12,12 +14,15 @@
     "Bloqueo y detección": "Bloqueo de control automático (BCA) centralizado en cabina; circuitos de vía de audiofrecuencia FTG; señales laterales luminosas.",
     "Detectores auxiliares": "Caída de objetos a la vía (DCO) y cajas calientes/frenos agarrotados (DCC).",
     "Comunicaciones": "GSM-R (voz). Red de transmisión SDH STM-16 Madrid–Córdoba y STM-4 Córdoba–Sevilla.",
-    "Control centralizado": "CTC Dimetronic (Siemens) en Madrid-Delicias, integrado en el CRC de Madrid-Puerta de Atocha; central LZB y telemando de detectores integrados en ese CRC."
+    "Control centralizado": "CTC Dimetronic (Siemens) en Madrid-Delicias, integrado en el CRC de Madrid-Puerta de Atocha; central LZB y telemando de detectores integrados en ese CRC.",
+    "Tramo Castilla-La Mancha (FCMAF, no oficial)": "Bloqueo BCA-LZB, mando en CRC Madrid-Atocha, GSM-R. 5 PAET (La Sagra, Mora, Urda, Calatrava, Venta de la Inés) y 8 PIB intermedios. Vmax 270 km/h casi todo el tramo, 300 entre PK 103,4 y 112,0 y 70 en Puertollano. Detalle en data/fcmaf_lineas.json."
    },
    "railguard": "El mapa ya marca esta línea como LZB. Antes figuraba «LZB → ETCS (migración)»: según este documento no hay ETCS en esta línea."
   },
   {
-   "id": "cor-mal", "name": "LAV Córdoba – Málaga", "kind": "Alta velocidad",
+   "id": "cor-mal",
+   "name": "LAV Córdoba – Málaga",
+   "kind": "Alta velocidad",
    "summary": "ETCS niveles 1 y 2 instalados (el material circula en nivel 1), LZB L72E y ASFA de respaldo.",
    "facts": {
     "Protección de trenes": "Equipada con ERTMS/ETCS niveles 1 y 2, pero el material rodante solo circula en nivel 1. LZB L72E (Thales) como respaldo nacional del ETCS nivel 1; ASFA como protección de respaldo en funcionamiento degradado, a velocidad reducida.",
@@ -30,7 +35,9 @@
    "railguard": "Esta línea no está entre los corredores del mapa. Las limitaciones temporales (LTV) viajan en eurobalizas y no están en ningún feed público: la capa BP intenta inferirlas."
   },
   {
-   "id": "l400", "name": "Línea 400 Alcázar de San Juan – Cádiz (tramo de Almodóvar del Río)", "kind": "Red convencional",
+   "id": "l400",
+   "name": "Línea 400 Alcázar de San Juan – Cádiz (tramo de Almodóvar del Río)",
+   "kind": "Red convencional",
    "summary": "Protección ASFA; enclavamientos telemandados desde el CTC de Córdoba.",
    "facts": {
     "Protección de trenes": "Equipada con ASFA.",
