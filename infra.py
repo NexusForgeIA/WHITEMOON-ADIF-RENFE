@@ -19,8 +19,8 @@ from renfe_adapter import project
 
 ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
              "https://overpass.private.coffee/api/interpreter"]
-# Península + Baleares (aprox.), en teselas de 2°×2° para no agotar el tiempo de Overpass
-LAT0, LAT1, LON0, LON1, STEP = 36.0, 44.0, -9.5, 3.5, 2.0
+# Península + Baleares (aprox.), en teselas de 1°×1° para no agotar el tiempo de Overpass
+LAT0, LAT1, LON0, LON1, STEP = 36.0, 44.0, -9.5, 3.5, 1.0
 TOL_KM = 0.05          # simplificación de geometría (50 m)
 POINT_KINDS = {"signal": "signal", "switch": "switch", "buffer_stop": "buffer", "railway_crossing": "crossing",
                "crossing": "crossing", "derail": "derail"}
@@ -173,7 +173,7 @@ class Infra:
                     return self.open(ep, query(b))["elements"]
                 except Exception as ex:  # 429/502/timeout: probar otro servidor
                     last = ex
-                    self.status["last_error"] = f"{ep.split('/')[2]}: {ex!r}"[:140]
+                    self.status.setdefault("errors_by_host", {})[ep.split("/")[2]] = repr(ex)[:80]
                     time.sleep(2)
         raise RuntimeError(f"tesela {b}: {last!r}")
 
