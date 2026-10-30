@@ -27,3 +27,11 @@ Fuentes leídas: página ERTMS de la Comisión Europea y SUBSET-091 v4.0.0 (requ
 | Confianza/intervalo de posición | No expuesto | Pendiente |
 
 Conclusión: RailGuard es una capa de supervisión independiente y asesora; no sustituye ni imita ETCS, y no puede reclamar nivel SIL.
+
+### Borrador AESF ETC ERTMS/ETCS (FN), v1.0 junio 2019 (leídas pp. 1–12)
+
+- ETCS convive en España con ASFA (clase B). La función nacional FN-27 regula las transiciones ETCS N1/N2 ↔ Nivel 0 con ASFA Digital, con señales CON/AKT y 500 ms de espera (2.1.1.7).
+- En Nivel 0 + ASFA, la velocidad de supervisión es el mínimo entre el valor nacional de la línea (V_NVUNFIT / V_NVSHUNT) y la velocidad máxima del vehículo (2.1.1.2).
+- Los valores nacionales los propone el administrador de infraestructuras, con consulta a empresas ferroviarias y gestión de riesgo según Reg. 402/2013 (cap. 3).
+- Implicación: RailGuard no conoce el sistema activo por tramo, ni las transiciones, ni el valor nacional de cada línea. Sus umbrales no son oficiales y su función es solo asesora. Datos pendientes de Adif.
+- Anexos C (escenarios transitorios) y D (valores nacionales) no leídos.
