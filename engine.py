@@ -35,6 +35,7 @@ from dataclasses import dataclass, field
 
 import fleet_profile
 import speed_profile
+import ltv
 import proximity
 
 NONE, CAUTION, RESTRICT, STOP = 0, 1, 2, 3
@@ -63,6 +64,9 @@ DEFAULT_CFG = {
     "escalate_after_s": 180,
     "station_radius_km": 3.0,
     "single_track": [],         # lista de [codigoA, codigoB]
+    "ltv_items": [],             # LTV de Adif (lo rellena el servidor desde ltv.py)
+    "ltv_radius_km": 1.0,       # distancia máxima tren-punto de la LTV (el punto es aproximado)
+    "ltv_margin": 1.25,         # tolerancia: la LTV es un punto, no un tramo exacto, y el tren puede estar ya frenando
     "tsr": {},                  # "A-B" -> km/h (limitaciones temporales Adif)
     "proximity_km": 3.0,        # regla de proximidad para las tablets de cabina
     "proximity_mode": "relevant",  # "relevant" | "strict" (ver proximity.py)
@@ -238,6 +242,12 @@ def b2_speed(c: Ctx):
             if zl and zl[0] < limit:
                 prof = zl
                 limit, why = zl[0], f"zona lenta PK {zl[1]:.0f} (FCMAF, no oficial)"
+        if not prof and c.cfg.get("ltv_items"):
+            hit = [i for i in ltv.near(c.cfg["ltv_items"], t.x, t.y, c.cfg["ltv_radius_km"]) if i["kmh"] * c.cfg["ltv_margin"] < limit]
+            if hit:
+                i = hit[0]
+                prof = (i["kmh"], i.get("pk0") or 0)
+                limit, why = i["kmh"] * c.cfg["ltv_margin"], f"LTV Adif línea {i['line']} PK {i.get('pk0')}-{i.get('pk1')} ({i['kmh']} km/h; visor público, no certificado)"
         r = t.kmh / limit if limit else 0
         sev = STOP if r > 1.15 else RESTRICT if r > 1.08 else CAUTION if r > 1.03 else NONE
         if prof and sev > CAUTION:

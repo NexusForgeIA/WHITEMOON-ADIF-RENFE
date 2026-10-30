@@ -819,7 +819,11 @@ def main():
                 APP.engine.log("FAULT", f"Ciclo fallido: {ex!r}")
             time.sleep(period)
 
-    threading.Thread(target=loop, args=(APP.tick, a.period), daemon=True).start()
+    def tick():
+        if LTV:
+            APP.engine.cfg["ltv_items"] = LTV.items
+        APP.tick()
+    threading.Thread(target=loop, args=(tick, a.period), daemon=True).start()
     threading.Thread(target=loop, args=(APP.prox_tick, 1.0), daemon=True).start()
     print(f"RailGuard ({APP.mode}) en http://{a.host}:{a.port}   ·   cabina: /tablet"
           + ("   ·   tokens demo: demo-<tren> (cabina) · ctc-madrid|barcelona|sevilla|nacional (panel /centro)" if APP.mode == "sim" else ""))

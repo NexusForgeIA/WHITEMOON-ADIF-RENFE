@@ -113,5 +113,5 @@ Datos en `data/safety_systems.json` (clave `declaracion_red_2026`). Libro de 464
 ## LTV (limitaciones temporales de velocidad) de Adif
 - Fuente: FeatureServer público del visor «Límites temporales de velocidad» de Adif (ArcGIS). Informativo; no es un feed de seguridad ni está certificado.
 - `ltv.py` lo descarga cada 30 min, cachea en `data/ltv_cache.json` y lo sirve en `/api/ltv`. Si Adif/ArcGIS no responde se mantiene la última caché; sin caché la capa queda vacía (no se inventan datos).
-- Mapa: capa «LTV» (punto naranja con km/h). Aún NO interviene en B2: no se generan avisos por LTV hasta validar el cruce con la posición de los trenes.
+- Mapa: capa «LTV» (punto naranja con km/h). En B2 genera un aviso **solo CAUTION** si un tren en marcha está a ≤1 km del punto de una LTV y supera su velocidad ×1,25 (el punto es aproximado, no un tramo exacto, y el tren puede estar frenando). Nunca restringe ni frena. Limitación conocida: no se cruza la línea del tren con `CODLINEA`, así que una vía paralela cercana podría dar un aviso erróneo; por eso se mantiene en CAUTION.
 - Instantánea del visor al 30/10/2026: 1024 restricciones activas (actualización del visor: 26/10/2026).
