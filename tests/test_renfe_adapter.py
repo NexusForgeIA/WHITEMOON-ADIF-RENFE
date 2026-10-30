@@ -140,3 +140,23 @@ def test_unknown_product_does_not_trigger_false_overspeed_for_an_ave():
     _, tr = f.fetch()
     e.step(tr, (T0 + 15) * 1000 + 1000)
     assert [h for h in e.hazards if h.barrier == "B2"] == []
+
+
+def test_train_detail_has_schedule_delay_and_position_text():
+    z = io.BytesIO()
+    with zipfile.ZipFile(z, "w") as f:
+        f.writestr("stops.txt", "stop_id,stop_name,stop_lat,stop_lon\nS1,Madrid,41.0,-4.0\nS2,Vigo,41.0,-2.0\nS3,Ourense,41.0,-3.0\n")
+        f.writestr("routes.txt", "route_id,route_short_name,route_long_name\nR1,AVE,\n")
+        f.writestr("trips.txt", "route_id,trip_id\nR1,11111\n")
+        f.writestr("stop_times.txt", "trip_id,stop_id,stop_sequence,arrival_time,departure_time\n"
+                   "11111,S1,0,12:00:00,12:00:00\n11111,S3,1,14:30:00,14:32:00\n11111,S2,2,15:16:00,15:16:00\n")
+    z.seek(0)
+    open("/tmp/_gtfs_t2.zip", "wb").write(z.read())
+    g = load_gtfs("/tmp/_gtfs_t2.zip")
+    f = feed_with([(T0, [ent("11111", 41.0, -3.2, "S3")])], gtfs=g, delays=tu("111111" + "2026-10-30", 4080))
+    f.fetch()
+    d = f.detail["11111"]
+    assert d["product"] == "AVE" and d["ori"] == "Madrid" and d["des"] == "Vigo"
+    assert (d["dest_sched"], d["dest_est"]) == ("15:16", "16:24")      # 15:16 + 68 min
+    assert d["next"] == {"name": "Ourense", "sched": "14:30", "est": "15:38"}
+    assert d["where"] == "Entre Madrid y Ourense"

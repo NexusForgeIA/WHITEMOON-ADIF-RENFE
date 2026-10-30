@@ -448,6 +448,24 @@ class App:
                 return None, "token de centro no válido"
             return cid, None
 
+    def train_detail(self, n):
+        """Ficha de un tren: datos del motor + horarios del GTFS (solo en modo Renfe)."""
+        with self.lock:
+            s = self.engine.snapshot()
+            t = next((x for x in s["trains"] if x["n"] == n), None)
+            if not t:
+                return None
+            d = {"n": n, "kmh": t["kmh"], "cmd": t["cmd"], "ret_min": t["ret"], "from": t["from"], "to": t["to"],
+                 "dest": t["dest"], "line": t["line"], "signalling": t["signalling"], "atp": t["atp"],
+                 "op": t["op"], "src": t["src"],
+                 "operator": next((o["name"] for o in self.operators if o["id"] == t["op"]), t["op"]),
+                 "alerts": [{"barrier": h["barrier"], "sev": h["sev"], "msg": h["msg"]}
+                            for h in s["hazards"] if n in h["trains"]][:6]}
+            extra = (getattr(self.feed, "detail", None) or {}).get(n)
+            if extra:
+                d.update({k: v for k, v in extra.items() if v is not None and k != "n"})
+            return d
+
     def centre_snapshot(self, cid):
         with self.lock:
             now = int(time.time() * 1000)
@@ -630,6 +648,11 @@ class H(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         if path == "/api/snapshot":
             return self._send(200, APP.snapshot())
+        if path == "/api/train":
+            from urllib.parse import parse_qs, urlparse
+            n = (parse_qs(urlparse(self.path).query).get("n") or [""])[0]
+            d = APP.train_detail(n)
+            return self._send(200, d) if d else self._send(404, {"ok": False, "msg": "tren desconocido"})
         if path == "/api/health":
             age = time.time() - APP.last
             return self._send(200 if age < 15 else 503, {"ok": age < 15, "cycle": APP.engine.cycle, "age_s": round(age, 1), "feed": getattr(APP.feed, "stats", None)})

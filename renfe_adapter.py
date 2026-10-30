@@ -65,6 +65,19 @@ def _csv(zf, name):
         return list(csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig")))
 
 
+def _hms(t):
+    """'HH:MM:SS' (GTFS admite >24 h) -> segundos desde medianoche, o None."""
+    try:
+        h, m, sec = (int(p) for p in str(t).strip().split(":"))
+        return h * 3600 + m * 60 + sec
+    except Exception:
+        return None
+
+
+def hhmm(sec):
+    return None if sec is None else f"{int(sec // 3600) % 24:02d}:{int(sec % 3600 // 60):02d}"
+
+
 def load_gtfs(src: str):
     """src: ruta a un .zip o URL. Devuelve {'stops':{id:(name,lat,lon)}, 'trips':{trip_id:{...}}, 'by_number':{...}}."""
     if src.startswith("http"):
@@ -74,16 +87,19 @@ def load_gtfs(src: str):
         zf = zipfile.ZipFile(src)
     stops = {r["stop_id"]: (r.get("stop_name", r["stop_id"]), float(r["stop_lat"]), float(r["stop_lon"]))
              for r in _csv(zf, "stops.txt") if r.get("stop_lat")}
-    routes = {r["route_id"]: product_of(r.get("route_short_name"), r.get("route_long_name"))
-              for r in _csv(zf, "routes.txt")}
+    rows_r = _csv(zf, "routes.txt")
+    routes = {r["route_id"]: product_of(r.get("route_short_name"), r.get("route_long_name")) for r in rows_r}
+    rname = {r["route_id"]: (r.get("route_short_name") or "").strip() for r in rows_r}
     trip_route = {r["trip_id"]: r["route_id"] for r in _csv(zf, "trips.txt")}
     seq = {}
     for r in _csv(zf, "stop_times.txt"):
-        seq.setdefault(r["trip_id"], []).append((int(r["stop_sequence"]), r["stop_id"]))
+        seq.setdefault(r["trip_id"], []).append((int(r["stop_sequence"]), r["stop_id"],
+                                                 _hms(r.get("arrival_time")), _hms(r.get("departure_time"))))
     trips = {}
     for tid, lst in seq.items():
         lst.sort()
-        trips[tid] = {"stops": [s for _, s in lst], "product": routes.get(trip_route.get(tid), 0)}
+        trips[tid] = {"stops": [x[1] for x in lst], "product": routes.get(trip_route.get(tid), 0),
+                      "times": [(x[2], x[3]) for x in lst], "rname": rname.get(trip_route.get(tid), "")}
     by_number = {}
     for tid, info in trips.items():
         by_number.setdefault(tid[:5], info)
@@ -102,6 +118,7 @@ class RenfeFeed:
         self.now = now
         self.state = {}
         self.stats = {}
+        self.detail = {}
         self.skew_ms = None
         self.skew_note = None
         self.est = {}
@@ -133,6 +150,28 @@ class RenfeFeed:
             if tid is not None and d is not None:
                 out[tid] = int(d)
         return out
+
+    def _nm(self, sid):
+        return (self.est.get(sid) or {}).get("n") or sid
+
+    def _detail(self, label, info, sig, ant, status, delay_s):
+        """Ficha del tren: horarios del GTFS + retraso del feed. Solo lo que se sabe; el resto queda a None."""
+        d = {"n": label, "delay_s": delay_s, "status": status}
+        if not info:
+            return d
+        stops, times = info["stops"], info.get("times") or []
+        delay = delay_s or 0
+        d.update(product=info.get("rname") or None, ori=self._nm(stops[0]), des=self._nm(stops[-1]))
+        if times:
+            arr = times[-1][0] if times[-1][0] is not None else times[-1][1]
+            d["dest_sched"], d["dest_est"] = hhmm(arr), hhmm(None if arr is None else arr + delay)
+            i = stops.index(sig) if sig in stops else -1
+            if i >= 0:
+                t = times[i][0] if times[i][0] is not None else times[i][1]
+                d["next"] = {"name": self._nm(sig), "sched": hhmm(t), "est": hhmm(None if t is None else t + delay)}
+        d["where"] = ("En " + self._nm(sig)) if status == "STOPPED_AT" else \
+            (f"Entre {self._nm(ant)} y {self._nm(sig)}" if ant and sig and ant != sig else (f"Hacia {self._nm(sig)}" if sig else None))
+        return d
 
     # ---- ciclo ----
     def fetch(self):
@@ -198,6 +237,7 @@ class RenfeFeed:
                 ant, ori, des, prod = st["ant"] or sig, None, None, 0
             if status == "STOPPED_AT":
                 ant = sig
+            self.detail[label] = self._detail(label, info, sig, ant, status, delays.get(trip_id))
             k = kmh / 3600
             trains.append({"n": label, "p": prod, "x": x, "y": y, "kmh": round(kmh, 1),
                            "vx": st["ux"] * k if kmh > 1 else 0.0, "vy": st["uy"] * k if kmh > 1 else 0.0,
@@ -205,6 +245,8 @@ class RenfeFeed:
                            "ori": ori, "des": des, "mat": f"v{vid}", "op": "renfe-viajeros"})
         for gone in set(self.state) - seen:
             del self.state[gone]
+        for gone in set(self.detail) - {t["n"] for t in trains}:
+            del self.detail[gone]
         self.stats = {"entities": len(trains), "header_age_s": round(self.now() - ts_ms / 1000),
                       "gtfs_matched": matched, "gtfs_loaded": bool(self.gtfs), "skew_s": (self.skew_ms or 0) // 1000}
         return self.est, trains

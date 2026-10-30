@@ -24,6 +24,10 @@ header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:var(
 .arrow{align-self:center;color:var(--mut);font-size:11px;line-height:14px}
 .human{border-left-color:var(--acc)}
 #mapwrap{position:relative;padding:0;overflow:hidden}canvas{width:100%;height:100%;display:block}
+#card{position:absolute;top:12px;right:12px;width:min(320px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;background:#0b121aF2;border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:8px;padding:12px 14px;font-size:13px;z-index:5}
+#card h3{margin:0;font-size:19px;letter-spacing:.3px}#card .sub{color:var(--mut);margin:2px 0 8px}#card .x{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--mut);font-size:20px;cursor:pointer}
+#card .r{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-top:1px solid #16212d}#card .r span:first-child{color:var(--mut)}#card .r span:last-child{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+#card .bad{color:var(--stop)}#card .al{margin-top:8px;font-size:12px;color:var(--res)}
 #tip{position:absolute;pointer-events:none;background:#06090dee;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px;display:none;white-space:nowrap}
 .legend{position:absolute;left:10px;bottom:8px;display:flex;gap:10px;font-size:11px;color:var(--mut);background:#0a1017cc;padding:3px 8px;border-radius:6px}
 .legend s{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;text-decoration:none}
@@ -79,7 +83,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
   <div class="ctl"><button id="reset">Reiniciar simulación</button></div></div>
 </section>
 
-<section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div>
+<section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
   <div class="tb"><button id="zi" title="Acercar">+</button><button id="zo" title="Alejar">−</button><button id="zr" title="Ajustar a toda la red">⌂</button>
     <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label>
     <select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
@@ -259,8 +263,35 @@ cv.addEventListener('pointermove',e=>{
   draw()});
 const endP=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;
   if(drag&&!drag.moved&&e.type==='pointerup'&&S){const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
-    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);sel=t?t.n:null;if(t)$('mt').value=t.n;draw()}
+    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);sel=t?t.n:null;if(t){$('mt').value=t.n;openCard(t.n)}else closeCard();draw()}
   if(!ptrs.size)drag=null};
+
+// ---- ficha de tren ----
+const card=$('card');let cardN=null,cardTimer=null;
+const fmtDelay=m=>m>0?(m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'):m<0?'adelantado '+(-m)+' min':'a tiempo';
+function renderCard(d,t){
+  const row=(k,v,bad)=>v==null||v===''?null:h('div','r',null,[h('span',null,k),h('span',bad?'bad':null,String(v))]);
+  const ret=d.delay_s!=null?Math.round(d.delay_s/60):(d.ret_min!=null?d.ret_min:t&&t.ret);
+  const kids=[h('button','x','×'),h('h3',null,(d.product?d.product+' ':'')+d.n),
+    h('div','sub',d.ori&&d.des?d.ori+' → '+d.des:(d.from||'?')+' → '+(d.to||'?')+(d.dest?' (destino '+d.dest+')':''))];
+  kids[0].onclick=closeCard;
+  [row('Retraso',ret==null?null:fmtDelay(ret),ret>0),row('Llegada prevista',d.dest_sched),row('Llegada estimada',d.dest_est,ret>0),
+   row('Velocidad','≈ '+d.kmh+' km/h'),row('Dónde',d.where||(d.from&&d.to?'Entre '+d.from+' y '+d.to:null)),
+   d.next?row('Llega a '+d.next.name,(d.next.est||d.next.sched)):null,
+   row('Estado de seguridad',{NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[d.cmd]||d.cmd,d.cmd==='STOP'),
+   row('Línea',d.line?d.line+(d.signalling?' · '+d.signalling:''):null),row('ATP a bordo',d.atp||'sin telemetría'),
+   row('Operador',d.operator),row('Posición',d.src==='tablet'?'GPS tablet':'feed')].forEach(r=>r&&kids.push(r));
+  (d.alerts||[]).forEach(a=>kids.push(h('div','al',a.barrier+' · '+a.msg)));
+  card.replaceChildren(...kids);card.style.borderLeftColor=COL[d.cmd]||'var(--acc)';card.hidden=false;
+}
+async function loadCard(){
+  if(!cardN)return;const t=S&&S.trains.find(x=>x.n===cardN);
+  let d=null;try{const r=await fetch('/api/train?n='+encodeURIComponent(cardN));if(r.ok)d=await r.json()}catch(e){}
+  if(!d||d.n!==cardN){if(!t){closeCard();return}d={n:t.n,kmh:t.kmh,cmd:t.cmd,ret_min:t.ret,from:t.from,to:t.to,dest:t.dest,line:t.line,signalling:t.signalling,atp:t.atp,src:t.src,operator:((S.operators||[]).find(o=>o.id===t.op)||{}).name}}
+  if(cardN===d.n)renderCard(d,t);
+}
+function openCard(n){cardN=n;loadCard();clearInterval(cardTimer);cardTimer=setInterval(loadCard,10000)}
+function closeCard(){cardN=null;card.hidden=true;clearInterval(cardTimer)}
 cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
 cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect();zoomAt(2,e.clientX-r.left,e.clientY-r.top)});
 $('zi').onclick=()=>base&&zoomAt(1.5,base.W/2,base.H/2);$('zo').onclick=()=>base&&zoomAt(1/1.5,base.W/2,base.H/2);
