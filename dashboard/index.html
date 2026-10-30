@@ -772,13 +772,38 @@ function tvGauge(v,max){
   const [nx,ny]=pt(v,R-22),[bx,by]=pt(v,R+9);
   return '<svg viewBox="0 0 180 112" width="100%" style="max-width:230px">'+seg(0,max,'#8fd3a8')+seg(max,max*1.03,'#e9d27a')+seg(max*1.03,max*1.08,'#f2b27a')+seg(max*1.08,max*1.15,'#ee8f8f')+seg(max*1.15,S0,'#d32f2f')
    +'<line x1="'+nx+'" y1="'+ny+'" x2="'+bx+'" y2="'+by+'" stroke="#0f2233" stroke-width="3.5" stroke-linecap="round"/><text x="90" y="86" text-anchor="middle" font-size="30" font-weight="800" fill="#0f2233">'+v+'</text><text x="90" y="101" text-anchor="middle" font-size="10" fill="#5b6f82">km/h · límite '+max+'</text></svg>'}
-function tvMini(t,near){const W=640,H=330,P=30;let xs=near.map(n=>n.x).concat(t.x),ys=near.map(n=>n.y).concat(t.y);
-  const k=S.unit_km;let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const span=Math.max((x1-x0)*k,(y1-y0)*k,40),sc=(Math.min(W,H)-2*P)/span*1;
-  const cx=(x0+x1)/2,cy=(y0+y1)/2,X=x=>W/2+(x-cx)*k*sc,Y=y=>H/2+(y-cy)*k*sc;
+function tvMini(t,near){
+  // Mapa de ruta local: solo lo cercano, etiquetas sin solaparse. Escala uniforme (km reales en línea recta).
+  const W=640,H=330,P=26,R=70,k=S.unit_km,sc=(H/2-P)/R,ox=t.x*k,oy=t.y*k;
+  const X=x=>W/2+(x*k-ox)*sc,Y=y=>H/2+(y*k-oy)*sc,D=o=>Math.hypot(o.x*k-ox,o.y*k-oy);
+  const placed=[],esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const free=(x,y,w,hh)=>{const r=[x,y-hh,x+w,y+2];if(r[0]<2||r[2]>W-2||r[1]<2||r[3]>H-2)return false;if(placed.some(q=>r[0]<q[2]&&r[2]>q[0]&&r[1]<q[3]&&r[3]>q[1]))return false;placed.push(r);return true};
+  const lab=(x,y,txt,fs,col,wt,dx,dy)=>{const w=txt.length*fs*.56;for(const [ax,ay] of [[dx,dy],[dx,dy+20],[-w-dx,dy],[-w-dx,dy+20],[-w/2,dy-8],[-w/2,dy+26]]){if(free(x+ax,y+ay,w,fs))return '<text x="'+(x+ax)+'" y="'+(y+ay)+'" font-size="'+fs+'" font-weight="'+(wt||500)+'" fill="'+col+'" stroke="#f2f6fa" stroke-width="3" paint-order="stroke">'+esc(txt)+'</text>'}return ''};
   let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="background:#f2f6fa;border-radius:10px">';
-  (S.stations||[]).forEach(st=>{const x=X(st.x),y=Y(st.y);if(x<8||y<8||x>W-8||y>H-8)return;s+='<circle cx="'+x+'" cy="'+y+'" r="3" fill="#8a9bab"/><text x="'+(x+6)+'" y="'+(y+4)+'" font-size="10" fill="#44586b">'+st.n.replace(/&/g,'')+'</text>'});
-  near.forEach(n=>{s+='<circle cx="'+X(n.x)+'" cy="'+Y(n.y)+'" r="6" fill="'+(n.cmd==='NONE'?'#455a6e':TVCOL[n.cmd])+'" stroke="#fff" stroke-width="2"/><text x="'+(X(n.x)+9)+'" y="'+(Y(n.y)-8)+'" font-size="11" font-weight="700" fill="#0f2233">'+n.n+'</text>'});
-  s+='<circle cx="'+X(t.x)+'" cy="'+Y(t.y)+'" r="9" fill="#1d6fd6" stroke="#fff" stroke-width="3"/><text x="'+(X(t.x)+12)+'" y="'+(Y(t.y)+4)+'" font-size="12" font-weight="800" fill="#1d6fd6">'+t.n+' (este tren)</text></svg>';return s}
+  s+='<circle cx="'+W/2+'" cy="'+H/2+'" r="'+R*sc+'" fill="#fff" stroke="#dbe5ee" stroke-dasharray="4 5"/><text x="'+(W/2+R*sc*.72)+'" y="'+(H/2-R*sc*.72)+'" font-size="9" fill="#8a9bab">'+R+' km</text>';
+  const st={};(S.stations||[]).forEach(x=>st[x.c]=x);
+  s+='<clipPath id="tvclip"><circle cx="'+W/2+'" cy="'+H/2+'" r="'+R*sc+'"/></clipPath><g clip-path="url(#tvclip)">';
+  // vía de la línea del tren (corredor), recortada a la zona
+  (S.corridors||[]).filter(c=>t.line&&c.name===t.line).forEach(c=>{const pts=c.stations.filter(q=>st[q]).map(q=>[X(st[q].x),Y(st[q].y)]);
+    if(pts.length>1)s+='<polyline points="'+pts.map(q=>q.join(',')).join(' ')+'" fill="none" stroke="#9fb4c8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'});
+  // tramo actual
+  const a=(S.stations||[]).find(q=>q.n===t.from),b=(S.stations||[]).find(q=>q.n===t.to);
+  if(a&&b)s+='<line x1="'+X(a.x)+'" y1="'+Y(a.y)+'" x2="'+X(b.x)+'" y2="'+Y(b.y)+'" stroke="#1d6fd6" stroke-width="4" stroke-linecap="round" opacity=".55"/>';
+  s+='</g>';
+  // estaciones: puntos para las cercanas, etiqueta solo para las más próximas y las del tramo
+  const sts=(S.stations||[]).map(q=>({...q,d:D(q)})).filter(q=>q.d<=R).sort((p,q)=>p.d-q.d);
+  sts.forEach(q=>{s+='<circle cx="'+X(q.x)+'" cy="'+Y(q.y)+'" r="'+((q.n===t.from||q.n===t.to)?4.5:3)+'" fill="'+((q.n===t.from||q.n===t.to)?'#1d6fd6':'#8a9bab')+'"/>'});
+  // trenes cercanos (sin etiqueta salvo los más próximos)
+  const tr=near.map(n=>({...n,d:D(n)})).filter(n=>n.d<=R).sort((p,q)=>p.d-q.d);
+  tr.forEach(n=>{s+='<circle cx="'+X(n.x)+'" cy="'+Y(n.y)+'" r="5.5" fill="'+(n.cmd==='NONE'?'#455a6e':TVCOL[n.cmd])+'" stroke="#fff" stroke-width="2"/>'});
+  s+='<circle cx="'+X(t.x)+'" cy="'+Y(t.y)+'" r="9" fill="#1d6fd6" stroke="#fff" stroke-width="3"/>';
+  placed.push([X(t.x)-10,Y(t.y)-12,X(t.x)+10,Y(t.y)+10]);
+  s+=lab(X(t.x),Y(t.y),t.n+' (este tren)',12,'#1d6fd6',800,13,-12)||lab(X(t.x),Y(t.y),t.n,12,'#1d6fd6',800,-60,-14);
+  // etiquetas por prioridad: estaciones del tramo, trenes más cercanos, estaciones más cercanas
+  sts.filter(q=>q.n===t.from||q.n===t.to).forEach(q=>{s+=lab(X(q.x),Y(q.y),q.n,11,'#0f2233',700,7,-6)||lab(X(q.x),Y(q.y),q.n,11,'#0f2233',700,7,14)});
+  tr.slice(0,6).forEach(n=>{s+=lab(X(n.x),Y(n.y),n.n,10.5,'#0f2233',700,8,-8)||lab(X(n.x),Y(n.y),n.n,10.5,'#0f2233',700,8,14)});
+  sts.slice(0,9).forEach(q=>{if(q.n!==t.from&&q.n!==t.to)s+=lab(X(q.x),Y(q.y),q.n,10,'#5b6f82',500,6,4)});
+  return s+'</svg>'}
 function renderTV(){
   const ov=$('tvov');if(ov.hidden||!S)return;const t=S.trains.find(x=>x.n===tvN);
   if(!t){ov.replaceChildren(h('div','w',null,[h('div','hd',null,[h('h1',null,'Tren '+tvN+' sin datos'),h('div','sp'),(()=>{const b=h('button',null,'Cerrar');b.onclick=closeTV;return b})()])]));return}
@@ -803,8 +828,8 @@ function renderTV(){
   const strip=el('div','strip','<h4>Trenes en la misma vía'+(t.line?' · '+t.line:' (sin línea identificada: trenes a menos de 150 km)')+'</h4>');
   const row=el('div','tr5','');[slot(beh,0,2),slot(beh,1,2)].forEach(o=>row.appendChild(card(o)));row.appendChild(card(t,true));[ahe[0]||null,ahe[1]||null].forEach(o=>row.appendChild(card(o)));
   strip.appendChild(row);if(und.length)strip.appendChild(el('div','nt','Sin rumbo conocido para '+und.length+' tren(es) más; no se clasifican como delante/detrás.'));
-  const near=S.trains.filter(o=>o.n!==t.n&&dist(o)<120);
-  const bt=el('div','bt','');bt.appendChild(el('div','mp',tvMini(t,near)+'<div class="nt">Mapa esquemático local (estaciones y trenes a menos de 120 km). Distancias en línea recta, no por vía.</div>'));
+  const near=S.trains.filter(o=>o.n!==t.n&&dist(o)<75);
+  const bt=el('div','bt','');bt.appendChild(el('div','mp',tvMini(t,near)+'<div class="nt">Mapa de ruta local (radio 70 km): solo se rotulan los trenes y estaciones más cercanos. Distancias en línea recta, no por vía.</div>'));
   const ib=el('div','ib','');
   ib.appendChild(el('div','tl','<h4>Información del tren</h4>'+[['Línea',t.line||'—'],['Señalización',t.signalling||'—'],['ATP a bordo',t.atp||'sin telemetría'],['Operador',(S.operators.find(o=>o.id===t.op)||{}).name||t.op],['Barreras actuando',(t.by&&t.by.length)?t.by.join(' · '):'ninguna']].map(([a,b])=>'<div class="r"><span>'+a+'</span><span>'+b+'</span></div>').join('')));
   ib.appendChild(el('div','tl','<h4>Próxima referencia</h4>'+(d.next?'<div class="r"><span>'+d.next.name+'</span><span>'+(d.next.est||d.next.sched||'—')+(d.next.est&&d.next.sched&&d.next.est!==d.next.sched?' (prev. '+d.next.sched+')':'')+'</span></div>':'<div class="sub">Sin horario disponible para este tren.</div>')+(d.dest_est?'<div class="r"><span>Destino '+(d.des||t.dest||'')+'</span><span>'+d.dest_est+'</span></div>':'')));
