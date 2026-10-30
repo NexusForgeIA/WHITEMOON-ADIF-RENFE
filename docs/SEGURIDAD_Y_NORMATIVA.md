@@ -35,3 +35,31 @@ Conclusión: RailGuard es una capa de supervisión independiente y asesora; no s
 - Los valores nacionales los propone el administrador de infraestructuras, con consulta a empresas ferroviarias y gestión de riesgo según Reg. 402/2013 (cap. 3).
 - Implicación: RailGuard no conoce el sistema activo por tramo, ni las transiciones, ni el valor nacional de cada línea. Sus umbrales no son oficiales y su función es solo asesora. Datos pendientes de Adif.
 - Anexos C (escenarios transitorios) y D (valores nacionales) no leídos.
+
+#### Lectura completa del borrador AESF ETC ERTMS/ETCS (FN) (pp. 1–42) y aplicación
+
+Aplicado:
+- Deceleración de RailGuard (0,6 m/s²) comparada con los valores nacionales ETCS (Anexo D, paquete 203): A_NVMAXREDADH1 = 1,0 y A_NVMAXREDADH2/3 = 0,7 m/s². RailGuard es más conservador. Queda fijado con un test (`tests/test_etcs_reference.py`).
+- El ETCS usa además factores de corrección (Kr_int 0,9; Kv_int 0,7; Kt_int 1,1) y un nivel de confianza del freno de emergencia de 99,9999999 % (M_NVEBCL). RailGuard no los modela: su curva de frenado es determinista y asesora.
+
+Referencia (valores por defecto / usados históricamente en España):
+| Variable | Defecto | Uso previo en España |
+|---|---|---|
+| V_NVUNFIT (modo UN, sin ETCS en vía) | 100 km/h | AV 200 / CONV 140 km/h |
+| V_NVSTFF (Staff Responsible) | 40 km/h | 100 km/h |
+| V_NVONSIGHT / V_NVSHUNT | 30 km/h | = defecto |
+| V_NVREL (liberación) | 40 km/h | 15 km/h |
+| D_NVOVTRP / T_NVOVTRP (rebase EOA) | 200 m / 60 s | 80 m / 40 s |
+| T_NVCONTACT (pérdida de contacto RBC) | ilimitado | 20 s |
+| D_NVPOTRP (marcha atrás Post Trip) | 200 m | 50 m |
+
+Hallazgos del Anexo C:
+- Las funciones nacionales se están eliminando salvo FN-27; coexisten trenes con y sin ellas (inventario a 25/07/2018, por serie de tren). La compatibilidad tren/vía depende de la ingeniería de cada línea.
+- Hay combinaciones con riesgo teórico señalado por la propia AESF (escenario E1, función solo a bordo: FN-20, FN-24, FN-77, FN-124), sobre todo por limitaciones temporales de velocidad (LTV) revocables en zonas N1+N2.
+- Las líneas AV con ERTMS se inventarían por línea y función; la mayoría no implementa funciones nacionales en vía.
+
+Implicaciones para RailGuard (límites honestos):
+- No sabemos qué modo ETCS (FS/OS/SR/UN/SH/TR/PT) ni qué nivel lleva cada tren, ni sus valores nacionales; por tanto no podemos reproducir la supervisión real.
+- Las LTV (limitaciones temporales de velocidad) no están en nuestros datos: un tren legítimamente lento o rápido por una LTV puede parecer anómalo o pasar desapercibido.
+- Un rebase de la autorización (modo TR, freno de emergencia) no es observable desde GPS público.
+- Nuestros umbrales siguen siendo propios, no oficiales; los valores de la tabla son solo contexto.

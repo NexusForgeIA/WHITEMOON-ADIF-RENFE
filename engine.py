@@ -46,7 +46,7 @@ DEFAULT_CFG = {
                              16: 160, 18: 160, 19: 140},
     "default_max_speed": 160,
     "unknown_product_max_speed": 310,  # producto sin clasificar: máximo de red (B2 queda con menos cobertura, no con falsos excesos)
-    "decel_service": 0.6,       # m/s² (conservador)
+    "decel_service": 0.6,       # m/s² (conservador; ETC ETCS(FN) Anexo D: ETCS asume 0,7 m/s² con adherencia reducida y 1,0 en el nivel 1)
     "spacing_margin_km": 0.5,
     "stale_s": 90,
     "feed_dead_s": 120,
