@@ -136,3 +136,6 @@ posiciones sucesivas y marca como *congelado* un GPS que repite posición cuando
 Sin `--gtfs` solo funcionan B1, B2 (envolvente) y B4 parcial: no hay geometría de tramos ni destino.
 Estado de verificación: el adaptador está probado con entidades reales y GTFS sintético; **no se ha probado
 contra el feed en vivo** (red del entorno de desarrollo bloqueada). Ejecuta la sonda primero.
+
+## Web de demostración
+Versión estática con grabaciones del motor real (no datos en vivo): ver [`web/README.md`](web/README.md).
