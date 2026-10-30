@@ -21,6 +21,7 @@ from drivers import Drivers
 from engine import Engine
 from infra import Infra
 import systems
+import forecast
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 CFG = {"single_track": [["54404", "54405"]]}  # DEMO: la lista real debe salir de la infraestructura de Adif
@@ -398,6 +399,10 @@ class App:
             s["proximity_mode"] = self.engine.cfg["proximity_mode"]
             self._annotate(s, now)
             try:   # informativo: nunca puede romper la lectura de datos de seguridad
+                s["forecast"] = forecast.predict(self.engine)
+            except Exception as ex:
+                s["forecast"] = {"items": [], "total": 0, "horizon_s": 0, "note": "Previsión no disponible: " + repr(ex)[:100]}
+            try:
                 s["outages"] = self.systems()["outages"]
             except Exception as ex:
                 s["outages"] = [{"id": "OUTAGES-ERR", "sev": "WARN", "system": "Panel", "title": "No se pudo calcular el estado de sistemas",
