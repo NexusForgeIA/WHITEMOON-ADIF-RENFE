@@ -78,3 +78,25 @@ def test_b2_ltv_otra_via_no_avisa():
     item2 = {**item, "y": 0}
     est_lejos = _run(200, [{**item2, "c0": "A", "c1": "B"}], x=100.0)
     assert est_lejos[0]
+
+
+TR = [{"attributes": {"COD_LINEA": "200 - X", "PKI": 10.0, "PKD": 20.0},
+       "geometry": {"paths": [[[-3.0, 40.0], [-3.0, 40.045], [-3.0, 40.09]]]}}]
+
+
+def test_geometria_de_ltv_desde_tramos():
+    tr = ltv.parse_tramos(TR)
+    g = ltv.geometry(tr, "200", 12, 14)
+    assert g and len(g[0]) >= 2
+    (x0, y0), (x1, y1) = g[0][0], g[0][-1]
+    assert 1.5 < ((x1 - x0) ** 2 + (y1 - y0) ** 2) ** .5 < 2.5   # ~2 km de 10 PK
+    assert ltv.geometry(tr, "999", 12, 14) == [] and ltv.geometry(tr, "200", 30, 31) == []
+
+
+def test_matching_con_geometria_ignora_el_radio_del_punto():
+    tr = ltv.parse_tramos(TR)
+    g = ltv.geometry(tr, "200", 10, 20)
+    i = {"id": 1, "kmh": 30, "x": g[0][0][0], "y": g[0][0][1], "g": g}
+    mx, my = g[0][len(g[0]) // 2]
+    assert ltv.matching([i], {}, mx, my) == [i]                 # a mitad del tramo, lejos del punto
+    assert ltv.matching([i], {}, mx + 5, my) == []

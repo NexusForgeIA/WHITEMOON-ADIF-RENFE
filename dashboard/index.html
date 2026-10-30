@@ -427,8 +427,8 @@ function draw(){
       cx.globalAlpha=.9;cx.strokeStyle='#0a1017';cx.lineWidth=Math.max(.8,lw-.6);cx.setLineDash([7,9]);cx.stroke();cx.setLineDash([]);cx.globalAlpha=1});
   }
   // LTV de Adif: punto naranja con la velocidad límite (informativo)
-  if(LTVD&&$('llt')&&$('llt').checked){const u=S.unit_km||1,z=V.z;cx.save();cx.font='600 10px system-ui';cx.textAlign='center';
-    LTVD.forEach(i=>{const [x,y]=T(i.x/u,i.y/u);if(x<-20||y<-20||x>W+20||y>H+20)return;
+  if(LTVD&&$('llt')&&$('llt').checked){const u=S.unit_km||1,z=V.z;cx.save();cx.font='600 10px system-ui';cx.textAlign='center';cx.lineCap='round';cx.lineJoin='round';
+    LTVD.forEach(i=>{if(i.g)i.g.forEach(pl=>{cx.beginPath();pl.forEach((q,k)=>{const [a,b]=T(q[0]/u,q[1]/u);k?cx.lineTo(a,b):cx.moveTo(a,b)});cx.strokeStyle='rgba(255,159,67,.95)';cx.lineWidth=Math.min(6,2.5+z*.4);cx.stroke()});const [x,y]=T(i.x/u,i.y/u);if(x<-20||y<-20||x>W+20||y>H+20)return;
       cx.fillStyle='rgba(255,159,67,.85)';cx.strokeStyle='#0a1017';cx.lineWidth=1;cx.beginPath();cx.arc(x,y,z>3?5:3,0,6.3);cx.fill();cx.stroke();
       if(z>3){cx.fillStyle='#ffd9a8';cx.fillText(i.kmh,x,y-8)}});cx.restore()}
   // líneas de alta velocidad (AVE): halo claro + nombre sobre el trazado
