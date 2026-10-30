@@ -1,0 +1,207 @@
+{
+ "source": "FCMAF (Federación Castellano Manchega de Amigos del Ferrocarril), fcmaf.es — fuente privada y divulgativa, NO oficial de Adif; consultada el 30/10/2026",
+ "nota": "Datos fácticos (PK, velocidades, tipo de bloqueo) de los tramos en Castilla-La Mancha. Cotejar con la Declaración sobre la Red de Adif antes de usarlos como límite oficial. No incluye ASFA/ETCS ni distancias de frenado.",
+ "lineas": {
+  "010": {
+   "nombre": "Madrid-Puerta de Atocha a Sevilla-Santa Justa (AV)",
+   "tramo_cubierto": "Castilla-La Mancha, 228,351 km",
+   "bloqueo": "BCA-LZB",
+   "puesto_mando": "CRC Madrid-Atocha",
+   "radio": "GSM-R",
+   "via": "doble, 25 kV 50 Hz, ancho 1435",
+   "rampa_max_permil": 12.5,
+   "inauguracion": "14/04/1992",
+   "apertura": "21/04/1992",
+   "velocidades_max_kmh": [
+    {
+     "pk_desde": 20.3,
+     "pk_hasta": 99.3,
+     "v": 270
+    },
+    {
+     "pk_desde": 99.3,
+     "pk_hasta": 103.4,
+     "v": 290
+    },
+    {
+     "pk_desde": 103.4,
+     "pk_hasta": 112.0,
+     "v": 300
+    },
+    {
+     "pk_desde": 112.0,
+     "pk_hasta": 115.1,
+     "v": 290
+    },
+    {
+     "pk_desde": 115.1,
+     "pk_hasta": 170.2,
+     "v": 270
+    },
+    {
+     "pk_desde": 170.2,
+     "pk_hasta": 173.1,
+     "v": 190
+    },
+    {
+     "pk_desde": 173.1,
+     "pk_hasta": 178.1,
+     "v": 240
+    },
+    {
+     "pk_desde": 178.1,
+     "pk_hasta": 206.8,
+     "v": 270
+    },
+    {
+     "pk_desde": 206.8,
+     "pk_hasta": 208.8,
+     "v": 200
+    },
+    {
+     "pk_desde": 208.8,
+     "pk_hasta": 212.6,
+     "v": "70-200 (70 en Puertollano)"
+    },
+    {
+     "pk_desde": 212.6,
+     "pk_hasta": 229.3,
+     "v": 270
+    },
+    {
+     "pk_desde": 229.3,
+     "pk_hasta": 286.2,
+     "v": 250
+    }
+   ],
+   "puntos": [
+    {
+     "n": "Yeles",
+     "tipo": "PIB",
+     "pk": 35.307
+    },
+    {
+     "n": "La Sagra",
+     "tipo": "PAET",
+     "pk": 53.729
+    },
+    {
+     "n": "Ablates",
+     "tipo": "PIB",
+     "pk": 73.727
+    },
+    {
+     "n": "Mora",
+     "tipo": "PAET",
+     "pk": 89.545
+    },
+    {
+     "n": "Los Yébenes",
+     "tipo": "PIB",
+     "pk": 104.869
+    },
+    {
+     "n": "Urda",
+     "tipo": "PAET",
+     "pk": 119.749
+    },
+    {
+     "n": "El Emperador",
+     "tipo": "PIB",
+     "pk": 130.138
+    },
+    {
+     "n": "Malagón",
+     "tipo": "PIB",
+     "pk": 149.617
+    },
+    {
+     "n": "Ciudad Real",
+     "tipo": "Estación",
+     "pk": 170.747
+    },
+    {
+     "n": "Calatrava",
+     "tipo": "PAET",
+     "pk": 196.481
+    },
+    {
+     "n": "Puertollano",
+     "tipo": "Estación",
+     "pk": 209.762
+    },
+    {
+     "n": "Brazatortas",
+     "tipo": "PIB",
+     "pk": 225.425
+    },
+    {
+     "n": "Venta de la Inés",
+     "tipo": "PAET",
+     "pk": 244.482
+    }
+   ],
+   "subestaciones": [
+    "Añover",
+    "Mora",
+    "El Emperador",
+    "Ciudad Real",
+    "La Nava",
+    "Venta de la Inés"
+   ],
+   "bases_mantenimiento": [
+    {
+     "n": "Mora",
+     "pk": 88.682
+    },
+    {
+     "n": "Calatrava",
+     "pk": 195.794
+    }
+   ]
+  },
+  "020": {
+   "nombre": "La Sagra a Toledo (AV)",
+   "longitud_km": 20.995,
+   "bloqueo": "BCA",
+   "puesto_mando": "CRC Madrid-Atocha",
+   "radio": "GSM-R",
+   "via": "doble, 25 kV 50 Hz, ancho 1435",
+   "rampa_max_permil": {
+    "par": 17.7,
+    "impar": 27.5
+   },
+   "velocidades_max_kmh": [
+    {
+     "pk_desde": 0,
+     "pk_hasta": 15.306,
+     "v": 220
+    },
+    {
+     "pk_desde": 15.306,
+     "pk_hasta": 18.76,
+     "v": 165
+    },
+    {
+     "pk_desde": 18.76,
+     "pk_hasta": 20.2,
+     "v": 140
+    },
+    {
+     "pk_desde": 20.2,
+     "pk_hasta": 20.842,
+     "v": 80
+    }
+   ],
+   "inauguracion": "15/11/2005"
+  }
+ },
+ "lineas_AV_catalogo": [
+  "010",
+  "020",
+  "040",
+  "042",
+  "050"
+ ],
+ "lineas_sin_leer": "040, 042, 050 y 400 no se pudieron consultar (la herramienta no tenía acceso a esas páginas)"
+}

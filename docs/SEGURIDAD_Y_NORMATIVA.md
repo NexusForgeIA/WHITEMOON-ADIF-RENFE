@@ -81,3 +81,11 @@ Datos en `data/safety_systems.json` y botón «📋 Líneas» del panel. Es un e
 - LAV Córdoba–Málaga: ETCS N1 y N2 instalados (el material circula en N1), LZB L72E y ASFA de respaldo; detectores DCO, DCC, DVL, DOA, DCDP; LTV gestionadas por eurobalizas. Transición LZB→ASFA: reconocimiento del maquinista en ~8 s o freno de emergencia.
 - Línea 400 (convencional): ASFA; CTC Alcatel en Córdoba.
 - Datos que Adif tiene y RailGuard no recibe: alarmas de detectores, estado de enclavamientos y circuitos de vía, LTV activas, datos LZB por tren, SAM.
+
+### Datos de línea de FCMAF (Castilla-La Mancha, fuente divulgativa)
+Fuente: fcmaf.es (Federación Castellano Manchega de Amigos del Ferrocarril), consultada el 30/10/2026. **No es fuente oficial de Adif**; cotejar con la Declaración sobre la Red antes de usarla como límite. Datos en `data/fcmaf_lineas.json`.
+- Línea 010 (Madrid–Sevilla, tramo CLM de 228,351 km): bloqueo BCA-LZB, mando en CRC Madrid-Atocha, GSM-R, doble vía 25 kV, rampa máx. 12,5 ‰. Vmax por PK: 270 km/h en general, 290–300 entre PK 99,3 y 115,1 (pico 300), 190 en Ciudad Real, 240 PK 173–178, 200 PK 207–209, 70–200 en Puertollano, 250 hasta Córdoba.
+- 5 PAET (La Sagra, Mora, Urda, Calatrava, Venta de la Inés) y 8 PIB (Yeles, Ablates, Los Yébenes, El Emperador, Malagón, Brazatortas...) con su PK; 6 subestaciones telemandadas desde Atocha; bases de mantenimiento en Mora y Calatrava.
+- Línea 020 (La Sagra–Toledo, 20,995 km): bloqueo BCA, GSM-R; 220 km/h hasta PK 15,3, luego 165, 140 y 80 en Toledo.
+- No consta ASFA, ETCS ni distancias de frenado. No se pudieron leer las líneas 040, 042, 050 ni 400 (acceso de la herramienta limitado).
+- Uso posible: un perfil de velocidad máxima por PK para B2 en Madrid–Sevilla; requiere convertir PK a posición con las estaciones. Pendiente, no aplicado: B2 sigue usando sus límites actuales.
