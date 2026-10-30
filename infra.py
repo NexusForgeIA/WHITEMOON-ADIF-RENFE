@@ -16,6 +16,7 @@ import urllib.parse
 import urllib.request
 
 from renfe_adapter import project
+import adif_wfs
 
 ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
              "https://overpass.private.coffee/api/interpreter"]
@@ -182,8 +183,21 @@ class Infra:
             if os.path.exists(self.cache) and time.time() - os.path.getmtime(self.cache) < 30 * 86400:
                 self._set(json.load(open(self.cache, encoding="utf-8")))
                 return
-            els, failed, streak = [], [], 0
             self.status["state"] = "descargando"
+            try:   # 1) fuente oficial de Adif (WFS de la iDE de Adif)
+                diag = self.status.setdefault("adif", {})
+                t0 = time.time()
+                ways, pts = adif_wfs.load(diag)
+                diag["seconds"] = round(time.time() - t0, 1)
+                data = {"ways": [dict(w, s=None) for w in ways], "points": pts + section_changes(ways), "failed_tiles": 0, "source": "adif"}
+                os.makedirs(os.path.dirname(self.cache) or ".", exist_ok=True)
+                json.dump(data, open(self.cache, "w", encoding="utf-8"), separators=(",", ":"))
+                self._set(data)
+                return
+            except Exception as ex:
+                self.status.setdefault("adif", {})["error"] = repr(ex)[:300]
+            # 2) respaldo: OpenStreetMap (no oficial)
+            els, failed, streak = [], [], 0
             for b in tiles():
                 if streak >= 3 and not els:   # Overpass inaccesible: no bloquear horas; se reintentará más tarde
                     self.status.update(state="error", error="Overpass inaccesible desde este servidor (3 zonas seguidas fallidas)")
@@ -215,7 +229,9 @@ class Infra:
         d = dict(data)
         d["points"] = list(data["points"]) + xp
         d["cantones"] = cant
-        d["meta"] = {"source": "OpenStreetMap (ODbL) · © colaboradores de OpenStreetMap", "official": False,
+        off = data.get("source") == "adif"
+        d["meta"] = {"source": ("Adif · iDE de Adif (WFS Red de Transporte Ferroviario) · © Administrador de infraestructuras ferroviarias"
+                                if off else "OpenStreetMap (ODbL) · © colaboradores de OpenStreetMap"), "official": off,
                      "fetched": int(time.time()), **meta,
                      "counts": {"ways": len(d["ways"]), "points": len(d["points"]),
                                 "with_tracks": sum(1 for w in d["ways"] if w["t"]),
