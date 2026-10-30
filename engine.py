@@ -67,6 +67,11 @@ DEFAULT_CFG = {
     "proximity_hold_s": 5,      # el ROJO se mantiene este tiempo tras desaparecer la condición
     "tablet_fresh_s": 10,       # antigüedad máxima de una posición de tablet para usarla
     "atp_stale_s": 15,
+    # --- tolerancia al ruido del feed (valores de sim = sin filtro; el modo live los endurece, ver server.py) ---
+    "speed_implausible_kmh": 360,   # por encima de esto la velocidad es un error de dato, no un exceso real (máx. red ≈ 310)
+    "overspeed_persist": 1,         # ciclos consecutivos con exceso antes de ordenar nada (live: 3)
+    "jump_persist": 1,              # saltos consecutivos para RESTRICT; el primero se avisa como CAUTION (live: 2)
+    "stale_restrict_s": 90,         # posición caducada: CAUTION desde stale_s, RESTRICT desde aquí (live: 300)
 }
 
 
@@ -136,12 +141,22 @@ class Hazard:
 class Ctx:
     """Entrada inmutable de un ciclo. Cada barrera la lee por su cuenta."""
 
-    def __init__(self, trains, est, cfg, now_ms, prev):
+    def __init__(self, trains, est, cfg, now_ms, prev, streak=None):
         self.trains, self.est, self.cfg, self.now_ms, self.prev = trains, est, cfg, now_ms, prev
+        self.streak = streak if streak is not None else {}
+        self.seen = set()
         k = cfg["km_per_px"]
         self.st = {c: (s["x"] * k, s["y"] * k) for c, s in est.items()}
         self.atp = {}
         self.line_of = lambda seg: None
+
+    def persist(self, key, cond):
+        """Ciclos consecutivos en que `cond` es cierta para `key` (0 si no lo es)."""
+        if not cond:
+            return 0
+        self.seen.add(key)
+        self.streak[key] = self.streak.get(key, 0) + 1
+        return self.streak[key]
 
     def name(self, code):
         return self.est.get(code, {}).get("n", code or "?")
@@ -165,15 +180,17 @@ def b1_integrity(c: Ctx):
     for t in c.trains:
         age = (c.now_ms - t.ts) / 1000
         if age > c.cfg["stale_s"]:
-            out.append(Hazard("B1", RESTRICT, (t.n,), t.undirected(), "STALE",
+            sev = RESTRICT if age > max(c.cfg["stale_restrict_s"], c.cfg["stale_s"]) else CAUTION
+            out.append(Hazard("B1", sev, (t.n,), t.undirected(), "STALE",
                               f"Posición caducada ({age:.0f} s): ocupación desconocida", {"age_s": round(age)}))
         p = c.prev.get(t.n)
         if p and t.ts > p[2]:
             dt = (t.ts - p[2]) / 1000
             d = math.hypot(t.x - p[0], t.y - p[1])
             reach = c.cfg["jump_factor"] * c.vmax(t) / 3600 * dt + 0.5
-            if d > reach:
-                out.append(Hazard("B1", RESTRICT, (t.n,), t.undirected(), "JUMP",
+            n_j = c.persist(("JUMP", t.n), d > reach)
+            if n_j:   # el primer salto aislado es casi siempre un glitch de GPS: se avisa; si se repite, se restringe
+                out.append(Hazard("B1", RESTRICT if n_j >= c.cfg["jump_persist"] else CAUTION, (t.n,), t.undirected(), "JUMP",
                                   f"Salto de posición imposible: {d:.1f} km en {dt:.0f} s", {"km": round(d, 1)}))
     by = defaultdict(list)
     for t in c.trains:
@@ -205,8 +222,18 @@ def b2_speed(c: Ctx):
             curve = math.sqrt(2 * c.cfg["decel_service"] * d * 1000) * 3.6
             if curve < limit:
                 limit, why = curve, f"curva de frenado a {c.name(t.sig)} ({d:.1f} km)"
+        if t.kmh > c.cfg["speed_implausible_kmh"]:
+            # velocidad físicamente imposible en la red española: dato erróneo, no exceso. Se avisa como duda de dato (B1), sin frenar.
+            c.persist(("OVERSPEED", t.n), False)
+            out.append(Hazard("B1", CAUTION, (t.n,), seg, "SPEED_IMPLAUSIBLE",
+                              f"Velocidad imposible en el feed ({t.kmh:.0f} km/h): se descarta como dato erróneo",
+                              {"kmh": round(t.kmh)}))
+            continue
         r = t.kmh / limit if limit else 0
         sev = STOP if r > 1.15 else RESTRICT if r > 1.08 else CAUTION if r > 1.03 else NONE
+        n_o = c.persist(("OVERSPEED", t.n), sev != NONE)
+        if sev and n_o < c.cfg["overspeed_persist"]:
+            sev = NONE if sev == CAUTION else CAUTION   # exceso aún no confirmado: solo aviso
         if sev:
             out.append(Hazard("B2", sev, (t.n,), seg, "OVERSPEED",
                               f"{t.kmh:.0f} km/h sobre límite {limit:.0f} ({why})",
@@ -334,6 +361,7 @@ class Engine:
         self.cycle = 0
         self.now_ms = 0
         self.prev = {}
+        self.streak = {}
         self.trains: list[Train] = []
         self.hazards: list[Hazard] = []
         self.state: dict[str, dict] = {}     # B5: orden vigente por tren
@@ -389,7 +417,7 @@ class Engine:
         if was and not self.degraded:
             self.log("SYS", "Feed recuperado")
 
-        ctx = Ctx(self.trains, self.est, self.cfg, now_ms, self.prev)
+        ctx = Ctx(self.trains, self.est, self.cfg, now_ms, self.prev, self.streak)
         ctx.atp, ctx.line_of = self.atp, self.line_of
         for t in self.trains:
             if t.undirected():
@@ -410,6 +438,8 @@ class Engine:
                     self.fault_since[bid] = now_ms
                 self.faults[bid] = repr(ex)
                 self.log("FAULT", f"Barrera {bid} en fallo: {ex!r}")
+        for k in [k for k in self.streak if k not in ctx.seen]:
+            del self.streak[k]
         if self.degraded or self.faults:
             for t in self.trains:
                 hz.append(Hazard("SYS", CAUTION, (t.n,), t.undirected(), "DEGRADED",

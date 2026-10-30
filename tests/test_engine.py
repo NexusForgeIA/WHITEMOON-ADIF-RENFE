@@ -205,3 +205,42 @@ def test_operator_sees_only_contained_situations():
     item = e.operator_queue()[0]
     assert item["level"] == "CRITICA" and "Freno de emergencia ordenado" in item["auto"]
     assert {"B3", "B4"} <= set(item["barriers"])
+
+
+# ---- tolerancia al ruido del feed real (cfg de modo live) ----
+LIVE = {"overspeed_persist": 3, "jump_persist": 2, "stale_s": 120, "stale_restrict_s": 300,
+        "default_max_speed": 310, "speed_implausible_kmh": 340}
+
+
+def test_live_implausible_speed_is_data_error_not_stop():
+    e = eng(cfg=LIVE)
+    e.step([mk("X", 120, 374)], NOW)
+    assert any(h.code == "SPEED_IMPLAUSIBLE" for h in e.hazards)
+    assert cmds(e)["X"] != "STOP"
+
+
+def test_live_overspeed_needs_persistence_then_acts():
+    e = eng(enabled={"B2"}, cfg=LIVE)
+    seen = []
+    for i in range(4):
+        e.step([mk("X", 120, 335, p=2, ts=NOW + i * 15_000)], NOW + i * 15_000)
+        seen.append(cmds(e)["X"])
+    assert seen[0] != "STOP" and seen[1] != "STOP"   # aún sin confirmar
+    assert seen[3] in ("STOP", "RESTRICT")           # confirmado: actúa
+
+
+def test_live_single_gps_jump_only_cautions_but_repeat_restricts():
+    e = eng(cfg=LIVE)
+    e.step([mk("X", 100, 100)], NOW)
+    e.step([mk("X", 150, 100, ts=NOW + 10_000)], NOW + 10_000)
+    assert [h.sev for h in e.hazards if h.code == "JUMP"] == [CAUTION]
+    e.step([mk("X", 200, 100, ts=NOW + 20_000)], NOW + 20_000)
+    assert [h.sev for h in e.hazards if h.code == "JUMP"] == [RESTRICT]
+
+
+def test_live_stale_cautions_then_restricts():
+    e = eng(cfg=LIVE)
+    e.step([mk("X", 120, 100, ts=NOW - 150_000)], NOW)
+    assert [h.sev for h in e.hazards if h.code == "STALE"] == [CAUTION]
+    e.step([mk("X", 120, 100, ts=NOW - 350_000)], NOW + 1000)
+    assert [h.sev for h in e.hazards if h.code == "STALE"] == [RESTRICT]

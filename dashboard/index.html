@@ -30,7 +30,12 @@ header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:var(
 #card .bad{color:var(--stop)}#card .al{margin-top:8px;font-size:12px;color:var(--res)}
 #infnote{position:absolute;right:10px;bottom:52px;max-width:min(420px,60%);font-size:10.5px;line-height:1.35;color:var(--mut);background:#0a1017dd;padding:4px 8px;border-radius:6px;text-align:right}
 #tip{position:absolute;pointer-events:none;background:#06090dee;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px;display:none;white-space:nowrap}
-.legend{position:absolute;left:10px;bottom:8px;display:flex;gap:10px;font-size:11px;color:var(--mut);background:#0a1017cc;padding:3px 8px;border-radius:6px}
+.legend{position:absolute;left:10px;bottom:8px;max-width:calc(100% - 170px);flex-wrap:wrap;display:flex;gap:4px 10px;font-size:11px;color:var(--mut);background:#0a1017cc;padding:3px 8px;border-radius:6px}
+#lg{position:absolute;left:10px;bottom:36px;width:min(330px,calc(100% - 20px));background:#0a1017ee;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11px;line-height:1.35;color:var(--mut)}
+#lg b{color:#d6e1ec}#lg .lr{display:grid;grid-template-columns:12px 78px 1fr;gap:6px;align-items:start;padding:3px 0;border-top:1px solid #16212d}#lg .lr:first-of-type{border-top:0}
+#lg .lr i{width:10px;height:10px;border-radius:50%;margin-top:2px}#lg .lr em{font-style:normal;font-weight:700;color:#d6e1ec}
+#lg .lh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}#lg .lh button{background:none;border:0;color:var(--mut);font-size:15px;cursor:pointer}
+#lgb{background:#0a1017cc;border:1px solid var(--line);color:#d6e1ec;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer}
 .legend s{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;text-decoration:none}
 #right{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}#right .panel{flex:1}
 .item{border:1px solid var(--line);border-radius:6px;padding:8px;margin-bottom:8px;background:#0d151e}
@@ -115,9 +120,15 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 <section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
   <div class="tb"><button id="zi" title="Acercar">+</button><button id="zo" title="Alejar">−</button><button id="zr" title="Ajustar a toda la red">⌂</button>
     <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
-    <select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
+    <button id="lgb" title="Qué significan los colores y las etiquetas del mapa">? Leyenda</button><select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
   <div class="legend"><span><s style="background:var(--ok)"></s>libre</span><span><s style="background:var(--cau)"></s>precaución</span><span><s style="background:var(--res)"></s>restringido</span><span><s style="background:var(--stop)"></s>STOP</span>
     <span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
+  <div id="lg" hidden><div class="lh"><b>Estado de cada tren (orden de RailGuard)</b><button id="lgx" title="Cerrar">×</button></div>
+    <div class="lr"><i style="background:var(--ok)"></i><em>NONE · libre</em><span>Sin orden. Ninguna barrera detecta riesgo; circula normal.</span></div>
+    <div class="lr"><i style="background:var(--cau)"></i><em>CAUTION · precaución</em><span>Aviso leve: dato dudoso o ligero exceso de velocidad (3–8 %). Se avisa a cabina y centro; no frena.</span></div>
+    <div class="lr"><i style="background:var(--res)"></i><em>RESTRICT · restringido</em><span>Riesgo real: limita la velocidad y avisa a cabina por GSM-R (exceso &gt;8 %, poca separación, alcance previsto, salto de GPS repetido).</span></div>
+    <div class="lr"><i style="background:var(--stop)"></i><em>STOP</em><span>Peligro inminente: freno de emergencia y bloque enclavado. Solo lo libera una persona con doble autorización (B7).</span></div>
+    <div style="margin-top:6px;border-top:1px solid #16212d;padding-top:5px"><b>Etiqueta junto al tren</b>: <code>T-9004 B3·B4</code> = barreras que están actuando sobre él (B1 datos · B2 velocidad · B3 separación · B4 predicción · B0 ATP). El mayor nivel manda si varias opinan a la vez.<br><b>▶</b> rumbo del tren · <b>círculo rojo pulsante</b> = STOP activo · <b>aro de 3 km</b> = radio de aviso a tablets.<br>Con el feed real hay "velocidad imposible" y saltos de GPS: se descartan como error de dato (aviso, sin frenar) y un exceso solo actúa si se repite 3 ciclos seguidos.</div></div>
   <div id="acting"></div><div id="infnote" hidden></div><div class="scale" id="scale"></div>
 </section>
 
@@ -286,7 +297,7 @@ cv.addEventListener('pointermove',e=>{
   hover=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10)||null;
   if(hover){tip.style.display='block';tip.style.left=(mx+14>r.width-340?Math.max(4,mx-340):mx+14)+'px';tip.style.top=(my+14)+'px';
     const o=(S.operators||[]).find(x=>x.id===hover.op);
-    tip.replaceChildren(h('b',null,hover.n+' · '+hover.cmd+' · '+hover.kmh+' km/h'),h('div',null,(o?o.name:hover.op)+' · retraso '+hover.ret+' min'),
+    tip.replaceChildren(h('b',null,hover.n+' · '+({NONE:'NONE (libre)',CAUTION:'CAUTION (precaución)',RESTRICT:'RESTRICT (restringido)',STOP:'STOP'}[hover.cmd]||hover.cmd)+' · '+hover.kmh+' km/h'),h('div',null,(o?o.name:hover.op)+' · retraso '+hover.ret+' min'),
       h('div',null,(hover.from||'?')+' → '+(hover.to||'?')+(hover.dest?'  (destino '+hover.dest+')':'')),
       h('div',null,hover.line?hover.line+' · '+hover.signalling:'línea sin catalogar'),
       h('div',null,'ATP a bordo: '+(hover.atp||'sin telemetría')+' · posición: '+(hover.src==='tablet'?'GPS tablet':'feed')))}
@@ -486,6 +497,11 @@ function aux(){
   const pr=(S.proximity||[]).filter(x=>x.level==='RED');const pb=$('pbanner');
   pb.style.display=pr.length?'block':'none';if(pr.length)pb.textContent='⚠ PROXIMIDAD <'+S.proximity_km+' km: '+pr.map(x=>x.a+'↔'+x.b+' '+x.dist_km.toFixed(1)+' km').join(' · ');
 }
+(function(){const b=$('lgb'),g=$('lg'),x=$('lgx');let on=false;try{on=localStorage.getItem('rg_leg')==='1'}catch(e){}
+  const set=v=>{g.hidden=!v;try{localStorage.setItem('rg_leg',v?'1':'0')}catch(e){}};
+  // la primera vez se muestra abierta para que se entienda; luego se recuerda la elección
+  let first=true;try{first=localStorage.getItem('rg_leg')===null}catch(e){}
+  set(first||on);b.onclick=()=>set(g.hidden);x.onclick=()=>set(false)})();
 load();setInterval(load,1000);setInterval(()=>{if(S&&(S.trains.some(t=>t.cmd==='STOP')||(S.proximity||[]).some(x=>x.level==='RED')))draw()},120);
 </script>
 </body>
