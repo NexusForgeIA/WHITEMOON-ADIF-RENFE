@@ -301,7 +301,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 
 <section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
   <div class="tb"><button id="zi" title="Acercar">+</button><button id="zo" title="Alejar">−</button><button id="zr" title="Ajustar a toda la red">⌂</button>
-    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lcl" hidden title="Cercanías: posición de parada, sin velocidad; solo informativo"><input type="checkbox" id="lc" checked>Cercanías <span id="lcn"></span></label><label title="Dibuja el contorno de España y países vecinos"><input type="checkbox" id="lbm" checked>Mapa</label><label title="Resalta las líneas de alta velocidad (AVE) y su nombre"><input type="checkbox" id="lave" checked>AVE</label><label title="Limitaciones temporales de velocidad publicadas por Adif (informativo)"><input type="checkbox" id="llt" checked>LTV <span id="ltn"></span></label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
+    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lcl" hidden title="Cercanías: posición de parada, sin velocidad; solo informativo"><input type="checkbox" id="lc" checked>Cercanías <span id="lcn"></span></label><label title="Dibuja el contorno de España y países vecinos"><input type="checkbox" id="lbm" checked>Mapa</label><label title="Resalta las líneas de alta velocidad (AVE) y su nombre"><input type="checkbox" id="lave" checked>AVE</label><label title="Limitaciones temporales de velocidad publicadas por Adif (informativo)"><input type="checkbox" id="llt" checked>LTV <span id="ltn"></span></label><label title="Cuarteles/comandancias de la Guardia Civil y sedes de Cruz Roja (OpenStreetMap, no oficial). Pulse uno para ver su ficha"><input type="checkbox" id="lem" checked>Emergencias <span id="emn"></span></label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
     <button id="lgb" title="Qué significan los colores y las etiquetas del mapa">? Leyenda</button><select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
   <div class="legend"><span><s style="background:var(--ok)"></s>libre</span><span><s style="background:var(--cau)"></s>precaución</span><span><s style="background:var(--res)"></s>restringido</span><span><s style="background:var(--stop)"></s>STOP</span>
     <span style="color:#e8f1ff">┅ AVE alta velocidad</span><span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
@@ -475,6 +475,14 @@ function draw(){
     LTVD.forEach(i=>{if(i.g)i.g.forEach(pl=>{cx.beginPath();pl.forEach((q,k)=>{const [a,b]=T(q[0]/u,q[1]/u);k?cx.lineTo(a,b):cx.moveTo(a,b)});cx.strokeStyle='rgba(255,159,67,.95)';cx.lineWidth=Math.min(6,2.5+z*.4);cx.stroke()});const [x,y]=T(i.x/u,i.y/u);if(x<-20||y<-20||x>W+20||y>H+20)return;
       cx.fillStyle='rgba(255,159,67,.85)';cx.strokeStyle='#0a1017';cx.lineWidth=1;cx.beginPath();cx.arc(x,y,z>3?5:3,0,6.3);cx.fill();cx.stroke();
       if(z>3){cx.fillStyle='#ffd9a8';cx.fillText(i.kmh,x,y-8)}});cx.restore()}
+  if(EMD&&$('lem')&&$('lem').checked){const u=S.unit_km||1,z=V.z,W=cv.clientWidth,H=cv.clientHeight,big=z>=2;cx.save();
+    EMD.forEach(i=>{const [x,y]=T(i.x/u,i.y/u);i._p=x;i._q=y;if(x<-12||y<-12||x>W+12||y>H+12)return;
+      if(!big){cx.fillStyle=i.k==='gc'?'#2fbf71':'#ff5d6c';cx.globalAlpha=.8;cx.fillRect(x-1.5,y-1.5,3,3);return}
+      cx.globalAlpha=1;const r=big&&z>=4?8:6;
+      if(i.k==='gc'){cx.fillStyle='#1f7a4d';cx.strokeStyle='#d9f7e6';cx.lineWidth=1.4;cx.beginPath();cx.rect(x-r,y-r,2*r,2*r);cx.fill();cx.stroke();cx.fillStyle='#fff';cx.font='700 '+(r+2)+'px system-ui';cx.textAlign='center';cx.fillText('G',x,y+r/2.2)}
+      else{cx.fillStyle='#fff';cx.strokeStyle='#c4121f';cx.lineWidth=1.4;cx.beginPath();cx.arc(x,y,r,0,6.3);cx.fill();cx.stroke();cx.fillStyle='#d3202e';const a=r*.62,b=r*.2;cx.fillRect(x-b,y-a,2*b,2*a);cx.fillRect(x-a,y-b,2*a,2*b)}
+      if(EMS&&EMS.n===i.id){cx.strokeStyle='#ffd24a';cx.lineWidth=2.2;cx.beginPath();cx.arc(x,y,r+5,0,6.3);cx.stroke()}});
+    cx.restore()}
   // líneas de alta velocidad (AVE): halo claro + nombre sobre el trazado
   if($('lave')&&$('lave').checked){
     const AVEID=['bcn-fig'];const seen={};
@@ -553,7 +561,7 @@ cv.addEventListener('pointermove',e=>{
   draw()});
 const endP=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;
   if(drag&&!drag.moved&&e.type==='pointerup'&&S){const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
-    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);sel=t?t.n:null;if(t){$('mt').value=t.n;openCard(t.n)}else closeCard();try{renderCab()}catch(e){}draw()}
+    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);const po=!t&&EMD&&$('lem')&&$('lem').checked?EMD.map(i=>({i,d:Math.hypot((i._p||-99)-mx,(i._q||-99)-my)})).filter(o=>o.d<(V.z>=2?12:6)).sort((a,b)=>a.d-b.d)[0]:null;sel=t?t.n:null;if(t){EMS=null;$('mt').value=t.n;openCard(t.n)}else if(po)openPoi(po.i);else{EMS=null;closeCard()};try{renderCab()}catch(e){}draw()}
   if(!ptrs.size)drag=null};
 
 
@@ -580,6 +588,20 @@ async function loadPunct(){try{const r=await fetch('/api/punct',{cache:'no-store
   $('punsub').textContent=H.length>1?'evolución de hoy · '+H.length+' min':'acumulando evolución…';
   $('pun').title='Umbrales de indemnización de Renfe (retraso actual como aproximación): '+Object.entries(k.thresholds).map(([a,b])=>a+' ≥ '+b+' min').join(' · ')+'. Informativo; no interviene en la seguridad.'}catch(e){$('pun').hidden=true}}
 loadPunct();setInterval(loadPunct,30000);
+let EMD=null,EMS=null;
+function loadEmg(){fetch('/api/emergencia',{cache:'no-store'}).then(r=>r.json()).then(j=>{EMD=j.items&&j.items.length?j.items:null;const e=$('emn');if(e)e.textContent=EMD?'('+EMD.length+')':'';if(typeof draw==='function')draw()}).catch(()=>{})}
+setTimeout(loadEmg,4000);setInterval(loadEmg,300000);
+const kmTo=(a,b)=>{const u=S.unit_km||1;return Math.hypot(a.x*u-b.x,a.y*u-b.y)};
+const fkm=d=>(d<10?d.toFixed(1):Math.round(d)).toString().replace('.',',')+' km';
+function nearEmg(t,k){if(!EMD||!t)return null;let best=null,bd=1e9;EMD.forEach(i=>{if(i.k!==k)return;const d=kmTo(t,i);if(d<bd){bd=d;best=i}});return best?{i:best,d:bd}:null}
+function openPoi(i){EMS={n:i.id};cardN=null;clearInterval(cardTimer);
+  const row=(k,v)=>v?h('div','r',null,[h('span',null,k),h('span',null,String(v))]):null;
+  const tn=(S.trains||[]).filter(visible).map(t=>({t,d:kmTo(t,i)})).sort((a,b)=>a.d-b.d)[0];
+  const kids=[h('button','x','×'),h('h3',null,i.n),h('div','sub',i.k==='gc'?'Guardia Civil':'Cruz Roja')];kids[0].onclick=()=>{EMS=null;card.hidden=true;draw()};
+  [row('Dirección',i.a),row('Teléfono',i.t),tn?row('Tren más cercano',tn.t.n+' · '+fkm(tn.d)):null].forEach(r=>r&&kids.push(r));
+  if(i.w){const a=h('a',null,'Sitio web');a.href=/^https?:\/\//.test(i.w)?i.w:'https://'+i.w;a.target='_blank';a.rel='noopener noreferrer';a.style.cssText='display:block;margin-top:6px;color:#8cc8ff';kids.push(a)}
+  kids.push(h('div','al','Datos de OpenStreetMap (no oficiales; pueden faltar o estar desfasados). Solo informativo: RailGuard no avisa ni moviliza a nadie. En una emergencia, 112.'));
+  card.replaceChildren(...kids);card.style.borderLeftColor=i.k==='gc'?'#1f7a4d':'#d3202e';card.hidden=false;draw()}
 let LTVD=null,LTVI={};
 function loadLtv(){fetch('/api/ltv',{cache:'no-store'}).then(r=>r.json()).then(j=>{LTVD=j.items&&j.items.length?j.items:null;LTVI=j;const e=$('ltn');if(e)e.textContent=LTVD?'('+LTVD.length+')':'';if(typeof draw==='function')draw()}).catch(()=>{})}
 loadLtv();setInterval(loadLtv,600000);
@@ -978,7 +1000,8 @@ function renderCard(d,t){
    d.next?row('Llega a '+d.next.name,(d.next.est||d.next.sched)):null,
    row('Estado de seguridad',{NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[d.cmd]||d.cmd,d.cmd==='STOP'),
    row('Línea',d.line?d.line+(d.signalling?' · '+d.signalling:''):null),row('ATP a bordo',d.atp||'sin telemetría'),
-   row('Operador',d.operator),row('Posición',d.src==='tablet'?'GPS tablet':'feed')].forEach(r=>r&&kids.push(r));
+   row('Operador',d.operator),row('Posición',d.src==='tablet'?'GPS tablet':'feed'),
+   ...['gc','cr'].map(k=>{const n=nearEmg(t,k);return n?row((k==='gc'?'Guardia Civil':'Cruz Roja')+' más cercana',n.i.n+' · '+fkm(n.d)):null})].forEach(r=>r&&kids.push(r));
   (d.alerts||[]).forEach(a=>kids.push(h('div','al',a.barrier+' · '+a.msg)));
   card.replaceChildren(...kids);card.style.borderLeftColor=COL[d.cmd]||'var(--acc)';card.hidden=false;
 }
@@ -989,7 +1012,7 @@ async function loadCard(){
   if(cardN===d.n)renderCard(d,t);
 }
 function openCard(n){cardN=n;loadCard();clearInterval(cardTimer);cardTimer=setInterval(loadCard,10000)}
-function closeCard(){cardN=null;card.hidden=true;clearInterval(cardTimer)}
+function closeCard(){cardN=null;EMS=null;card.hidden=true;clearInterval(cardTimer)}
 cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
 cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect();zoomAt(2,e.clientX-r.left,e.clientY-r.top)});
 $('zi').onclick=()=>base&&zoomAt(1.5,base.W/2,base.H/2);$('zo').onclick=()=>base&&zoomAt(1/1.5,base.W/2,base.H/2);

@@ -21,6 +21,7 @@ from drivers import Drivers
 from engine import Engine
 from infra import Infra
 from ltv import Ltv
+from emergency import Emergency
 import punctuality
 import systems
 import forecast
@@ -679,6 +680,7 @@ STATIC = {"/": ("index.html", "text/html"), "/index.html": ("index.html", "text/
 
 INFRA = None
 LTV = None
+EMG = None
 PUNCT = punctuality.History(os.path.join(ROOT, "data", "punct_history.json"))
 
 
@@ -731,6 +733,8 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/punct":
             k = punctuality.compute((t.n, t.ret, t.cat) for t in APP.engine.trains)
             return self._send(200, {**k, "history": PUNCT.series(), "source": "Feed GTFS-RT de Renfe (Larga Distancia, Avant, AVE); umbrales del compromiso de puntualidad de Renfe"})
+        if path == "/api/emergencia":
+            return self._send(200, EMG.api() if EMG else {"ready": False, "items": []})
         if path == "/api/ltv":
             return self._send(200, LTV.api() if LTV else {"ready": False, "items": []})
         if path == "/api/infra":
@@ -799,7 +803,7 @@ class H(BaseHTTPRequestHandler):
 
 
 def main():
-    global APP, INFRA, LTV
+    global APP, INFRA, LTV, EMG
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", help="'renfe' (feed oficial) o URL con el esquema de /api/estado")
     ap.add_argument("--gtfs", help="google_transit.zip de Renfe (ruta o URL); necesario para parada anterior, destino y producto")
@@ -815,6 +819,9 @@ def main():
     if a.source == "renfe" and os.environ.get("RG_LTV", "1") != "0":
         LTV = Ltv(os.path.join(ROOT, "data", "ltv_cache.json"))
         LTV.start()
+    if a.source == "renfe" and os.environ.get("RG_EMG", "1") != "0":
+        EMG = Emergency(os.path.join(ROOT, "data", "emergency_cache.json"))
+        threading.Timer(180, EMG.start).start()     # tras la carga inicial de infraestructura, para no saturar Overpass
 
     def loop(fn, period):
         while True:
