@@ -151,7 +151,8 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 .chip.bad{border-color:var(--stop);color:#ff9aa4;text-decoration:line-through}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12384f;border:1px solid var(--acc);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;z-index:99;max-width:min(560px,90vw);display:none}
 @media(max-width:1100px){body{height:auto;grid-template-columns:1fr;grid-template-rows:auto}#chain{grid-row:auto}#mapwrap{height:max(560px,78vh)}#ovl{max-height:34%}#log{grid-column:1}#cabins{grid-column:1}}
-#toasts{position:fixed;top:64px;right:14px;z-index:60;display:flex;flex-direction:column;gap:8px;max-width:360px}
+#toasts{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column-reverse;gap:6px;width:min(360px,90vw);pointer-events:none}
+.toast{pointer-events:auto}
 .toast{background:#142130;border:1px solid #3a4a5c;border-left:6px solid #d9b84a;border-radius:8px;padding:9px 12px;color:#e8eef5;font-size:13px;cursor:pointer;box-shadow:0 6px 18px #0008}
 .toast.RESTRICT{border-left-color:#e07b2f}.toast.STOP{border-left-color:#e04040}.toast.SYS{border-left-color:#8a6de0}
 .toast b{display:block;font-size:12px;letter-spacing:.04em;margin-bottom:2px}
@@ -491,12 +492,12 @@ function renderDelays(){
     r.onclick=()=>{if(FULL)setFull(false);sel=t.n;$('mt').value=t.n;openCard(t.n);draw()};return r}))}
 
 // ── Notificaciones locales (en pantalla, sonido y navegador). Nada sale del navegador: no se envían correos ni mensajes. ──
-let NTF=false,ntSeen=null,ntSys=null;
+let NTF=false,ntSeen=null,ntSys=null,ntLast={},ntBeep=0;
 try{NTF=localStorage.getItem('rg_ntf')==='1'}catch(e){}
 function ntLabel(){const b=$('ntb');if(b)b.textContent='🔔 Avisos: '+(NTF?'sí':'no')}
 function beep(sev){try{const A=window.__ac||(window.__ac=new (window.AudioContext||window.webkitAudioContext)());const o=A.createOscillator(),g=A.createGain();o.frequency.value=sev==='STOP'?880:660;g.gain.value=.08;o.connect(g);g.connect(A.destination);o.start();o.stop(A.currentTime+(sev==='STOP'?.5:.25))}catch(e){}}
 function toast(sev,title,msg,train){const bx=$('toasts');if(!bx)return;const d=h('div','toast '+sev,null,[h('b',null,title),document.createTextNode(msg)]);
-  d.onclick=()=>{d.remove();if(train){sel=train;$('mt').value=train;openCard(train);draw()}};bx.prepend(d);while(bx.children.length>4)bx.lastChild.remove();setTimeout(()=>d.remove(),sev==='CAUTION'?7000:15000)}
+  d.onclick=()=>{d.remove();if(train){sel=train;$('mt').value=train;openCard(train);draw()}};bx.append(d);while(bx.children.length>3)bx.firstChild.remove();setTimeout(()=>d.remove(),sev==='CAUTION'?6000:10000)}
 function osNotify(title,msg){try{if(window.Notification&&Notification.permission==='granted')new Notification(title,{body:msg,tag:title+msg})}catch(e){}}
 function notifyCheck(){
   const hz=S.hazards||[],cur=new Set(hz.map(x=>x.barrier+'|'+x.code+'|'+x.trains.join(',')));
@@ -505,9 +506,13 @@ function notifyCheck(){
   document.title=(bad?'('+bad+') ':'')+'RailGuard';
   if(ntSeen===null){ntSeen=cur;ntSys=sysNow;return}   // primera carga: no se avisa de lo que ya estaba
   if(NTF){
-    hz.filter(x=>!ntSeen.has(x.barrier+'|'+x.code+'|'+x.trains.join(','))).sort((a,b)=>(SEVN[b.sev]||0)-(SEVN[a.sev]||0)).slice(0,4).forEach(x=>{
-      const t='['+x.barrier+'] '+x.sev+' · tren '+x.trains.join(', ');toast(x.sev,t,x.msg,x.trains[0]);
-      if(x.sev!=='CAUTION'){beep(x.sev);osNotify(t,x.msg)}});
+    const now=Date.now(),fresh=hz.filter(x=>{const k=x.barrier+'|'+x.code+'|'+x.trains.join(',');return !ntSeen.has(k)&&!(ntLast[k]&&now-ntLast[k]<600000)})
+      .sort((a,b)=>(SEVN[b.sev]||0)-(SEVN[a.sev]||0));
+    fresh.forEach(x=>{ntLast[x.barrier+'|'+x.code+'|'+x.trains.join(',')]=now});   // mismo aviso: no se repite en 10 min
+    const show=fresh.slice(0,2);
+    show.forEach(x=>{const t='['+x.barrier+'] '+x.sev+' · tren '+x.trains.join(', ');toast(x.sev,t,x.msg,x.trains[0]);if(x.sev!=='CAUTION')osNotify(t,x.msg)});
+    if(fresh.length>2)toast(fresh[2].sev,'+'+(fresh.length-2)+' avisos nuevos','Abra «Ver todo» para la lista completa');
+    if(fresh.some(x=>x.sev!=='CAUTION')&&now-ntBeep>5000){ntBeep=now;beep(fresh.some(x=>x.sev==='STOP')?'STOP':'RESTRICT')}
     if(sysNow!==ntSys&&sysNow!=='|'){toast('SYS','SISTEMA',(S.degraded||'Barrera en fallo: '+(S.barriers||[]).filter(b=>b.status==='FAULT').map(b=>b.id).join(', ')));beep('RESTRICT');osNotify('RailGuard · sistema',S.degraded||'Barrera en fallo')}
   }
   ntSeen=cur;ntSys=sysNow}
