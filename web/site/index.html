@@ -82,7 +82,7 @@ button:hover:not(:disabled){border-color:var(--acc)}button:disabled{opacity:.4;c
 table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;border-bottom:1px solid #182533;vertical-align:top}
 .sev{font-weight:700;font-size:10px}.sev.STOP{color:var(--stop)}.sev.RESTRICT{color:var(--res)}.sev.CAUTION{color:var(--cau)}
 #log{grid-column:2;font:11.5px ui-monospace,Menlo,Consolas,monospace}
-#log div{padding:1px 0;border-bottom:1px solid #151f2b}#log .k{display:inline-block;width:78px;color:var(--mut)}
+#log div{padding:1px 0;border-bottom:1px solid #151f2b}#log .k{display:inline-block;width:96px;color:var(--mut)}
 #log .HAZARD{color:var(--res)}#log .ACTUATE{color:var(--stop)}#log .RELEASE,#log .CLEAR,#log .REARM{color:var(--ok)}#log .FAULT,#log .SYS{color:var(--stop)}
 .ctl{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.ctl button.on{background:#3a2a10;border-color:var(--cau);color:var(--cau)}
 .man{display:flex;gap:6px;margin-top:8px}.man input{flex:1;background:#0a1017;border:1px solid var(--line);color:var(--tx);border-radius:5px;padding:4px 7px}
@@ -411,11 +411,17 @@ function render(){
   // peligros
   renderHazards();renderActing();
   // log
-  const lg=$('log');lg.replaceChildren(h('h2',null,'Registro de eventos (auditoría: data/events.jsonl)'),...S.events.slice(0,FULL?60:7).map(e=>h('div',e.kind,null,[h('span','k',fmt(e.t)),h('span','k',e.kind),document.createTextNode(e.msg)])),...(FULL?[]:[moreBtn('Ver el registro completo ›',logModal)]));
+  const lg=$('log');lg.replaceChildren(h('h2',null,'Registro de eventos (auditoría: data/events.jsonl)'),...S.events.slice(0,FULL?60:7).map(e=>h('div',e.kind,null,[h('span','k',fmt(e.t)),h('span','k',evk(e)),document.createTextNode(evm(e))])),...(FULL?[]:[moreBtn('Ver el registro completo ›',logModal)]));
   aux();draw();try{enhance()}catch(e){console.error(e)}
 }
 
 // ---- mapa ----
+const EVK={HAZARD:'PELIGRO',ACTUATE:'ACTUACIÓN',CLEAR:'DESPEJADO',RELEASE:'LIBERACIÓN',SYS:'SISTEMA',FAULT:'FALLO',PROX:'PROXIMIDAD',GUARD:'B7 RECHAZA',REARM:'REARME',MANUAL:'MANUAL',ACK:'RECONOCIDO'};
+const EVC={ATP_BRAKING:'frenado ATP',ATP_DISCREPANCY:'discrepancia con ATP',ATP_ISOLATED:'ATP aislado',ATP_STALE:'telemetría ATP caducada',CONVERGE:'convergencia de trenes',DEGRADED:'sistema degradado',DUP_POS:'posición duplicada',FLEET_DEVIATION:'desviación respecto a la flota',FLEET_OVER_REF:'velocidad sobre la de la flota',HEADON:'trenes de frente',JUMP:'salto de posición',OVERSPEED:'exceso de velocidad',SPACING:'distancia insuficiente',SPEED_IMPLAUSIBLE:'velocidad o salto imposible',STALE:'posición caducada',TTC:'tiempo hasta colisión bajo'};
+const evk=e=>EVK[e.kind]||e.kind;
+function evm(e){const m=e.msg||'',x=m.match(/^Condición despejada: ([^|]+)\|([A-Z_]+)\|([^|]*)/);
+  if(x)return 'Despejado ['+x[1]+'] '+(x[3]&&!x[3].startsWith('(')?x[3]+': ':'')+(EVC[x[2]]||x[2]);
+  return m.replace(/ CAUTION /,' PRECAUCIÓN ').replace(/ RESTRICT /,' RESTRINGIDO ').replace(/ a CAUTION/,' a PRECAUCIÓN').replace(/ a RESTRICT/,' a RESTRINGIDO').replace(/ a NONE/,' a LIBRE')}
 const cv=$('cv'),cx=cv.getContext('2d'),tip=$('tip');
 let V={z:1,px:0,py:0},base=null,sel=null,opf='',drag=null,ptrs=new Map(),pinch0=0;
 const SIGCOL=sg=>!sg?'#8ea0b6':sg.includes('LZB')?'#ff9f43':sg.startsWith('ETCS')?'#4aa8ff':'#8ea0b6';
@@ -753,7 +759,7 @@ function enhance(){
   const bl=[...document.querySelectorAll('#bars .bar')];bl.forEach((e,i)=>{const x=i<S.barriers.length?S.barriers[i]:{id:'B6',name:'Operador',desc:'',status:'',total:0};e.onclick=()=>barrierModal(x)});
   const hzs=[...document.querySelectorAll('#hz .hzc')],gs=groupHazards();hzs.forEach((e,i)=>{const g=gs[i];if(!g||e.dataset.e)return;e.dataset.e=1;e.onclick=()=>focusTrain(g.n);
     const a=h('div','acts');const b1=h('button',null,'📍 Ver en mapa');b1.onclick=ev=>{ev.stopPropagation();focusTrain(g.n)};const b2=h('button','g','▣ Vista de tren');b2.onclick=ev=>{ev.stopPropagation();openTV(g.n)};a.append(b1,b2);e.appendChild(a)});
-  const ev=[...document.querySelectorAll('#log>div')];(S.events||[]).forEach((e,i)=>{const row=ev[i];if(!row)return;const m=(e.msg||'').match(/\b(T-\d+|\d{5})\b/g)||[];const tr=m.find(n=>(S.trains||[]).some(t=>t.n===n));if(tr){row.title='Pulse para ver el tren '+tr;row.onclick=()=>focusTrain(tr)}else row.style.cursor='default'});
+  const ev=[...document.querySelectorAll('#log>div')];(S.events||[]).forEach((e,i)=>{const row=ev[i];if(!row)return;const m=evm(e).match(/\b(T-\d+|\d{5})\b/g)||[];const tr=m.find(n=>(S.trains||[]).some(t=>t.n===n));if(tr){row.title='Pulse para ver el tren '+tr;row.onclick=()=>focusTrain(tr)}else row.style.cursor='default'});
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDM()});
 
@@ -774,7 +780,7 @@ function moreBtn(txt,fn){const b=h('button','more',txt);b.onclick=ev=>{ev.stopPr
 function kpiDelay(){const rows=delayList().map(t=>({main:t.n,sev:t.ret>=30?'RESTRICT':'CAUTION',text:(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'→ '+t.to:''))+(t.dest?' · destino '+t.dest:'')+(t.eta?' · llega ~'+hhmm(t.eta):'')+' · +'+fmtDelay(t.ret)}));
   showDM('Trenes con retraso ('+rows.length+')','Retraso ≥ '+DLY_MIN+' min según el feed de Renfe, solo viajes en curso, por llegada estimada más cercana. Pulse uno para verlo en el mapa.',rows)}
 function logModal(){const rows=(S.events||[]).map(e=>{const m=(e.msg||'').match(/\b(T-\d+|\d{5})\b/g)||[];const tr=m.find(n=>(S.trains||[]).some(t=>t.n===n));
-  return{main:fmt(e.t),sev:e.kind==='HAZARD'?'RESTRICT':e.kind==='CLEAR'||e.kind==='RELEASE'?'NONE':'CAUTION',text:e.kind+' · '+e.msg,go:tr?'ver tren ›':'',fn:tr?()=>focusTrain(tr):()=>{}}});
+  return{main:fmt(e.t),sev:e.kind==='HAZARD'?'RESTRICT':e.kind==='CLEAR'||e.kind==='RELEASE'?'NONE':'CAUTION',text:evk(e)+' · '+evm(e),go:tr?'ver tren ›':'',fn:tr?()=>focusTrain(tr):()=>{}}});
   showDM('Registro de eventos','Auditoría (data/events.jsonl). Los más recientes primero.',rows)}
 let fcTab=false,avTab=false;
 let FULL=false;
