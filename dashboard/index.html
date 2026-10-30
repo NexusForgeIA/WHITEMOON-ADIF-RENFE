@@ -52,7 +52,10 @@ header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:var(
 #fcn{background:#7c5cff;color:#fff;border-radius:9px;padding:0 6px;font-size:10px;display:none}#fcn.on{display:inline}
 .fci{border:1px solid #3b2f78;border-left:3px solid #7c5cff;border-radius:6px;padding:7px 8px;margin-bottom:8px;background:#0f0d24}.fci.soon{border-left-color:#ff9f43}
 .fci .t{display:flex;gap:8px;align-items:baseline;font-size:11px}.fci .t em{font-style:normal;font-weight:700;color:#b9a8ff}.fci.soon .t em{color:#ffb86b}.fci .t span{margin-left:auto;font-weight:700;color:#d6e1ec}
-.fci .m{margin-top:3px}.fci .th{margin-top:3px;color:var(--mut);font-size:11px}.fci .sg2{font-size:10px;color:var(--mut);margin-top:2px}
+#dly{border-color:#7a5a1d}#dlsum{font-size:11px;color:var(--mut);margin-bottom:6px}#dll{max-height:230px;overflow:auto}
+.dr{display:flex;gap:8px;align-items:baseline;padding:4px 6px;margin-bottom:3px;border-left:3px solid var(--cau);background:#13171d;border-radius:4px;cursor:pointer;font-size:12px}
+.dr:hover{background:#1b222b}.dr b{min-width:70px}.dr .w{color:var(--mut);font-size:10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dr .d{margin-left:auto;font-weight:700}
+.dr.m2{border-left-color:var(--res)}.dr.m3{border-left-color:var(--stop)}.fci .m{margin-top:3px}.fci .th{margin-top:3px;color:var(--mut);font-size:11px}.fci .sg2{font-size:10px;color:var(--mut);margin-top:2px}
 #fcnote{font-size:10.5px;color:var(--mut);margin:0 0 8px;line-height:1.35}
 .legend s{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;text-decoration:none}
 #right{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}#right .panel{flex:1}
@@ -156,6 +159,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 </section>
 
 <aside id="right">
+  <section class="panel" id="dly"><h2 class="tabs"><button class="on" style="cursor:default">⏱ Trenes con retraso <span id="dln"></span></button></h2><div id="dlsum"></div><div id="dll"></div></section>
   <section class="panel"><h2>Cola del operador · B6 <span style="text-transform:none;letter-spacing:0">(solo situaciones ya contenidas)</span></h2><div id="queue"></div>
     <div class="man"><input id="mt" placeholder="Nº de tren (restricción manual)"><button id="mb">Restringir</button><button id="mr">Retirar</button></div></section>
   <section class="panel"><h2 class="tabs"><button id="tabhz" class="on">Peligros activos</button><button id="tabfc" title="Previsión de posibles conflictos en los próximos 20 min (informativa)">🔮 Previsión <span id="fcn"></span></button><button id="tabav" title="Avisos oficiales de Renfe Cercanías/Rodalies (informativo)" hidden>🚆 Avisos <span id="avn"></span></button></h2><div id="hz"></div><div id="fc" hidden></div><div id="av" hidden></div></section>
@@ -218,7 +222,7 @@ function render(){
   $('mode').textContent=S.mode==='sim'?'SIMULACIÓN sobre captura real':'EN VIVO';$('mode').className='pill '+S.mode;
   $('clock').textContent=fmt(S.now)+' · ciclo '+S.cycle;
   const b=$('banner');b.style.display=S.degraded?'block':'none';if(S.degraded)b.textContent='⚠ '+S.degraded;
-  renderOuts(S.outages||[]);renderForecast();
+  renderOuts(S.outages||[]);renderForecast();renderDelays();
   const k=S.kpi,ks=$('kpis');ks.replaceChildren(...[['trains','trenes'],['clear','libres'],['caution','precaución'],['restrict','restringidos'],['stop','STOP']].map(([a,l])=>h('div','kpi',null,[h('b',null,k[a]),h('small',null,l)])));
   // cadena
   const bars=$('bars');bars.replaceChildren();
@@ -435,6 +439,14 @@ function renderHazards(){
     hz.appendChild(h('div','hzc '+sev,null,[h('div','t',null,[h('em',null,sev),h('span',null,'Tren '+g.n)]),h('div','m',main.msg+(g.hz.length>1?'  (+'+(g.hz.length-1)+' más)':'')),chainChips(g,t),
       h('div','a',null,[h('b',null,'Aplicado: '),document.createTextNode(ACTION[t?t.cmd:'NONE'])])]))});
   if(gs.length>30)hz.appendChild(h('div','empty','… y '+(gs.length-30)+' trenes más con avisos.'))}
+const DLY_MIN=5;   // umbral de «retraso» (min): criterio habitual de puntualidad; ajustable
+function renderDelays(){
+  const all=S.trains||[],L=all.filter(t=>(t.ret||0)>=DLY_MIN).sort((a,b)=>b.ret-a.ret),n=L.length;
+  $('dln').textContent='('+n+')';
+  const avg=n?Math.round(L.reduce((s,t)=>s+t.ret,0)/n):0;
+  $('dlsum').textContent=n?n+' de '+all.length+' trenes con ≥ '+DLY_MIN+' min · máximo '+fmtDelay(L[0].ret)+' · media '+avg+' min':'Ningún tren con ≥ '+DLY_MIN+' min de retraso ('+all.length+' trenes). Retraso según el feed de Renfe; los trenes sin dato cuentan como a tiempo.';
+  $('dll').replaceChildren(...L.map(t=>{const r=h('div','dr'+(t.ret>=30?' m3':t.ret>=15?' m2':''),null,[h('b',null,t.n),h('span','w',(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'hacia '+t.to:''))+(t.dest?' · destino '+t.dest:'')),h('span','d','+'+fmtDelay(t.ret))]);
+    r.onclick=()=>{sel=t.n;$('mt').value=t.n;openCard(t.n);draw()};return r}))}
 let fcTab=false,avTab=false;
 function renderForecast(){
   const F=S.forecast||{items:[],total:0},n=F.items.length,b=$('fcn');b.textContent=F.total||n;b.className=(F.total||n)?'on':'';
