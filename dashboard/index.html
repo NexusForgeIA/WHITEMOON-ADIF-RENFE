@@ -104,6 +104,27 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 #acting div.am{background:#3a2a10ee;border-color:var(--res)}#acting b{letter-spacing:.03em}
 .sysb{font-weight:700;color:var(--acc);border-color:var(--acc)}
 #sysov{position:fixed;inset:0;z-index:50;background:#070b10;overflow:auto;padding:18px max(18px,env(safe-area-inset-left,0px))}
+
+#tvov{position:fixed;inset:0;z-index:52;background:#e9eff5;color:#0f2233;overflow:auto;padding:14px max(14px,env(safe-area-inset-left,0px));font-family:system-ui,sans-serif}#tvov[hidden]{display:none}
+#tvov .w{max-width:1180px;margin:0 auto;display:grid;gap:12px}
+#tvov .hd{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border-radius:14px;padding:12px 16px;box-shadow:0 1px 4px #0002}
+#tvov .hd h1{margin:0;font-size:22px}#tvov .hd small{display:block;color:#5b6f82;font-size:13px}
+#tvov .st{padding:8px 14px;border-radius:10px;font-weight:700;border:1px solid}#tvov .st small{font-weight:400;color:inherit;opacity:.8}
+#tvov .st.NONE{background:#e5f7ec;border-color:#9bd9b3;color:#14703a}#tvov .st.CAUTION{background:#fff7dc;border-color:#ecd277;color:#8a6a00}#tvov .st.RESTRICT{background:#ffeedd;border-color:#f0b27a;color:#a14a00}#tvov .st.STOP{background:#ffe3e3;border-color:#f08a8a;color:#a60b0b}
+#tvov .hd .sp{flex:1}#tvov .hd button{border:0;background:#0f2233;color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;cursor:pointer}
+#tvov .tiles{display:grid;grid-template-columns:1.3fr 1fr 1.2fr 1.2fr 1fr;gap:12px}
+#tvov .tl{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 4px #0002;min-width:0}#tvov .tl h4{margin:0 0 6px;font-size:13px;color:#44586b}
+#tvov .big{font-size:26px;font-weight:800}#tvov .sub{color:#5b6f82;font-size:12px;margin-top:2px}
+#tvov .bad{color:#b3261e}#tvov .ok{color:#14703a}
+#tvov .strip{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 4px #0002}#tvov .strip h4{margin:0 0 8px;font-size:14px}
+#tvov .tr5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+#tvov .tc{border:1px solid #d3dde7;border-radius:10px;padding:8px 10px;background:#f8fafc;font-size:12px;min-width:0}#tvov .tc b{font-size:14px}
+#tvov .tc.me{border:2px solid #1d6fd6;background:#eaf3ff}#tvov .tc.e{border-style:dashed;color:#8a9bab;text-align:center;display:flex;align-items:center;justify-content:center}
+#tvov .tc .dk{font-weight:700;margin-top:4px}
+#tvov .bt{display:grid;grid-template-columns:1fr 330px;gap:12px}#tvov .mp{background:#fff;border-radius:14px;padding:8px;box-shadow:0 1px 4px #0002}
+#tvov .ib{display:grid;gap:12px;align-content:start}#tvov .r{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #e3eaf1;padding:5px 0;font-size:13px}#tvov .r span:first-child{color:#5b6f82}#tvov .r span:last-child{font-weight:600;text-align:right}
+#tvov .nt{font-size:11px;color:#5b6f82;padding:0 4px}
+@media(max-width:900px){#tvov .tiles{grid-template-columns:1fr 1fr}#tvov .tr5{grid-template-columns:repeat(2,1fr)}#tvov .bt{grid-template-columns:1fr}}
 #aboutov{position:fixed;inset:0;z-index:51;background:#070b10;overflow:auto;padding:18px max(18px,env(safe-area-inset-left,0px))}#aboutov[hidden]{display:none}
 #aboutov .ab{max-width:980px;margin:0 auto}#aboutov h1{font-size:22px;margin:6px 0}#aboutov h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:18px 0 6px}
 #aboutov table{width:100%;border-collapse:collapse;font-size:12.5px}#aboutov td,#aboutov th{border-top:1px solid #16212d;padding:6px 8px;text-align:left;vertical-align:top}#aboutov th{color:var(--mut);font-weight:600}
@@ -158,6 +179,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
   <div id="ovl"><div id="acting"></div><div id="outs"></div></div><div id="infnote" hidden></div><div class="scale" id="scale"></div>
 </section>
 
+<div id="tvov" hidden></div>
 <aside id="right">
   <section class="panel" id="dly"><h2 class="tabs"><button class="on" style="cursor:default">⏱ Trenes con retraso <span id="dln"></span></button></h2><div id="dlsum"></div><div id="dll"></div></section>
   <section class="panel"><h2>Cola del operador · B6 <span style="text-transform:none;letter-spacing:0">(solo situaciones ya contenidas)</span></h2><div id="queue"></div>
@@ -222,7 +244,7 @@ function render(){
   $('mode').textContent=S.mode==='sim'?'SIMULACIÓN sobre captura real':'EN VIVO';$('mode').className='pill '+S.mode;
   $('clock').textContent=fmt(S.now)+' · ciclo '+S.cycle;
   const b=$('banner');b.style.display=S.degraded?'block':'none';if(S.degraded)b.textContent='⚠ '+S.degraded;
-  renderOuts(S.outages||[]);renderForecast();renderDelays();
+  renderOuts(S.outages||[]);renderForecast();renderDelays();renderTV();
   const k=S.kpi,ks=$('kpis');ks.replaceChildren(...[['trains','trenes'],['clear','libres'],['caution','precaución'],['restrict','restringidos'],['stop','STOP']].map(([a,l])=>h('div','kpi',null,[h('b',null,k[a]),h('small',null,l)])));
   // cadena
   const bars=$('bars');bars.replaceChildren();
@@ -542,6 +564,56 @@ $('abb').onclick=openAbout;addEventListener('keydown',e=>{if(e.key==='Escape'&&!
 function openSys(){$('sysov').hidden=false;document.body.style.overflow='hidden';loadSys();clearInterval(sysTimer);sysTimer=setInterval(loadSys,2000)}
 function closeSys(){$('sysov').hidden=true;document.body.style.overflow='';clearInterval(sysTimer)}
 $('sysb').onclick=openSys;addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('sysov').hidden)closeSys()});
+
+// ---- Vista de tren: panel visual y claro de un tren (solo datos reales del supervisor) ----
+let tvN=null,tvD=null,tvT=0;
+const TVCOL={NONE:'#1fa35a',CAUTION:'#e0a800',RESTRICT:'#e8710a',STOP:'#d32f2f'},TVTXT={NONE:'Operación normal',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP · freno aplicado'};
+function tvGauge(v,max){const R=70,C=Math.PI*R,f=Math.max(0,Math.min(1,v/(max||300))),col=f>1?'#d32f2f':v>max*.92?'#e0a800':'#1fa35a';
+  return '<svg viewBox="0 0 180 105" width="100%" style="max-width:210px"><path d="M20 90A70 70 0 0 1 160 90" fill="none" stroke="#dbe4ec" stroke-width="14" stroke-linecap="round"/><path d="M20 90A70 70 0 0 1 160 90" fill="none" stroke="'+col+'" stroke-width="14" stroke-linecap="round" stroke-dasharray="'+(C*f)+' '+C+'"/><text x="90" y="82" text-anchor="middle" font-size="34" font-weight="800" fill="#0f2233">'+v+'</text><text x="90" y="100" text-anchor="middle" font-size="11" fill="#5b6f82">km/h</text></svg>'}
+function tvMini(t,near){const W=640,H=330,P=30;let xs=near.map(n=>n.x).concat(t.x),ys=near.map(n=>n.y).concat(t.y);
+  const k=S.unit_km;let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const span=Math.max((x1-x0)*k,(y1-y0)*k,40),sc=(Math.min(W,H)-2*P)/span*1;
+  const cx=(x0+x1)/2,cy=(y0+y1)/2,X=x=>W/2+(x-cx)*k*sc,Y=y=>H/2+(y-cy)*k*sc;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="background:#f2f6fa;border-radius:10px">';
+  (S.stations||[]).forEach(st=>{const x=X(st.x),y=Y(st.y);if(x<8||y<8||x>W-8||y>H-8)return;s+='<circle cx="'+x+'" cy="'+y+'" r="3" fill="#8a9bab"/><text x="'+(x+6)+'" y="'+(y+4)+'" font-size="10" fill="#44586b">'+st.n.replace(/&/g,'')+'</text>'});
+  near.forEach(n=>{s+='<circle cx="'+X(n.x)+'" cy="'+Y(n.y)+'" r="6" fill="'+(n.cmd==='NONE'?'#455a6e':TVCOL[n.cmd])+'" stroke="#fff" stroke-width="2"/><text x="'+(X(n.x)+9)+'" y="'+(Y(n.y)-8)+'" font-size="11" font-weight="700" fill="#0f2233">'+n.n+'</text>'});
+  s+='<circle cx="'+X(t.x)+'" cy="'+Y(t.y)+'" r="9" fill="#1d6fd6" stroke="#fff" stroke-width="3"/><text x="'+(X(t.x)+12)+'" y="'+(Y(t.y)+4)+'" font-size="12" font-weight="800" fill="#1d6fd6">'+t.n+' (este tren)</text></svg>';return s}
+function renderTV(){
+  const ov=$('tvov');if(ov.hidden||!S)return;const t=S.trains.find(x=>x.n===tvN);
+  if(!t){ov.replaceChildren(h('div','w',null,[h('div','hd',null,[h('h1',null,'Tren '+tvN+' sin datos'),h('div','sp'),(()=>{const b=h('button',null,'Cerrar');b.onclick=closeTV;return b})()])]));return}
+  const k=S.unit_km,d=tvD&&tvD.n===tvN?tvD:{};
+  const dist=o=>Math.hypot(o.x-t.x,o.y-t.y)*k;
+  let hx=t.hx,hy=t.hy;if(hx==null){const st=(S.stations||[]).find(s=>s.n===t.to);if(st){const m=Math.hypot(st.x-t.x,st.y-t.y)||1;hx=(st.x-t.x)/m;hy=(st.y-t.y)/m}}
+  const same=S.trains.filter(o=>o.n!==t.n&&(t.line?o.line===t.line:dist(o)<150)).map(o=>({...o,d:dist(o),ahead:hx==null?null:((o.x-t.x)*hx+(o.y-t.y)*hy)>=0})).filter(o=>o.d<250);
+  const beh=same.filter(o=>o.ahead===false).sort((a,b)=>a.d-b.d).slice(0,2).reverse(),ahe=same.filter(o=>o.ahead===true).sort((a,b)=>a.d-b.d).slice(0,2),und=same.filter(o=>o.ahead==null);
+  const ret=d.delay_s!=null?Math.round(d.delay_s/60):t.ret,act=(S.hazards||[]).filter(x=>x.trains.includes(t.n));
+  const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;e.innerHTML=html;return e};
+  const tile=(ti,body)=>el('div','tl','<h4>'+ti+'</h4>'+body);
+  const card=(o,me)=>o?el('div','tc'+(me?' me':''),'<b>'+o.n+'</b><div>'+o.kmh+' km/h'+(o.ret>=5?' · <span class="bad">+'+o.ret+' min</span>':'')+'</div><div style="color:'+(o.cmd==='NONE'?'#14703a':TVCOL[o.cmd])+'">● '+({NONE:'libre',CAUTION:'precaución',RESTRICT:'restringido',STOP:'STOP'}[o.cmd])+'</div>'+(me?'<div class="dk">Nuestro tren</div>':'<div class="dk">'+(o.d<10?o.d.toFixed(1):Math.round(o.d)).toString().replace('.',',')+' km '+(o.ahead?'delante':'detrás')+'</div>')):el('div','tc e','—');
+  const slot=(a,i,n)=>a[a.length-n+i]||null;
+  const hd=el('div','hd','<div style="font-size:30px">🚆</div><div><h1>'+(d.product?d.product+' ':'')+t.n+'</h1><small>'+(d.ori&&d.des?d.ori+' → '+d.des:(t.from||'?')+' → '+(t.to||'?')+(t.dest?' (destino '+t.dest+')':''))+(t.line?' · '+t.line:'')+'</small></div><div class="st '+t.cmd+'">'+TVTXT[t.cmd]+'<small>'+(act.length?act.length+' aviso(s) de barreras':'Sin avisos de las barreras')+'</small></div><div class="sp"></div><div style="text-align:right;font-size:13px;color:#44586b">'+fmt(S.now)+'<br>ciclo '+S.cycle+' · '+(S.mode==='sim'?'SIMULACIÓN':'EN VIVO')+'</div>');
+  const cb=h('button',null,'✕ Cerrar');cb.onclick=closeTV;hd.appendChild(cb);
+  const tiles=el('div','tiles','');
+  tiles.append(tile('Velocidad actual',tvGauge(t.kmh,t.vmax)+'<div class="sub">Límite de referencia: '+t.vmax+' km/h <span title="Valor de RailGuard por tipo de tren; no es el límite oficial de la línea">ⓘ</span></div>'),
+    tile('Dirección','<div class="big" style="font-size:20px">'+(t.to?'→ '+t.to:'—')+'</div><div class="sub">'+(t.dest?'Destino: '+t.dest:'')+'</div>'),
+    tile('Posición actual','<div class="big" style="font-size:19px">'+(t.from&&t.to&&t.from!==t.to?'Entre '+t.from+' y '+t.to:(d.where||(t.to?'Hacia '+t.to:'—')))+'</div><div class="sub">'+(t.src==='tablet'?'GPS de la tablet de cabina':'Posición del feed de Renfe')+' · sin P.K. (pendiente de datos de Adif)</div>'),
+    tile('Estado de seguridad','<div class="big" style="color:'+(t.cmd==='NONE'?'#14703a':TVCOL[t.cmd])+'">'+({NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[t.cmd])+'</div><div class="sub">'+(act.length?act.slice(0,2).map(x=>x.barrier+' · '+x.msg).join('<br>'):'Ninguna barrera detecta riesgo')+'</div>'),
+    tile('Puntualidad','<div class="big '+(ret>=5?'bad':'ok')+'">'+(ret>=5?'+'+ret+' min':ret>0?'+'+ret+' min':'A tiempo')+'</div><div class="sub">'+(d.dest_est?'Llegada estimada '+d.dest_est+(d.dest_sched?' (prevista '+d.dest_sched+')':''):'según feed de Renfe')+'</div>'));
+  const strip=el('div','strip','<h4>Trenes en la misma vía'+(t.line?' · '+t.line:' (sin línea identificada: trenes a menos de 150 km)')+'</h4>');
+  const row=el('div','tr5','');[slot(beh,0,2),slot(beh,1,2)].forEach(o=>row.appendChild(card(o)));row.appendChild(card(t,true));[ahe[0]||null,ahe[1]||null].forEach(o=>row.appendChild(card(o)));
+  strip.appendChild(row);if(und.length)strip.appendChild(el('div','nt','Sin rumbo conocido para '+und.length+' tren(es) más; no se clasifican como delante/detrás.'));
+  const near=S.trains.filter(o=>o.n!==t.n&&dist(o)<120);
+  const bt=el('div','bt','');bt.appendChild(el('div','mp',tvMini(t,near)+'<div class="nt">Mapa esquemático local (estaciones y trenes a menos de 120 km). Distancias en línea recta, no por vía.</div>'));
+  const ib=el('div','ib','');
+  ib.appendChild(el('div','tl','<h4>Información del tren</h4>'+[['Línea',t.line||'—'],['Señalización',t.signalling||'—'],['ATP a bordo',t.atp||'sin telemetría'],['Operador',(S.operators.find(o=>o.id===t.op)||{}).name||t.op],['Barreras actuando',(t.by&&t.by.length)?t.by.join(' · '):'ninguna']].map(([a,b])=>'<div class="r"><span>'+a+'</span><span>'+b+'</span></div>').join('')));
+  ib.appendChild(el('div','tl','<h4>Próxima referencia</h4>'+(d.next?'<div class="r"><span>'+d.next.name+'</span><span>'+(d.next.est||d.next.sched||'—')+(d.next.est&&d.next.sched&&d.next.est!==d.next.sched?' (prev. '+d.next.sched+')':'')+'</span></div>':'<div class="sub">Sin horario disponible para este tren.</div>')+(d.dest_est?'<div class="r"><span>Destino '+(d.des||t.dest||'')+'</span><span>'+d.dest_est+'</span></div>':'')));
+  ib.appendChild(el('div','nt','No se muestra cobertura móvil, estado de catenaria ni obras: RailGuard no dispone de esos datos. Esta vista no ordena nada; la seguridad la aplican las barreras automáticas.'));
+  bt.appendChild(ib);
+  ov.replaceChildren(h('div','w',null,[hd,tiles,strip,bt]));
+}
+async function loadTV(){if(!tvN)return;try{const r=await fetch('/api/train?n='+encodeURIComponent(tvN));if(r.ok)tvD=await r.json()}catch(e){}renderTV()}
+function openTV(n){tvN=n;tvD=null;$('tvov').hidden=false;document.body.style.overflow='hidden';renderTV();loadTV();clearInterval(tvT);tvT=setInterval(loadTV,10000)}
+function closeTV(){$('tvov').hidden=true;document.body.style.overflow='';clearInterval(tvT);tvN=null}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('tvov').hidden)closeTV()});
 // ---- ficha de tren ----
 const card=$('card');let cardN=null,cardTimer=null;
 const fmtDelay=m=>m>0?(m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'):m<0?'adelantado '+(-m)+' min':'a tiempo';
@@ -551,6 +623,7 @@ function renderCard(d,t){
   const kids=[h('button','x','×'),h('h3',null,(d.product?d.product+' ':'')+d.n),
     h('div','sub',d.ori&&d.des?d.ori+' → '+d.des:(d.from||'?')+' → '+(d.to||'?')+(d.dest?' (destino '+d.dest+')':''))];
   kids[0].onclick=closeCard;
+  {const vb=h('button',null,'▣ Vista de tren');vb.style.cssText='margin:4px 0 8px;width:100%;padding:8px;border-radius:8px;border:1px solid #2b6cb0;background:#12304f;color:#cfe6ff;font-weight:700;cursor:pointer';vb.onclick=()=>openTV(d.n);kids.push(vb)}
   [row('Retraso',ret==null?null:fmtDelay(ret),ret>0),row('Llegada prevista',d.dest_sched),row('Llegada estimada',d.dest_est,ret>0),
    row('Velocidad','≈ '+d.kmh+' km/h'),row('Dónde',d.where||(d.from&&d.to?'Entre '+d.from+' y '+d.to:null)),
    d.next?row('Llega a '+d.next.name,(d.next.est||d.next.sched)):null,
