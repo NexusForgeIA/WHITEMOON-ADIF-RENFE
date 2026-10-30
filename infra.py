@@ -39,7 +39,7 @@ def tiles():
 def query(b):
     s, w, n, e = b
     bb = f"({s},{w},{n},{e})"
-    return (f'[out:json][timeout:120];'
+    return (f'[out:json][timeout:50];'
             f'(way["railway"="rail"]["usage"~"^(main|branch)$"][!"service"]{bb};'
             f'way["railway"="rail"]["highspeed"="yes"]{bb};)->.r;'
             f'.r out tags geom qt;'
@@ -162,7 +162,7 @@ class Infra:
     def _http(ep, q):
         req = urllib.request.Request(ep, data=("data=" + urllib.parse.quote(q)).encode(),
                                      headers={"User-Agent": "RailGuard/1.0 (WhiteMoon; contact whitemoon.es)"})
-        with urllib.request.urlopen(req, timeout=150) as r:
+        with urllib.request.urlopen(req, timeout=60) as r:
             return json.load(r)
 
     def _tile(self, b):
@@ -173,6 +173,7 @@ class Infra:
                     return self.open(ep, query(b))["elements"]
                 except Exception as ex:  # 429/502/timeout: probar otro servidor
                     last = ex
+                    self.status["last_error"] = f"{ep.split('/')[2]}: {ex!r}"[:140]
                     time.sleep(2)
         raise RuntimeError(f"tesela {b}: {last!r}")
 
@@ -182,9 +183,12 @@ class Infra:
                 self._set(json.load(open(self.cache, encoding="utf-8")))
                 return
             els, failed = [], []
+            self.status["state"] = "descargando"
             for b in tiles():
                 try:
+                    t0 = time.time()
                     els += self._tile(b)
+                    self.status["last_tile_s"] = round(time.time() - t0, 1)
                 except Exception as ex:
                     failed.append(str(ex)[:120])
                 self.status["tiles_done"] += 1
