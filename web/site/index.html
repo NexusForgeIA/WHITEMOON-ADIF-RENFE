@@ -112,7 +112,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 .chips{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin:6px 0}.chips small{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.07em}
 .chip{font-size:10.5px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--mut);background:#0a1017;white-space:nowrap}
 .chip.det{border-color:var(--cau);color:var(--cau);background:#2a2312}.chip.exe{border-color:var(--stop);color:#fff;background:#5a000a}.chip.hum{border-color:var(--acc);color:var(--acc)}.chip.ok{border-color:#1f5a40;color:var(--ok)}
-#acting{display:none;flex-direction:column;gap:4px}
+#acting{display:none!important}#actb.am{background:#3a2a10;color:#ffe1b8;border-color:var(--res)}#actb{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #acting div{background:#5a000aee;border:1px solid #ff4d5e;color:#fff;border-radius:8px;padding:5px 10px;font-size:12px;line-height:1.35}
 #acting div.am{background:#3a2a10ee;border-color:var(--res)}#acting b{letter-spacing:.03em}
 .sysb{font-weight:700;color:var(--acc);border-color:var(--acc)}
@@ -274,7 +274,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 <div id="toasts" aria-live="polite"></div>
 <header>
   <a href="./" class="brand" style="display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit"><img src="logo.png" alt="" height="36" style="height:36px;width:auto;display:block;border-radius:4px" style="display:block"><h1>RAIL<span>GUARD</span></h1></a><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><select id="dv" title="Vista"><option value="nacional">Centro Nacional</option><option value="madrid">Madrid · Atocha</option><option value="barcelona">Barcelona · Sants</option><option value="sevilla">Sevilla · Santa Justa</option></select><a id="dtab" class="pill" href="tablet.html" style="text-decoration:none">📱 App de cabina</a><span id="dprog" class="pill"></span><button id="drs" title="Reiniciar la reproducción">↻</button><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
-  <div id="banner" class="banner"></div><div id="pbanner"></div>
+  <div id="banner" class="banner"></div><div id="pbanner"></div><div id="actb" class="banner" style="display:none;cursor:help"></div>
   <button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
   <button id="cabb" class="sysb" title="Muestra u oculta la banda del tren en foco">▣ Cabina</button>
   <button id="ntb" class="sysb" style="border-color:#6b5a2b;color:#ffe9a8" title="Avisos en pantalla, sonido y notificación del navegador cuando aparece un peligro nuevo o un sistema falla">🔔 Avisos: no</button>
@@ -805,7 +805,9 @@ function renderActing(){
     a.appendChild(h('div',null,null,[h('b',null,'⛔ TREN '+t.n+' · STOP'),document.createTextNode(' — '+dets+' detecta → B5 frena y enclava el bloque → B7 exigirá prueba de vía libre y 2 autorizaciones')]))}
   else if(stops.length>1)a.appendChild(h('div',null,null,[h('b',null,'⛔ '+stops.length+' TRENES EN STOP'),document.createTextNode(' — '+stops.slice(0,6).map(t=>t.n).join(', ')+(stops.length>6?' …':'')+' · B5 frena y enclava · B7 exigirá prueba de vía libre y 2 autorizaciones para cada uno')]));
   if(rs&&!stops.length)a.appendChild(h('div','am',null,[h('b',null,'🟠 '+rs+' tren(es) con restricción de velocidad'),document.createTextNode(' — ordenada automáticamente por B5; se libera sola tras varios ciclos limpios')]));
-  a.style.display=a.children.length?'flex':'none'}
+  const b=$('actb'),full=[...a.children].map(c=>c.textContent).join(' | ');
+  b.style.display=full?'block':'none';b.title=full;b.className='banner'+(stops.length?'':' am');
+  b.textContent=stops.length?'⛔ '+(stops.length===1?'STOP · tren '+stops[0].n:stops.length+' trenes en STOP'):(rs?'🟠 '+rs+' con restricción':'')}
 
 // ---- pantalla de sistemas de seguridad ----
 const STL={OK:'Operativo',ALERT:'Actuando',FAULT:'EN FALLO',NODATA:'Sin datos',OFF:'Desactivado'};
