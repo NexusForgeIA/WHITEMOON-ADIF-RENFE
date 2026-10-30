@@ -231,6 +231,13 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   #right .panel:last-child{flex:1 1 auto}
 }
 .xsum{cursor:pointer;list-style:none;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#0d151e;color:var(--tx);font-weight:600;font-size:12px;display:flex;justify-content:space-between}.xsum::-webkit-details-marker{display:none}#xtra[open] .xsum span{transform:rotate(180deg)}
+@media(max-width:700px){
+  .tb{right:10px;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  .tb>*{flex:0 0 auto}.tb select{max-width:150px}
+  #ovl{top:50px;max-height:30%}
+  .legend{max-width:calc(100% - 20px);bottom:34px}
+  #mapwrap{height:max(520px,72vh)}
+}
 </style>
 </head>
 <body>
