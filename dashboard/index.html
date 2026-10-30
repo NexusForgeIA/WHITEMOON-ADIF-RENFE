@@ -101,7 +101,10 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 #acting div.am{background:#3a2a10ee;border-color:var(--res)}#acting b{letter-spacing:.03em}
 .sysb{font-weight:700;color:var(--acc);border-color:var(--acc)}
 #sysov{position:fixed;inset:0;z-index:50;background:#070b10;overflow:auto;padding:18px max(18px,env(safe-area-inset-left,0px))}
-#sysov[hidden]{display:none}.sh{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.sh h1{margin:0;font-size:22px}.sh .sub{color:var(--mut);font-size:12px;flex:1;min-width:200px}
+#aboutov{position:fixed;inset:0;z-index:51;background:#070b10;overflow:auto;padding:18px max(18px,env(safe-area-inset-left,0px))}#aboutov[hidden]{display:none}
+#aboutov .ab{max-width:980px;margin:0 auto}#aboutov h1{font-size:22px;margin:6px 0}#aboutov h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:18px 0 6px}
+#aboutov table{width:100%;border-collapse:collapse;font-size:12.5px}#aboutov td,#aboutov th{border-top:1px solid #16212d;padding:6px 8px;text-align:left;vertical-align:top}#aboutov th{color:var(--mut);font-weight:600}
+#aboutov .ok{color:#7dffbd;font-weight:700}#aboutov .no{color:#ff9aa5;font-weight:700}#aboutov .mid{color:#ffe08a;font-weight:700}#aboutov p{margin:6px 0;line-height:1.5}#aboutov .box{border:1px solid var(--line);border-left:3px solid var(--acc);background:#0d151e;border-radius:6px;padding:8px 12px;margin:8px 0}#sysov[hidden]{display:none}.sh{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.sh h1{margin:0;font-size:22px}.sh .sub{color:var(--mut);font-size:12px;flex:1;min-width:200px}
 .flow{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin:10px 0 16px}.flow .n{font-size:11px;padding:4px 9px;border-radius:6px;border:1px solid var(--line);background:#0d151e;font-weight:700}.flow .n.OK{border-color:#1f5a40;color:var(--ok)}.flow .n.ALERT{border-color:var(--res);color:var(--res);background:#2a1d0c}.flow .n.FAULT{border-color:var(--stop);color:#fff;background:#5a000a;animation:bl 1s infinite}.flow .n.NODATA,.flow .n.OFF{color:var(--mut)}.flow i{color:var(--mut);font-style:normal}
 .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:12px}
 .sc{border:1px solid var(--line);border-top:4px solid var(--c);border-radius:10px;background:#0d151e;padding:12px 14px;--c:var(--ok);min-width:0}
@@ -122,6 +125,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
   <h1>RAIL<span>GUARD</span></h1><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
   <div id="banner" class="banner"></div><div id="pbanner"></div>
   <button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
+  <button id="abb" class="sysb" style="border-color:#3a4a5c;color:#d6e1ec" title="Qué datos son reales, qué es simulado y qué límites tiene este sistema">ℹ Alcance y fuentes</button>
   <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas de seguridad</button>
   <button id="adm" title="Token de administración (RAILGUARD_TOKEN)">🔑</button>
   <div class="kpis" id="kpis"></div>
@@ -166,7 +170,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
   <div class="tokbox" id="tk"></div><div id="drv"></div></div></section>
 
 <div id="toast"></div>
-<div id="sysov" hidden></div>
+<div id="sysov" hidden></div><div id="aboutov" hidden></div>
 <script>
 const $=id=>document.getElementById(id);
 function h(tag,cls,text,kids){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;(kids||[]).forEach(k=>e.appendChild(k));return e}
@@ -472,6 +476,46 @@ function renderSys(j){
 async function loadSys(){try{const r=await fetch('/api/systems',{cache:'no-store'});const j=await r.json();
   if(!j.systems){$('sysov').replaceChildren(h('div','sh',null,[(()=>{const b=h('button',null,'← Volver');b.onclick=closeSys;return b})(),h('div','sub','Esta pantalla necesita el servidor de RailGuard en ejecución (python3 server.py). La demo grabada no incluye el estado vivo de cada sistema.')]));return}
   renderSys(j)}catch(e){}}
+
+// ---- pantalla «Alcance y fuentes» (para auditoría: qué es real, qué es simulado, límites) ----
+async function openAbout(){
+  const ov=$('aboutov');ov.hidden=false;document.body.style.overflow='hidden';
+  let hl=null;try{hl=await (await fetch('/api/health',{cache:'no-store'})).json()}catch(e){}
+  const live=S&&S.mode==='live',f=hl&&hl.feed,inf=hl&&hl.infra,src=inf&&(inf.ign||inf.adif)||{};
+  const row=(a,st,cls,b)=>{const tr=h('tr');tr.append(h('td',null,a),h('td',cls,st),h('td',null,b));return tr};
+  const row3=(a,b,c)=>{const tr=h('tr');tr.append(h('td',null,a),h('td',null,b),h('td',null,c));return tr};
+  const T=(head,rows)=>{const t=h('table');t.append(h('tr',null,null,head.map(x=>h('th',null,x))));rows.forEach(r=>t.append(r));return t};
+  const close=h('button',null,'← Volver al panel');close.onclick=closeAbout;
+  const A=h('div','ab');
+  A.append(h('div','sh',null,[close]),h('h1',null,'RailGuard · alcance, fuentes y límites'),
+    h('p',null,'Capa de supervisión independiente en tierra, con defensa en profundidad (B1–B7). No sustituye al ATP de a bordo (LZB/ETCS/ASFA) ni a los enclavamientos de Adif: los contrasta y añade barreras. Prototipo de demostración, sin certificación (no se han aplicado EN 50126/50128/50129 ni se ha evaluado el SIL).'),
+    h('div','box',null,[h('b',null,'Modo actual: '),document.createTextNode(live?'EN VIVO con datos reales de posición de Renfe.':'SIMULACIÓN sobre una captura real: los trenes T-90xx y los escenarios son sintéticos.')]));
+  A.append(h('h2',null,'Datos: qué es real hoy'));
+  A.append(T(['Dato','Estado','Detalle'],[
+    row('Posición de los trenes',live?'REAL':'SIMULADO',live?'ok':'mid',live?('Feed GTFS-RT de Renfe (Larga Distancia, Avant, AVE). '+(f?f.entities+' entidades, retraso de cabecera '+f.header_age_s+' s, desfase del reloj corregido '+(f.skew_s||0)+' s. ':'')+'La velocidad se deriva de posiciones GPS: es ruidosa.'):'Captura de Renfe + trenes sintéticos.'),
+    row('Horarios y paradas',live?'REAL':'SIMULADO',live?'ok':'mid','GTFS de Renfe (data.renfe.com): origen, destino, próxima parada, retraso.'),
+    row('Trazado de las vías',(inf&&inf.state==='listo'&&src.real_links)?'REAL (solo geometría)':'ESQUEMÁTICO',(inf&&inf.state==='listo'&&src.real_links)?'mid':'no',(inf&&inf.state==='listo'&&src.real_links)?('IGN-CNIG, INSPIRE Redes de transporte (CC BY 4.0): '+src.real_links+' tramos reales. Sin número de vías.'):'Línea recta entre estaciones.'),
+    row('Número de vías, vía única/doble','NO DISPONIBLE','no','El servicio WFS de Adif que lo publica devolvió error de servidor el 30/10/2026 (probado desde el navegador y desde el servidor). Pendiente de Adif.'),
+    row('Señales, desvíos, cantones, balizas, bucles LZB','NO DISPONIBLE','no','No son datos abiertos. Hay que pedirlos a Adif; el sistema ya acepta un fichero data/infra_extra.json.'),
+    row('Velocidades máximas de línea y limitaciones temporales','NO DISPONIBLE','no','Se usa 310 km/h como máximo de red: B2 vigila poco. Pendiente de Adif.'),
+    row('Telemetría ATP de a bordo (LZB/ETCS/ASFA)','NO DISPONIBLE','no','Ningún tren la envía. Las alertas de «LZB caído» solo se han probado en simulación.'),
+    row('Tablets de cabina (alerta de 3 km)','PROBADO SOLO EN SIMULACIÓN','mid','Funciona en navegador de pruebas; falta probarlo con tablets reales (GPS, sirena, HTTPS).')]));
+  A.append(h('h2',null,'Qué hace cada capa y con qué se alimenta'));
+  A.append(T(['Capa','Se alimenta de','Limitación'],[
+    row3('B1 Integridad de datos','Posición y marca de tiempo del feed','Umbrales en vivo más tolerantes (3 ciclos) para no actuar por ruido de GPS'),
+    row3('B2 Velocidad y frenado','Velocidad derivada del GPS','Límite único de red en vivo; descarta >340 km/h como dato erróneo'),
+    row3('B3 Separación · B4 Predicción','Posiciones, rumbo y tramo (GTFS)','Sin geometría de bloques ni señales: la separación es estimada'),
+    row3('PROX · alerta de 3 km a cabinas','GPS de la tablet del maquinista','Canal independiente del feed; pendiente de prueba con tablets reales'),
+    row3('B5 Enclavamiento · B6 Centros · B7 Guardia','Órdenes de las capas anteriores y de las personas','Doble autorización y límites de rearme diseñados por RailGuard; a validar con operación de Adif'),
+    row3('Previsión (informativa)','Extrapolación a velocidad constante','No ordena nada; no conoce señales ni estaciones de adelantamiento')]));
+  A.append(h('h2',null,'Parámetros'));
+  A.append(h('p',null,'Todos los umbrales (distancias de frenado, tiempos de alcance, 3 km de proximidad, ciclos de persistencia, doble autorización) son valores de RailGuard, NO parámetros oficiales de Adif. Se muestran en «Sistemas de seguridad» y están pensados para calibrarse con los de Adif.'));
+  A.append(h('h2',null,'Qué haría falta para pasar de demostración a piloto'));
+  A.append(h('p',null,'1) Infraestructura de Adif (vías, señales, cantones, velocidades). 2) Telemetría ATP y un feed de posiciones de mayor calidad. 3) Validación de umbrales y procedimientos con Seguridad en la Circulación. 4) Pruebas con tablets reales. 5) Plan de disponibilidad (hoy un único servidor) y análisis de seguridad conforme a CENELEC.'));
+  A.append(h('p',null,'Fuentes: Renfe (data.renfe.com, GTFS y GTFS-RT) · IGN-CNIG (INSPIRE Redes de transporte, CC BY 4.0, © Instituto Geográfico Nacional de España) · mapa base esquemático propio.'));
+  ov.replaceChildren(A)}
+function closeAbout(){$('aboutov').hidden=true;document.body.style.overflow=''}
+$('abb').onclick=openAbout;addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('aboutov').hidden)closeAbout()});
 function openSys(){$('sysov').hidden=false;document.body.style.overflow='hidden';loadSys();clearInterval(sysTimer);sysTimer=setInterval(loadSys,2000)}
 function closeSys(){$('sysov').hidden=true;document.body.style.overflow='';clearInterval(sysTimer)}
 $('sysb').onclick=openSys;addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('sysov').hidden)closeSys()});

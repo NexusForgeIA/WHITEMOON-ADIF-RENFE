@@ -10,7 +10,7 @@ Superficies:
   /tablet    app de cabina (PWA, requiere HTTPS)  POST /api/tablet/pos · /api/tablet/ack  (cabecera X-Driver-Token)
 Variables: RAILGUARD_TOKEN -> los POST del panel exigen X-Token; emitir/revocar tokens de maquinista exige que exista.
 """
-import argparse, hmac, json, math, os, random, threading, time, urllib.request
+import argparse, base64, hmac, json, math, os, random, threading, time, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import gzip
@@ -674,8 +674,31 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b)
 
+    def _viewer_ok(self):
+        """Acceso de lectura protegido (RG_VIEW_PASSWORD): HTTP Basic, cualquier usuario. Sin variable = abierto (demo)."""
+        pw = os.environ.get("RG_VIEW_PASSWORD")
+        if not pw:
+            return True
+        try:
+            got = base64.b64decode(self.headers.get("Authorization", "")[6:]).decode("utf-8", "replace").split(":", 1)[1]
+        except Exception:
+            got = ""
+        if hmac.compare_digest(got.encode(), pw.encode()):
+            return True
+        body = "Acceso restringido".encode()
+        self.send_response(401)
+        self.send_header("WWW-Authenticate", 'Basic realm="RailGuard · acceso restringido", charset="UTF-8"')
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+        return False
+
     def do_GET(self):
         path = self.path.split("?")[0]
+        # abiertos con su propia autenticación o necesarios para la monitorización: salud, canal de centros y app de cabina
+        if path not in ("/api/health", "/api/centre/snapshot", "/manifest.webmanifest", "/sw.js", "/icon.svg") and not path.startswith("/tablet") and not self._viewer_ok():
+            return
         if path == "/api/snapshot":
             return self._send(200, APP.snapshot())
         if path == "/api/systems":
@@ -736,6 +759,8 @@ class H(BaseHTTPRequestHandler):
                 return self._send(401, {"ok": False, "msg": err})
             code, out = APP.centre_post(cid, self.path, body)
             return self._send(code, out)
+        if not self._viewer_ok():
+            return
         if APP.token and not hmac.compare_digest(self.headers.get("X-Token", ""), APP.token):
             return self._send(401, {"ok": False, "msg": "token requerido"})
         code, out = APP.post(self.path, body)
