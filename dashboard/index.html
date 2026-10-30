@@ -299,7 +299,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 
 <section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
   <div class="tb"><button id="zi" title="Acercar">+</button><button id="zo" title="Alejar">−</button><button id="zr" title="Ajustar a toda la red">⌂</button>
-    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lcl" hidden title="Cercanías: posición de parada, sin velocidad; solo informativo"><input type="checkbox" id="lc" checked>Cercanías <span id="lcn"></span></label><label title="Dibuja el contorno de España y países vecinos"><input type="checkbox" id="lbm" checked>Mapa</label><label title="Resalta las líneas de alta velocidad (AVE) y su nombre"><input type="checkbox" id="lave" checked>AVE</label><label title="Limitaciones temporales de velocidad publicadas por Adif (informativo)"><input type="checkbox" id="llt" checked>LTV <span id="ltn"></span></label><label title="Cuarteles/comandancias de la Guardia Civil y sedes de Cruz Roja (OpenStreetMap, no oficial). Pulse uno para ver su ficha"><input type="checkbox" id="lem" checked>Emergencias <span id="emn"></span></label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
+    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lcl" hidden title="Cercanías: posición de parada, sin velocidad; solo informativo"><input type="checkbox" id="lc" checked>Cercanías <span id="lcn"></span></label><label title="Dibuja el contorno de España y países vecinos"><input type="checkbox" id="lbm" checked>Mapa</label><label title="Resalta las líneas de alta velocidad (AVE) y su nombre"><input type="checkbox" id="lave" checked>AVE</label><label title="Limitaciones temporales de velocidad publicadas por Adif (informativo)"><input type="checkbox" id="llt" checked>LTV <span id="ltn"></span></label><label title="Cuarteles/comandancias de la Guardia Civil y sedes de Cruz Roja (OpenStreetMap, no oficial). Pulse uno para ver su ficha"><input type="checkbox" id="lem" checked>Emergencias <span id="emn"></span></label><label title="Incidencias de carretera de la DGT: obras, cortes, retenciones y accidentes (no es tráfico ferroviario). Pulse una para ver su ficha"><input type="checkbox" id="lrd" checked>Tráfico DGT <span id="rdn"></span></label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
     <button id="lgb" title="Qué significan los colores y las etiquetas del mapa">? Leyenda</button><select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
   <div class="legend"><span><s style="background:var(--ok)"></s>libre</span><span><s style="background:var(--cau)"></s>precaución</span><span><s style="background:var(--res)"></s>restringido</span><span><s style="background:var(--stop)"></s>STOP</span><span><s style="background:#1e5bff;border-radius:50%"></s>Guardia Civil</span><span><s style="background:#5aa9ff;border-radius:50%"></s>Cruz Roja</span>
     <span style="color:#e8f1ff">┅ AVE alta velocidad</span><span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
@@ -329,6 +329,11 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
     <div class="lr"><i style="background:#5aa9ff;border:1.5px solid #fff"></i><em>Cruz Roja</em><span>Sede, base o ambulancia de Cruz Roja (OpenStreetMap, no oficial).</span></div>
     <div class="lr"><i style="border:1.5px solid #7aa7c7;background:none"></i><em>Cercanías</em><span>Aro azul grisáceo: posición de parada, sin velocidad. Solo informativo.</span></div>
     <div class="lr"><i style="background:#8ea0b6;width:6px;height:6px"></i><em>Estaciones</em><span>Punto gris con nombre (las principales siempre, el resto con zoom).</span></div>
+    <div class="lr"><i class="tri" style="border-left-color:transparent;border-bottom:9px solid #e040fb;border-right-width:5px;border-left-width:5px;border-top:0;margin-top:2px"></i><em>Accidente</em><span>Incidencia de carretera de la DGT (triángulo magenta). Solo informativo; no es tráfico ferroviario.</span></div>
+    <div class="lr"><i class="tri" style="border-left-color:transparent;border-bottom:9px solid #ff4081;border-right-width:5px;border-left-width:5px;border-top:0;margin-top:2px"></i><em>Retención</em><span>Retención o tráfico anormal en carretera (DGT).</span></div>
+    <div class="lr"><i class="tri" style="border-left-color:transparent;border-bottom:9px solid #b08d57;border-right-width:5px;border-left-width:5px;border-top:0;margin-top:2px"></i><em>Obras y cortes</em><span>Obras o corte de carril (marrón; línea discontinua en el tramo afectado).</span></div>
+    <div class="lr"><i class="tri" style="border-left-color:transparent;border-bottom:9px solid #4dd0e1;border-right-width:5px;border-left-width:5px;border-top:0;margin-top:2px"></i><em>Meteo / calzada</em><span>Meteorología o mal estado de la calzada (DGT).</span></div>
+    <div class="lr"><i class="tri" style="border-left-color:transparent;border-bottom:9px solid #9aa5b1;border-right-width:5px;border-left-width:5px;border-top:0;margin-top:2px"></i><em>Otras (DGT)</em><span>Limitaciones de velocidad y otras incidencias.</span></div>
     <div class="lt">Avisos sobre el mapa</div>
     <div class="lr"><i class="ln" style="border-top:3px solid #ff1a1a;"></i><em>Proximidad</em><span>Línea roja con km entre dos trenes a menos de 3 km; blanca si es crítica. El círculo punteado es el radio de aviso.</span></div>
     <div class="lr"><i class="ln" style="border-top:2px dotted #9b86ff"></i><em>Previsión</em><span>Conflicto posible «si nada cambia»: violeta, o naranja si es inminente. Solo informativo.</span></div>
@@ -507,6 +512,15 @@ function draw(){
       else{cx.fillStyle='#5aa9ff';cx.strokeStyle='#fff';cx.lineWidth=1.6;cx.beginPath();cx.arc(x,y,r,0,6.3);cx.fill();cx.stroke();cx.fillStyle='#fff';const a=r*.62,b=r*.2;cx.fillRect(x-b,y-a,2*b,2*a);cx.fillRect(x-a,y-b,2*a,2*b)}
       if(EMS&&EMS.n===i.id){cx.strokeStyle='#ffd24a';cx.lineWidth=2.2;cx.beginPath();cx.arc(x,y,r+5,0,6.3);cx.stroke()}});
     cx.restore()}
+  if(RDD&&$('lrd')&&$('lrd').checked){const u=S.unit_km||1,z=V.z,W=cv.clientWidth,H=cv.clientHeight;cx.save();cx.lineCap='round';
+    RDD.forEach(i=>{const [x,y]=T(i.x/u,i.y/u);i._p=x;i._q=y;const col=RDC[i.k]||RDC.otr;
+      if(i.x1!=null){const [a,b]=T(i.x1/u,i.y1/u);i._p=(x+a)/2;i._q=(y+b)/2;if(z>=2&&Math.max(x,a)>-20&&Math.min(x,a)<W+20&&Math.max(y,b)>-20&&Math.min(y,b)<H+20){cx.strokeStyle=col;cx.globalAlpha=.85;cx.lineWidth=Math.min(5,2+z*.25);if(i.k==='obr'||i.k==='cor')cx.setLineDash([5,4]);cx.beginPath();cx.moveTo(x,y);cx.lineTo(a,b);cx.stroke();cx.setLineDash([])}}
+      const px=i._p,py=i._q;if(px<-12||py<-12||px>W+12||py>H+12)return;cx.globalAlpha=.95;
+      if(z<2){cx.fillStyle=col;cx.beginPath();cx.arc(px,py,1.8,0,6.3);cx.fill();return}
+      const r=z>=4?7:5;cx.fillStyle=col;cx.strokeStyle='#fff';cx.lineWidth=1.2;cx.beginPath();cx.moveTo(px,py-r);cx.lineTo(px+r*1.05,py+r*.85);cx.lineTo(px-r*1.05,py+r*.85);cx.closePath();cx.fill();cx.stroke();
+      if(z>=4){cx.fillStyle='#fff';cx.font='700 9px system-ui';cx.textAlign='center';cx.fillText('!',px,py+r*.62)}
+      if(RDS&&RDS.id===i.id){cx.globalAlpha=1;cx.strokeStyle='#ffd24a';cx.lineWidth=2.2;cx.beginPath();cx.arc(px,py,r+6,0,6.3);cx.stroke()}});
+    cx.restore()}
   // líneas de alta velocidad (AVE): halo claro + nombre sobre el trazado
   if($('lave')&&$('lave').checked){
     const AVEID=['bcn-fig'];const seen={};
@@ -585,7 +599,7 @@ cv.addEventListener('pointermove',e=>{
   draw()});
 const endP=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;
   if(drag&&!drag.moved&&e.type==='pointerup'&&S){const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
-    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);const po=!t&&EMD&&$('lem')&&$('lem').checked?EMD.map(i=>({i,d:Math.hypot((i._p||-99)-mx,(i._q||-99)-my)})).filter(o=>o.d<(V.z>=2?12:6)).sort((a,b)=>a.d-b.d)[0]:null;sel=t?t.n:null;if(t){EMS=null;$('mt').value=t.n;openCard(t.n)}else if(po)openPoi(po.i);else{EMS=null;closeCard()};try{renderCab()}catch(e){}draw()}
+    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);const po=!t&&EMD&&$('lem')&&$('lem').checked?EMD.map(i=>({i,d:Math.hypot((i._p||-99)-mx,(i._q||-99)-my)})).filter(o=>o.d<(V.z>=2?12:6)).sort((a,b)=>a.d-b.d)[0]:null;sel=t?t.n:null;if(t){EMS=null;$('mt').value=t.n;openCard(t.n)}else if(po)openPoi(po.i);else{const ro=RDD&&$('lrd')&&$('lrd').checked?RDD.map(i=>({i,d:Math.hypot((i._p||-99)-mx,(i._q||-99)-my)})).filter(o=>o.d<(V.z>=2?12:6)).sort((a,b)=>a.d-b.d)[0]:null;if(ro)openRoad(ro.i);else{EMS=null;RDS=null;closeCard()}};try{renderCab()}catch(e){}draw()}
   if(!ptrs.size)drag=null};
 
 
@@ -629,6 +643,18 @@ function openPoi(i){EMS={n:i.id};cardN=null;clearInterval(cardTimer);
   if(i.w){const a=h('a',null,'Sitio web');a.href=/^https?:\/\//.test(i.w)?i.w:'https://'+i.w;a.target='_blank';a.rel='noopener noreferrer';a.style.cssText='display:block;margin-top:6px;color:#8cc8ff';kids.push(a)}
   kids.push(h('div','al','Datos de OpenStreetMap (no oficiales; pueden faltar o estar desfasados). Solo informativo: RailGuard no avisa ni moviliza a nadie. En una emergencia, 112.'));
   card.replaceChildren(...kids);card.style.borderLeftColor=i.k==='gc'?'#1e5bff':'#5aa9ff';card.hidden=false;draw()}
+let RDD=null,RDS=null;const RDC={acc:'#e040fb',ret:'#ff4081',obr:'#b08d57',cor:'#b08d57',vel:'#9aa5b1',met:'#4dd0e1',cal:'#4dd0e1',otr:'#9aa5b1'};let RDK={};
+function loadRoad(){fetch('/api/trafico',{cache:'no-store'}).then(r=>r.json()).then(j=>{RDD=j.items&&j.items.length?j.items:null;RDK=j.kinds||{};const e=$('rdn');if(e)e.textContent=RDD?'('+RDD.length+')':(j.ready?'(0)':'(cargando…)');if(typeof draw==='function')draw()}).catch(()=>{})}
+setTimeout(loadRoad,5000);setInterval(loadRoad,300000);
+const midR=i=>({x:(i.x+(i.x1==null?i.x:i.x1))/2,y:(i.y+(i.y1==null?i.y:i.y1))/2});
+function nearRoad(t,r){if(!RDD||!t)return[];return RDD.map(i=>({i,d:kmTo(t,midR(i))})).filter(o=>o.d<=r).sort((a,b)=>a.d-b.d)}
+function openRoad(i){RDS={id:i.id};EMS=null;cardN=null;clearInterval(cardTimer);
+  const row=(k,v)=>v?h('div','r',null,[h('span',null,k),h('span',null,String(v))]):null;
+  const tn=(S.trains||[]).filter(visible).map(t=>({t,d:kmTo(t,midR(i))})).sort((a,b)=>a.d-b.d)[0];
+  const kids=[h('button','x','×'),h('h3',null,RDK[i.k]||'Incidencia'),h('div','sub',(i.road||'Carretera sin nombre')+(i.pk?' · km '+i.pk:''))];kids[0].onclick=()=>{RDS=null;card.hidden=true;draw()};
+  [row('Municipio',[i.mun,i.prov].filter(Boolean).join(', ')),i.s?row('Desde',new Date(i.s*1000).toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'})):null,row('Detalle',i.c),tn?row('Tren más cercano',tn.t.n+' · '+fkm(tn.d)):null].forEach(r=>r&&kids.push(r));
+  kids.push(h('div','al','Fuente: DGT (Punto de Acceso Nacional, CC BY). Es tráfico de carretera, no ferroviario. Solo informativo.'));
+  card.replaceChildren(...kids);card.style.borderLeftColor=RDC[i.k]||'#9aa5b1';card.hidden=false;draw()}
 let LTVD=null,LTVI={};
 function loadLtv(){fetch('/api/ltv',{cache:'no-store'}).then(r=>r.json()).then(j=>{LTVD=j.items&&j.items.length?j.items:null;LTVI=j;const e=$('ltn');if(e)e.textContent=LTVD?'('+LTVD.length+')':'';if(typeof draw==='function')draw()}).catch(()=>{})}
 loadLtv();setInterval(loadLtv,600000);
@@ -1028,7 +1054,8 @@ function renderCard(d,t){
    row('Estado de seguridad',{NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[d.cmd]||d.cmd,d.cmd==='STOP'),
    row('Línea',d.line?d.line+(d.signalling?' · '+d.signalling:''):null),row('ATP a bordo',d.atp||'sin telemetría'),
    row('Operador',d.operator),row('Posición',d.src==='tablet'?'GPS tablet':'feed'),
-   ...['gc','cr'].map(k=>{const n=nearEmg(t,k);return n?row((k==='gc'?'Guardia Civil':'Cruz Roja')+' más cercana',n.i.n+' · '+fkm(n.d)):null})].forEach(r=>r&&kids.push(r));
+   ...['gc','cr'].map(k=>{const n=nearEmg(t,k);return n?row((k==='gc'?'Guardia Civil':'Cruz Roja')+' más cercana',n.i.n+' · '+fkm(n.d)):null}),
+   (()=>{const r=nearRoad(t,5);return r.length?row('Tráfico DGT < 5 km',r.length+' incid. · '+(RDK[r[0].i.k]||'Incidencia')+' '+(r[0].i.road||'')+' a '+fkm(r[0].d)):null})()].forEach(r=>r&&kids.push(r));
   (d.alerts||[]).forEach(a=>kids.push(h('div','al',a.barrier+' · '+a.msg)));
   card.replaceChildren(...kids);card.style.borderLeftColor=COL[d.cmd]||'var(--acc)';card.hidden=false;
 }
@@ -1039,12 +1066,12 @@ async function loadCard(){
   if(cardN===d.n)renderCard(d,t);
 }
 function openCard(n){cardN=n;loadCard();clearInterval(cardTimer);cardTimer=setInterval(loadCard,10000)}
-function closeCard(){cardN=null;EMS=null;card.hidden=true;clearInterval(cardTimer)}
+function closeCard(){cardN=null;EMS=null;RDS=null;card.hidden=true;clearInterval(cardTimer)}
 cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
 cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect();zoomAt(2,e.clientX-r.left,e.clientY-r.top)});
 $('zi').onclick=()=>base&&zoomAt(1.5,base.W/2,base.H/2);$('zo').onclick=()=>base&&zoomAt(1/1.5,base.W/2,base.H/2);
 $('zr').onclick=()=>{V={z:1,px:0,py:0};draw()};
-['lv','ls','lr','li','lp','lf','lc','lbm','lave','llt','lem'].forEach(i=>{const e=$(i);if(e)e.onchange=()=>{infKey='';draw()}});
+['lv','ls','lr','li','lp','lf','lc','lbm','lave','llt','lem','lrd'].forEach(i=>{const e=$(i);if(e)e.onchange=()=>{infKey='';draw()}});
 $('opf').onchange=()=>{opf=$('opf').value;draw()};
 addEventListener('resize',()=>{base=null;draw()});
 $('mb').onclick=()=>{const t=$('mt').value.trim();if(t)post('/api/manual',{train:t})};

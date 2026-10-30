@@ -10,3 +10,4 @@ web/rec/
 data/punct_history.json
 data/ltv_cache.json
 data/emergency_cache.json
+data/traffic_cache.json
