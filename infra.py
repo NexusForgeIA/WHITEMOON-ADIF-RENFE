@@ -17,6 +17,7 @@ import urllib.request
 
 from renfe_adapter import project
 import adif_wfs
+import ign_wfs
 
 ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
              "https://overpass.private.coffee/api/interpreter"]
@@ -155,6 +156,7 @@ class Infra:
     def __init__(self, cache="data/infra_cache.json", extra="data/infra_extra.json", opener=None):
         self.cache, self.extra = cache, extra
         self.open = opener or self._http
+        self.official = opener is None   # con opener inyectado (tests) no se consultan Adif/IGN
         self.data = None
         self.status = {"state": "pendiente", "tiles_done": 0, "tiles_total": sum(1 for _ in tiles())}
         self.lock = threading.Lock()
@@ -178,24 +180,38 @@ class Infra:
                     time.sleep(2)
         raise RuntimeError(f"tesela {b}: {last!r}")
 
+    def _save(self, data):
+        os.makedirs(os.path.dirname(self.cache) or ".", exist_ok=True)
+        json.dump(data, open(self.cache, "w", encoding="utf-8"), separators=(",", ":"))
+        self._set(data)
+
+    def _official(self):
+        """Fuentes oficiales por orden: Adif (con nº de vías) y después IGN (solo trazado). True si alguna funcionó."""
+        for name in ("adif", "ign"):
+            diag = self.status.setdefault(name, {})
+            try:
+                t0 = time.time()
+                if name == "adif":
+                    ways, pts = adif_wfs.load(diag)
+                    data = {"ways": ways, "points": pts + section_changes(ways), "failed_tiles": 0, "source": "adif"}
+                else:
+                    ways = ign_wfs.load(diag, simplify)
+                    data = {"ways": ways, "points": section_changes(ways), "failed_tiles": 0, "source": "ign"}
+                diag["seconds"] = round(time.time() - t0, 1)
+                self._save(data)
+                return True
+            except Exception as ex:
+                diag["error"] = repr(ex)[:300]
+        return False
+
     def run(self):
         try:
             if os.path.exists(self.cache) and time.time() - os.path.getmtime(self.cache) < 30 * 86400:
                 self._set(json.load(open(self.cache, encoding="utf-8")))
                 return
             self.status["state"] = "descargando"
-            try:   # 1) fuente oficial de Adif (WFS de la iDE de Adif)
-                diag = self.status.setdefault("adif", {})
-                t0 = time.time()
-                ways, pts = adif_wfs.load(diag)
-                diag["seconds"] = round(time.time() - t0, 1)
-                data = {"ways": [dict(w, s=None) for w in ways], "points": pts + section_changes(ways), "failed_tiles": 0, "source": "adif"}
-                os.makedirs(os.path.dirname(self.cache) or ".", exist_ok=True)
-                json.dump(data, open(self.cache, "w", encoding="utf-8"), separators=(",", ":"))
-                self._set(data)
+            if self.official and self._official():
                 return
-            except Exception as ex:
-                self.status.setdefault("adif", {})["error"] = repr(ex)[:300]
             # 2) respaldo: OpenStreetMap (no oficial)
             els, failed, streak = [], [], 0
             for b in tiles():
@@ -229,9 +245,11 @@ class Infra:
         d = dict(data)
         d["points"] = list(data["points"]) + xp
         d["cantones"] = cant
-        off = data.get("source") == "adif"
-        d["meta"] = {"source": ("Adif · iDE de Adif (WFS Red de Transporte Ferroviario) · © Administrador de infraestructuras ferroviarias"
-                                if off else "OpenStreetMap (ODbL) · © colaboradores de OpenStreetMap"), "official": off,
+        src = data.get("source")
+        off = src in ("adif", "ign")
+        names = {"adif": "Adif · iDE de Adif (WFS Red de Transporte Ferroviario) · © Administrador de infraestructuras ferroviarias",
+                 "ign": "IGN-CNIG · INSPIRE Redes de transporte (trazado; sin nº de vías ni señales) · CC BY 4.0 © Instituto Geográfico Nacional de España"}
+        d["meta"] = {"source": names.get(src, "OpenStreetMap (ODbL) · © colaboradores de OpenStreetMap"), "official": off,
                      "fetched": int(time.time()), **meta,
                      "counts": {"ways": len(d["ways"]), "points": len(d["points"]),
                                 "with_tracks": sum(1 for w in d["ways"] if w["t"]),

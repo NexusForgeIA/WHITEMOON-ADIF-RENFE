@@ -31,3 +31,16 @@ def test_tracks_between_votes_nearest_official_way():
     assert A.tracks_between(ways, (10, 0.2), (90, 0.2)) == 2
     assert A.tracks_between(ways, (10, 50.1), (90, 50.1)) == 1
     assert A.tracks_between(ways, (10, 20), (90, 20)) is None       # nada a menos de 1,5 km: no se inventa
+
+
+def test_ign_parse_links_reads_gml_and_flags_fictitious():
+    import ign_wfs
+    gml = b"""<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:gml="http://www.opengis.net/gml/3.2"
+      xmlns:tn-ra="urn:x" xmlns:net="urn:y"><wfs:member><tn-ra:RailwayLink><net:centrelineGeometry><gml:LineString>
+      <gml:posList>40.0 -3.0 40.1 -3.1</gml:posList></gml:LineString></net:centrelineGeometry><net:fictitious>true</net:fictitious>
+      </tn-ra:RailwayLink></wfs:member><wfs:member><tn-ra:RailwayLink><net:centrelineGeometry><gml:LineString>
+      <gml:posList>41.0 -2.0 41.2 -2.2 41.3 -2.4</gml:posList></gml:LineString></net:centrelineGeometry><net:fictitious>false</net:fictitious>
+      </tn-ra:RailwayLink></wfs:member></wfs:FeatureCollection>"""
+    r = ign_wfs.parse_links(gml)
+    assert [f for f, _ in r] == [True, False]
+    assert r[1][1][0] == (41.0, -2.0) and len(r[1][1]) == 3
