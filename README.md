@@ -139,3 +139,5 @@ contra el feed en vivo** (red del entorno de desarrollo bloqueada). Ejecuta la s
 
 ## Web de demostración
 Versión estática con grabaciones del motor real (no datos en vivo): ver [`web/README.md`](web/README.md).
+
+Demo publicada con GitHub Pages: la raíz redirige a `web/site/` (grabación del motor real, no datos en vivo).
