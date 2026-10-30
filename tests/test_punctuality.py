@@ -17,8 +17,8 @@ def test_kpis_y_umbrales_de_renfe():
     assert sum(b["n"] for b in k["buckets"]) == 6
 
 
-def test_duplicados_y_vacio():
-    assert pu.compute([("1", 30, "AVE"), ("1", 30, "AVE")])["n"] == 1
+def test_un_registro_por_vehiculo_y_vacio():
+    assert pu.compute([("1", 30, "AVE"), ("1", 30, "AVE")])["n"] == 2   # un registro por vehículo, como el contador de trenes
     k = pu.compute([])
     assert k["n"] == 0 and k["pct_delayed"] == 0.0 and k["mean_min"] == 0.0
 

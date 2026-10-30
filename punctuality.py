@@ -30,13 +30,8 @@ def category(rname):
 
 
 def compute(rows):
-    """rows: iterable de (nº tren, retraso en min, categoría). Un mismo nº y retraso cuenta una vez (coches duplicados en el feed)."""
-    seen, L = set(), []
-    for n, ret, cat in rows:
-        k = (n, ret, cat)
-        if k not in seen:
-            seen.add(k)
-            L.append((n, max(0, int(ret or 0)), cat or "OTRO"))
+    """rows: iterable de (nº tren, retraso en min, categoría). Una fila por vehículo del feed, igual que el contador de trenes."""
+    L = [(n, max(0, int(ret or 0)), cat or "OTRO") for n, ret, cat in rows]   # mismo recuento que la barra superior (un registro por vehículo)
     N = len(L)
     delayed = [r for r in L if r[1] >= DELAY_MIN]
     indem = [r for r in L if INDEM_MIN.get(r[2]) and r[1] >= INDEM_MIN[r[2]]]
