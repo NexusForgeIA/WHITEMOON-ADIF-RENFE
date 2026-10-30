@@ -1,5 +1,7 @@
 # RailGuard · supervisión ferroviaria con defensa en profundidad
 
+> Seguridad y normativa: ver [docs/SEGURIDAD_Y_NORMATIVA.md](docs/SEGURIDAD_Y_NORMATIVA.md) (prototipo no certificado).
+
 Capa de supervisión que **no depende de una persona para la seguridad final**: el tren lleva su propia barrera (ATP) y
 cinco barreras automáticas independientes actúan antes de que llegue una persona. Incluye un panel de control, una
 **app de cabina (PWA)** con alarma roja a pantalla completa y el aviso de proximidad de 3 km.
