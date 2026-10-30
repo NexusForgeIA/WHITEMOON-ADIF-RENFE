@@ -105,11 +105,11 @@ def test_delay_from_trip_updates():
 
 def test_gtfs_gives_previous_stop_destination_and_product():
     g = gtfs_zip({"11111": ("AVE", ["S1", "S3", "S2"]), "22222": ("MD", ["S1", "S2"])})
-    f = feed_with([(T0, [ent("11111", 41.0, -3.2, "S3"), ent("22222", 41.0, -3.0, "S2", "STOPPED_AT")])], gtfs=g)
+    f = feed_with([(T0, [ent("11111", 41.0, -3.2, "S3"), ent("22222", 41.0, -3.0, "S1", "STOPPED_AT")])], gtfs=g)
     est, tr = f.fetch()
     a, b = {t["n"]: t for t in tr}["11111"], {t["n"]: t for t in tr}["22222"]
     assert (a["ant"], a["sig"], a["des"], a["p"]) == ("S1", "S3", "S2", 2)
-    assert b["ant"] == b["sig"] == "S2" and b["kmh"] == 0 and b["p"] == 16
+    assert b["ant"] == b["sig"] == "S1" and b["kmh"] == 0 and b["p"] == 16
     assert set(est) == {"S1", "S2", "S3"}
 
 
@@ -169,3 +169,11 @@ def test_entity_without_stop_id_does_not_break_the_feed_or_the_detail():
     f = feed_with([(T0, [e, ent("22222", 41.0, -3.0, "S3")])], gtfs=g)
     _, tr = f.fetch()
     assert len(tr) == 2 and "11111" in f.detail
+
+
+def test_tren_terminado_no_se_dibuja():
+    """Un tren parado en su última parada no está en circulación: ni mapa, ni peligros, ni KPIs."""
+    g = gtfs_zip({"22222": ("MD", ["S1", "S2"])})
+    f = feed_with([(T0, [ent("22222", 41.0, -3.0, "S2", "STOPPED_AT")])], gtfs=g)
+    _, tr = f.fetch()
+    assert tr == [] and f.stats["retrasos_caducados"] == 1

@@ -267,15 +267,18 @@ class RenfeFeed:
                 ant, ori, des, prod = st["ant"] or sig, None, None, 0
             if status == "STOPPED_AT":
                 ant = sig
+            dly = delays.get(trip_id, 0)
+            e_ = eta_epoch(info, dly, self.now()) if info else None
+            rolling = kmh > 5 and e_ is not None and self.now() - e_ <= 3 * 3600   # circulando de verdad: un retraso del feed anticuado no lo oculta
+            if info and finished(info, sig, status, dly, self.now()) and not (rolling and not (sig == (info["stops"] or [None])[-1] and status == "STOPPED_AT")):
+                stale += 1      # viaje ya terminado (o llegada estimada vencida): el feed lo sigue publicando, pero no está en circulación
+                continue        # no se dibuja, no genera peligros ni cuenta en los KPIs
             try:   # la ficha es informativa: un fallo aquí NUNCA debe tumbar la lectura de posiciones
                 self.detail[label] = self._detail(label, info, sig, ant, status, delays.get(trip_id))
             except Exception:
                 self.detail[label] = {"n": label}
             cat = punctuality.category(info.get("rname")) if info else "OTRO"
-            dly = delays.get(trip_id, 0)
             eta = eta_epoch(info, dly, self.now()) if info else None
-            if info and finished(info, sig, status, dly, self.now()):
-                dly, stale = 0, stale + 1       # el feed sigue publicando el retraso de un viaje ya terminado: no es vigente
             k = kmh / 3600
             trains.append({"n": label, "p": prod, "x": x, "y": y, "kmh": round(kmh, 1),
                            "vx": st["ux"] * k if kmh > 1 else 0.0, "vy": st["uy"] * k if kmh > 1 else 0.0,
