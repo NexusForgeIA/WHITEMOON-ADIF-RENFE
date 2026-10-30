@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg">
+<title>RailGuard Cabina</title>
+<style>
+:root{--bg:#0b1220;--panel:#121c2e;--line:#22314d;--tx:#e8eefc;--mut:#8ea0c0;--ok:#2ecc71;--am:#ffb020;--red:#ff1a1a}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-user-select:none;user-select:none}
+button{font:inherit;cursor:pointer}
+.wrap{max-width:760px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) 16px 24px}
+h1{font-size:20px;margin:0 0 4px}.mut{color:var(--mut)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+input[type=text],input[type=password]{width:100%;padding:14px;border-radius:10px;border:1px solid var(--line);background:#0b1426;color:var(--tx);font:inherit;font-size:18px}
+.btn{display:block;width:100%;padding:16px;border:0;border-radius:12px;background:#2f6bff;color:#fff;font-weight:700;font-size:18px;margin-top:12px}
+.btn.sec{background:#26364f}
+.row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1 1 140px}
+.k{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}.v{font-size:28px;font-weight:700}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;border:1px solid var(--line)}
+.ok{color:var(--ok);border-color:#1e6b43}.am{color:var(--am);border-color:#7a5710}.bad{color:#ff6b6b;border-color:#7a2323}
+.near{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+.hide{display:none!important}
+#link{position:sticky;top:0;z-index:5;background:#b45f00;color:#fff;text-align:center;font-weight:800;padding:10px;letter-spacing:.04em}
+/* ---- ALARMA A PANTALLA COMPLETA ---- */
+#alarm{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) 16px 12px;overflow:auto;color:#fff;text-align:center;background:var(--red);animation:pulse 1.1s ease-in-out infinite}
+#alarm.crit{animation-duration:.55s}
+@keyframes pulse{0%,100%{background:#ff0a0a}50%{background:#8f0000}}
+@media (prefers-reduced-motion:reduce){#alarm{animation:none;background:#e00000}}
+#alarm .t{font-size:clamp(18px,min(5vw,4vh),36px);font-weight:900;letter-spacing:.08em}
+#alarm .d{font-size:clamp(64px,min(22vw,21vh),190px);font-weight:900;line-height:1;margin:.1em 0}
+#alarm .d small{font-size:.28em;font-weight:800}
+#alarm .o{font-size:clamp(18px,min(4.2vw,3.6vh),32px);font-weight:800}
+#alarm .s{font-size:clamp(14px,min(3vw,2.4vh),20px);opacity:.95;margin-top:6px}
+#radar{width:min(40vw,27vh,300px);height:min(40vw,27vh,300px);margin:8px 0;border-radius:50%;background:rgba(0,0,0,.28);border:3px solid rgba(255,255,255,.8)}
+#ack{width:min(92vw,520px);padding:min(18px,2.4vh);margin-top:8px;border-radius:16px;border:4px solid #fff;background:rgba(0,0,0,.35);color:#fff;font-size:clamp(20px,min(4.5vw,4vh),32px);font-weight:900;letter-spacing:.06em}
+#ack.done{background:#fff;color:#8f0000}
+#alarm .link{position:absolute;top:0;left:0;right:0;background:#000;color:#ffb020;font-weight:800;padding:8px}
+</style>
+</head>
+<body>
+<div id="link" class="hide">ENLACE PERDIDO — alertas no disponibles<span id="linkAge"></span></div>
+
+<div class="wrap" id="login">
+  <h1>RailGuard · Cabina</h1>
+  <div class="mut">Aviso de proximidad entre trenes (&lt; 3 km). Complemento del ATP de a bordo, no lo sustituye.</div>
+  <div class="card">
+    <label class="k" for="tok">Token de maquinista</label>
+    <input id="tok" type="password" autocomplete="off" placeholder="Pegue el token que le entregó su operador">
+    <label class="mut" style="display:block;margin-top:10px"><input type="checkbox" id="demo"> Modo demostración (el servidor simula mi GPS · token <code>demo-&lt;nº de tren&gt;</code>)</label>
+    <button class="btn" id="start">INICIAR SERVICIO</button>
+    <div class="mut" id="loginMsg" style="margin-top:10px"></div>
+  </div>
+  <div class="mut">Al iniciar se activan GPS, sonido, vibración y pantalla encendida. Su posición se envía solo al sistema de seguridad de su operador y no se guarda.</div>
+</div>
+
+<div class="wrap hide" id="main">
+  <h1 id="hdr">Tren —</h1><div class="mut" id="op"></div>
+  <div class="card row">
+    <div><div class="k">Estado</div><div class="v"><span class="pill ok" id="st">VIGILANDO</span></div></div>
+    <div><div class="k">GPS</div><div class="v" id="gps" style="font-size:20px">—</div></div>
+    <div><div class="k">Velocidad</div><div class="v" id="spd">—</div></div>
+  </div>
+  <div class="card"><div class="k">Trenes a menos de <span id="th">3</span> km sin riesgo de vía (aviso informativo)</div><div id="near"><div class="mut" style="padding-top:8px">Ninguno</div></div></div>
+  <button class="btn sec" id="test">PROBAR ALARMA Y SONIDO (3 s)</button>
+  <button class="btn sec" id="stop">CERRAR SERVICIO</button>
+  <div class="mut" id="warn" style="margin-top:10px"></div>
+</div>
+
+<div id="alarm" class="hide" role="alertdialog" aria-live="assertive">
+  <div class="link hide" id="alink"></div>
+  <div class="t" id="at">⚠ TREN A MENOS DE 3 KM ⚠</div>
+  <div class="d"><span id="ad">0,0</span><small> km</small></div>
+  <div class="o" id="ao"></div>
+  <canvas id="radar" width="600" height="600"></canvas>
+  <div class="s" id="as"></div>
+  <button id="ack">ENTERADO</button>
+  <div class="s" id="am2" style="font-weight:700"></div>
+</div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const fmt=(n,d=1)=>Number(n).toFixed(d).replace('.',',');
+const COMPASS=['N','NE','E','SE','S','SO','O','NO'];
+const dir8=b=>COMPASS[Math.round(b/45)%8];
+let store={get(k){try{return localStorage.getItem(k)||''}catch(e){return ''}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let tok=store.get('rg_tok'), running=false, busy=false, lastOk=0, fix=null, geoId=null, state=null, wake=null;
+let testUntil=0;
+
+/* ---------------- sonido y vibración ---------------- */
+let actx=null, osc=null, gain=null, sirenT=null, sirenMode='';
+function audioInit(){
+  if(!actx){const C=window.AudioContext||window.webkitAudioContext;if(C)actx=new C()}
+  if(actx&&actx.state==='suspended')actx.resume();
+}
+function siren(mode){            // ''|'RED'|'CRITICAL'|'LINK'
+  if(mode===sirenMode)return;
+  sirenMode=mode;
+  clearInterval(sirenT);sirenT=null;
+  if(osc){try{osc.stop()}catch(e){}osc=null}
+  if(navigator.vibrate)navigator.vibrate(0);
+  if(!mode||!actx)return;
+  osc=actx.createOscillator();gain=actx.createGain();
+  osc.type=mode==='LINK'?'sine':'square';gain.gain.value=mode==='LINK'?.15:.6;
+  osc.connect(gain);gain.connect(actx.destination);osc.start();
+  const per=mode==='CRITICAL'?160:mode==='RED'?350:1500;let hi=false;
+  const tick=()=>{hi=!hi;if(!osc)return;
+    if(mode==='LINK'){gain.gain.value=hi?.2:0;osc.frequency.value=520}
+    else osc.frequency.value=hi?960:640;
+    if(navigator.vibrate&&mode!=='LINK')navigator.vibrate(per*.9)};
+  tick();sirenT=setInterval(tick,per);
+}
+async function keepAwake(){try{if('wakeLock' in navigator)wake=await navigator.wakeLock.request('screen')}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(running&&document.visibilityState==='visible')keepAwake()});
+
+/* ---------------- GPS ---------------- */
+function startGeo(){
+  if(!navigator.geolocation){$('gps').textContent='no disponible';return}
+  geoId=navigator.geolocation.watchPosition(p=>{
+    fix={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy,spd:p.coords.speed,hdg:p.coords.heading,ts:Date.now()};
+  },e=>{fix=null;$('gps').textContent=e.code===1?'permiso denegado':'sin señal'},{enableHighAccuracy:true,maximumAge:1000,timeout:10000});
+}
+
+/* ---------------- enlace con el servidor ---------------- */
+async function api(path,body){
+  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-Driver-Token':tok},body:JSON.stringify(body),cache:'no-store'});
+  if(r.status===401)throw new Error('AUTH');
+  return r.json();
+}
+async function poll(){
+  if(!running||busy)return;busy=true;
+  try{
+    const demo=$('demo').checked||store.get('rg_demo')==='1';
+    const body=demo?{demo:true}:(fix&&Date.now()-fix.ts<5000?{lat:fix.lat,lon:fix.lon,acc:fix.acc,spd:fix.spd,hdg:fix.hdg}:{});
+    state=await api('/api/tablet/pos',body);lastOk=Date.now();
+  }catch(e){
+    if(e.message==='AUTH'){stop();$('loginMsg').textContent='Token no válido o revocado.';}
+  }finally{busy=false}
+  render();
+}
+
+/* ---------------- pantalla ---------------- */
+function drawRadar(a){
+  const c=$('radar'),g=c.getContext('2d'),W=c.width,R=W/2-8,m=3.3;
+  g.clearRect(0,0,W,W);g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=3;
+  [1,2,3].forEach(k=>{g.beginPath();g.arc(W/2,W/2,R*k/3,0,7);g.stroke()});
+  g.fillStyle='#fff';g.font='bold 34px system-ui';g.textAlign='center';g.fillText('N',W/2,44);
+  g.beginPath();g.arc(W/2,W/2,14,0,7);g.fill();                         // mi tren
+  const sc=R/m;let px=a.east_km*sc,py=-a.north_km*sc;const L=Math.hypot(px,py);
+  if(L>R){px*=R/L;py*=R/L}
+  const x=W/2+px,y=W/2+py;
+  g.strokeStyle='#fff';g.lineWidth=6;g.beginPath();g.moveTo(W/2,W/2);g.lineTo(x,y);g.stroke();
+  g.fillStyle='#000';g.beginPath();g.arc(x,y,24,0,7);g.fill();g.strokeStyle='#fff';g.lineWidth=5;g.stroke();
+}
+function render(){
+  const now=Date.now();
+  const linkLost=!lastOk||now-lastOk>4000;
+  $('link').classList.toggle('hide',!(running&&linkLost));
+  if(running&&linkLost)$('linkAge').textContent=lastOk?` · hace ${Math.round((now-lastOk)/1000)} s`:'';
+  let mode='';
+  const testing=now<testUntil;
+  const a=state&&state.alerts&&state.alerts[0];
+  if(running&&(a||testing)){
+    const t=testing&&!a?{key:'test',level:'RED',dist_km:2.4,other:'PRUEBA',other_op:'Prueba de alarma',east_km:1.5,north_km:1.9,bearing:38,closing_kmh:0,other_kmh:0,reason:'prueba',acked:false}:a;
+    const crit=t.level==='CRITICAL';
+    $('alarm').classList.remove('hide');$('alarm').classList.toggle('crit',crit);
+    $('at').textContent=crit?'⚠ PELIGRO · TREN MUY CERCA ⚠':'⚠ TREN A MENOS DE 3 KM ⚠';
+    $('ad').textContent=fmt(t.dist_km,1);
+    $('ao').textContent=`Tren ${t.other} · ${t.other_op}`;
+    $('as').textContent=`Rumbo ${dir8(t.bearing)} (${t.bearing}°) · ${t.other_kmh!=null?t.other_kmh+' km/h · ':''}${t.closing_kmh>0?'se acercan a '+t.closing_kmh+' km/h':t.closing_kmh<0?'se alejan':'—'} · ${t.reason}`;
+    drawRadar(t);
+    $('ack').classList.toggle('done',!!t.acked);
+    $('ack').textContent=t.acked?'✔ ENTERADO':'ENTERADO';
+    $('am2').textContent=crit?'Reduzca velocidad y contacte con el CTC por GSM-R':(t.acked?'Alerta activa mientras no se separen más de 3,3 km':'Pulse ENTERADO · la alarma sigue hasta que haya separación');
+    $('alink').classList.toggle('hide',!linkLost);$('alink').textContent=linkLost?'ENLACE PERDIDO — datos de hace '+Math.round((now-lastOk)/1000)+' s':'';
+    mode=crit?'CRITICAL':(t.acked?'':'RED');   // CRITICAL no se silencia; RED se silencia con ENTERADO (la pantalla sigue roja)
+    window.__lastAlert=t;
+  }else{
+    $('alarm').classList.add('hide');
+    mode=running&&linkLost?'LINK':'';
+  }
+  siren(mode);
+  if(!running)return;
+  $('hdr').textContent='Tren '+(state?state.train:'—');
+  $('op').textContent=state?`${state.operator} · ${state.driver}`:'';
+  const ok=state&&!linkLost;
+  $('st').className='pill '+(a?'bad':ok?(state.near.length?'am':'ok'):'bad');
+  $('st').textContent=a?'ALERTA':ok?(state.feed_degraded?'VIGILANDO (RED DEGRADADA)':'VIGILANDO'):'SIN ENLACE';
+  $('spd').textContent=state&&state.speed_kmh!=null?state.speed_kmh+' km/h':'—';
+  if(store.get('rg_demo')==='1'||$('demo').checked)$('gps').textContent='simulado';
+  else if(fix&&now-fix.ts<5000)$('gps').textContent='±'+Math.round(fix.acc)+' m';
+  $('th').textContent=state?fmt(state.threshold_km,0):'3';
+  $('warn').textContent=state&&state.warn?state.warn:'';
+  const nb=$('near');nb.textContent='';
+  const list=(state&&state.near)||[];
+  if(!list.length){const d=document.createElement('div');d.className='mut';d.style.paddingTop='8px';d.textContent='Ninguno';nb.appendChild(d)}
+  list.forEach(n=>{const r=document.createElement('div');r.className='near';
+    const l=document.createElement('span');l.textContent=`Tren ${n.other} · ${n.other_op} · ${n.reason}`;
+    const v=document.createElement('b');v.textContent=fmt(n.dist_km,1)+' km';r.append(l,v);nb.appendChild(r)});
+}
+
+/* ---------------- eventos ---------------- */
+$('ack').addEventListener('click',async()=>{
+  audioInit();const t=window.__lastAlert;if(!t||t.key==='test'){testUntil=0;render();return}
+  try{await api('/api/tablet/ack',{key:t.key})}catch(e){}
+  poll();
+});
+$('start').addEventListener('click',()=>{
+  const v=$('tok').value.trim()||tok;
+  if(!v){$('loginMsg').textContent='Introduzca el token (en demo: demo-<nº de tren>, p. ej. demo-T-9009).';return}
+  tok=v;
+  store.set('rg_tok',tok);store.set('rg_demo',$('demo').checked?'1':'0');
+  audioInit();running=true;lastOk=0;
+  $('login').classList.add('hide');$('main').classList.remove('hide');
+  if(!$('demo').checked)startGeo();keepAwake();
+  poll();
+});
+function stop(){running=false;if(geoId!=null)navigator.geolocation.clearWatch(geoId);siren('');if(wake){try{wake.release()}catch(e){}}
+  $('alarm').classList.add('hide');$('link').classList.add('hide');$('main').classList.add('hide');$('login').classList.remove('hide')}
+$('stop').addEventListener('click',stop);
+$('test').addEventListener('click',()=>{audioInit();testUntil=Date.now()+3000;render();setTimeout(render,3100)});
+if(store.get('rg_demo')==='1')$('demo').checked=true;
+setInterval(poll,1000);setInterval(render,500);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+</script>
+</body>
+</html>

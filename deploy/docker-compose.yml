@@ -1,0 +1,16 @@
+# SIN PROBAR en este entorno (no había Docker). Revisar antes de exponer a Internet.
+services:
+  railguard:
+    build: {context: .., dockerfile: deploy/Dockerfile}
+    # para el feed oficial:  command: ["python3","server.py","--host","0.0.0.0","--source","renfe","--gtfs","/app/data/google_transit.zip"]
+    environment: [RAILGUARD_TOKEN=${RAILGUARD_TOKEN:?defina RAILGUARD_TOKEN}]
+    volumes: ["../data:/app/data"]        # events.jsonl (auditoría) y drivers.json (solo hashes de tokens)
+    restart: unless-stopped
+  caddy:                                   # HTTPS automático: obligatorio para GPS y service worker en las tablets
+    image: caddy:2
+    ports: ["80:80", "443:443"]
+    environment: [RG_DOMAIN, RG_USER, RG_HASH]
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "caddy_data:/data"]
+    depends_on: [railguard]
+    restart: unless-stopped
+volumes: {caddy_data: {}}

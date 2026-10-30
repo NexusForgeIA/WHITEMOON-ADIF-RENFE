@@ -1,0 +1,15 @@
+{$RG_DOMAIN} {
+	# Cabina (X-Driver-Token) y paneles de centro (X-Centre-Token): cada uno se autentica con su propio token.
+	# /api/centre/issue exige además RAILGUARD_TOKEN en el servidor, aunque esta ruta pase abierta.
+	@cab path /tablet /manifest.webmanifest /sw.js /icon.svg /api/tablet/* /centro /api/centre/*
+	handle @cab {
+		reverse_proxy railguard:8080
+	}
+	# Panel del operador y APIs de control: usuario y contraseña (hash con: caddy hash-password)
+	handle {
+		basic_auth {
+			{$RG_USER} {$RG_HASH}
+		}
+		reverse_proxy railguard:8080
+	}
+}

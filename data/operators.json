@@ -1,0 +1,443 @@
+[
+ {
+  "id": "renfe-viajeros",
+  "name": "Renfe Viajeros",
+  "type": "viajeros",
+  "brands": "AVE, Avlo, Alvia, Euromed, Intercity, Avant, Media Distancia, Cercanías/Rodalies",
+  "feed": "renfe-gtfsrt",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "ouigo",
+  "name": "Ouigo España",
+  "type": "viajeros",
+  "brands": "Ouigo",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "iryo",
+  "name": "Intermodalidad de Levante (ILSA) · Iryo",
+  "type": "viajeros",
+  "brands": "Iryo",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "alsa-ferrocarril",
+  "name": "Alsa Ferrocarril",
+  "type": "viajeros+mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "arriva-spain-rail",
+  "name": "Arriva Spain Rail",
+  "type": "viajeros",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "avanza-tren",
+  "name": "Avanza Tren",
+  "type": "viajeros",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "aisa-tren",
+  "name": "AISA Tren",
+  "type": "viajeros",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "athos-rail",
+  "name": "Athos Rail",
+  "type": "viajeros+mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "eco-rail",
+  "name": "Eco Rail",
+  "type": "viajeros+mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "empresa-ruiz",
+  "name": "Empresa Ruiz",
+  "type": "viajeros",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "euskotren",
+  "name": "Eusko Trenbideak (Euskotren)",
+  "type": "viajeros+mercancías",
+  "brands": "Euskotren",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "ferrocarrils-historics-de-l-ebre",
+  "name": "Ferrocarrils Històrics de l'Ebre",
+  "type": "viajeros",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "ferrovial-railway",
+  "name": "Ferrovial Railway",
+  "type": "viajeros+mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "fgc",
+  "name": "FGC Mobilitat",
+  "type": "viajeros",
+  "brands": "FGC (publica GTFS-RT de actualizaciones de viaje: adaptador pendiente)",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "fgc-rail",
+  "name": "FGC Rail",
+  "type": "viajeros+mercancías",
+  "brands": "FGC",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "global-rail",
+  "name": "Global Rail",
+  "type": "viajeros+mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "lcr-hispanica",
+  "name": "LCR Hispánica",
+  "type": "viajeros+mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "captrain",
+  "name": "Captrain España",
+  "type": "viajeros+mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "renfe-mercancias",
+  "name": "Renfe Mercancías",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "acciona-rail",
+  "name": "Acciona Rail Services",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "ceff-rail",
+  "name": "CEFF-Rail",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "compania-europea-ferroviaria-cef",
+  "name": "Compañía Europea Ferroviaria (CEFSA)",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "comsa-rail",
+  "name": "COMSA",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "continental-rail",
+  "name": "Continental Rail",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "contratas-y-servicios-ferroviari",
+  "name": "Contratas y Servicios Ferroviarios (COSFESA)",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "contratas-y-ventas",
+  "name": "Contratas y Ventas",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "csp-logitren",
+  "name": "CSP Logitren",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "electren",
+  "name": "Electren",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "go-transport-servicios-2018",
+  "name": "Go Transport Servicios 2018",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "guinovart-rail",
+  "name": "Guinovart Rail",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "rail-truck-strait-union",
+  "name": "Rail&Truck Strait Union",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "rubau-i-vilor-empresa-ferroviari",
+  "name": "Rubau i Vilor Empresa Ferroviaria (RIVEF)",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "suardiaz-rail-company",
+  "name": "Suardiaz Rail Company",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "traccion-rail",
+  "name": "Tracción Rail",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "transervi",
+  "name": "Transervi",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "transportes-mixtos-especiales-tr",
+  "name": "Transportes Mixtos Especiales (TRAMESA)",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "vias-y-construcciones",
+  "name": "Vías y Construcciones",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "medway",
+  "name": "Medway",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "hexafret",
+  "name": "Hexafret",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "db-cargo-france",
+  "name": "DB Cargo France",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "captrain-portugal",
+  "name": "Captrain Portugal",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "conte-rail",
+  "name": "Conte Rail",
+  "type": "mercancías",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "sncf-voyageurs",
+  "name": "SNCF Voyageurs",
+  "type": "viajeros",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "cp-comboios-de-portugal",
+  "name": "CP Comboios de Portugal",
+  "type": "viajeros",
+  "brands": "",
+  "feed": "tablet",
+  "verified": true,
+  "source": "AESF"
+ },
+ {
+  "id": "fgv",
+  "name": "FGV (Ferrocarrils de la Generalitat Valenciana)",
+  "type": "viajeros",
+  "brands": "red propia",
+  "feed": "tablet",
+  "verified": false,
+  "source": "no figura en el listado AESF: por confirmar"
+ },
+ {
+  "id": "sfm",
+  "name": "SFM (Serveis Ferroviaris de Mallorca)",
+  "type": "viajeros",
+  "brands": "red propia",
+  "feed": "tablet",
+  "verified": false,
+  "source": "no figura en el listado AESF: por confirmar"
+ },
+ {
+  "id": "adif",
+  "name": "Adif / Adif AV (trenes de mantenimiento y auscultación)",
+  "type": "infraestructura",
+  "brands": "",
+  "feed": "tablet",
+  "verified": false,
+  "source": "gestor de infraestructura"
+ },
+ {
+  "id": "demo-a",
+  "name": "Operador demo A (ficticio)",
+  "type": "demo",
+  "brands": "",
+  "feed": "demo",
+  "verified": true,
+  "source": "demo"
+ },
+ {
+  "id": "demo-b",
+  "name": "Operador demo B (ficticio)",
+  "type": "demo",
+  "brands": "",
+  "feed": "demo",
+  "verified": true,
+  "source": "demo"
+ }
+]

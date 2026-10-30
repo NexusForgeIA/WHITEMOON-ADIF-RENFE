@@ -1,0 +1,8 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+data/events.jsonl
+data/drivers.json
+data/centres_auth.json
+deploy/.env
+*.zip

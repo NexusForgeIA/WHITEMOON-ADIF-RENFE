@@ -1,0 +1,117 @@
+{
+ "_nota": "ILUSTRATIVO · verified=false en todo. Trazado esquemático (recta entre estaciones), no geometría real. Usted indicó que existe LZB en migración a ETCS/ERTMS pero no en qué líneas: la asignación 'LZB→ETCS' a Madrid–Sevilla es conocimiento general mío y hay que confirmarla con Adif; el resto figura como 'por confirmar'.",
+ "corridors": [
+  {
+   "id": "mad-bcn",
+   "name": "Madrid – Zaragoza – Barcelona (AV)",
+   "stations": [
+    "60000",
+    "04007",
+    "04040",
+    "78400",
+    "71801"
+   ],
+   "signalling": "ETCS / ASFA (por confirmar)",
+   "atp_required": false,
+   "max_kmh": 300,
+   "verified": false
+  },
+  {
+   "id": "mad-sev",
+   "name": "Madrid – Ciudad Real – Córdoba – Sevilla (AV)",
+   "stations": [
+    "60000",
+    "37200",
+    "50500",
+    "51003"
+   ],
+   "signalling": "LZB → ETCS (migración)",
+   "atp_required": true,
+   "max_kmh": 300,
+   "verified": false
+  },
+  {
+   "id": "mad-val",
+   "name": "Madrid – Cuenca – Valencia (AV)",
+   "stations": [
+    "17000",
+    "03208",
+    "03213",
+    "03216"
+   ],
+   "signalling": "ETCS / ASFA (por confirmar)",
+   "atp_required": false,
+   "max_kmh": 300,
+   "verified": false
+  },
+  {
+   "id": "ali-mur",
+   "name": "Alicante – Elx – Murcia (AV)",
+   "stations": [
+    "60911",
+    "03410",
+    "62002",
+    "61200"
+   ],
+   "signalling": "ETCS / ASFA (por confirmar)",
+   "atp_required": false,
+   "max_kmh": 300,
+   "verified": false
+  },
+  {
+   "id": "mad-gal",
+   "name": "Madrid – Segovia – Zamora – Ourense – Vigo (AV)",
+   "stations": [
+    "17000",
+    "08004",
+    "08240",
+    "30200",
+    "22100",
+    "08223"
+   ],
+   "signalling": "ETCS / ASFA (por confirmar)",
+   "atp_required": false,
+   "max_kmh": 300,
+   "verified": false
+  },
+  {
+   "id": "bcn-fig",
+   "name": "Barcelona – Girona – Figueres",
+   "stations": [
+    "71801",
+    "79300",
+    "04307"
+   ],
+   "signalling": "ETCS / ASFA (por confirmar)",
+   "atp_required": false,
+   "max_kmh": 300,
+   "verified": false
+  },
+  {
+   "id": "mal-alo",
+   "name": "Málaga – El Chorro – Álora (convencional, vía única)",
+   "stations": [
+    "54413",
+    "54403",
+    "54404",
+    "54405"
+   ],
+   "signalling": "ASFA (por confirmar)",
+   "atp_required": false,
+   "max_kmh": 160,
+   "verified": false
+  },
+  {
+   "id": "gra-loj",
+   "name": "Granada – Loja",
+   "stations": [
+    "05000",
+    "05012"
+   ],
+   "signalling": "Por confirmar",
+   "atp_required": false,
+   "max_kmh": 220,
+   "verified": false
+  }
+ ]
+}

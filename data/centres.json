@@ -1,0 +1,10 @@
+{
+  "_nota": "ILUSTRATIVO. Zonas por cercanía al centro (Voronoi con histéresis), no las demarcaciones reales de los CTC/PMR de Adif. Sustituir por las zonas reales (lista de estaciones/tramos por centro) cuando Adif las facilite. Coordenadas aproximadas de las estaciones.",
+  "national": {"id": "nacional", "name": "Centro Nacional de Supervisión"},
+  "border_km": 40,
+  "centres": [
+    {"id": "madrid", "name": "Madrid · Atocha", "lat": 40.4066, "lon": -3.6892},
+    {"id": "barcelona", "name": "Barcelona · Sants", "lat": 41.3791, "lon": 2.1400},
+    {"id": "sevilla", "name": "Sevilla · Santa Justa", "lat": 37.3925, "lon": -5.9754}
+  ]
+}
