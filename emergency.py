@@ -5,7 +5,9 @@ está en OSM (teléfono, dirección) simplemente no se muestra. Solo informativo
 """
 import json, math, os, threading, time, urllib.parse, urllib.request
 
-from infra import ENDPOINTS
+# Servidores que responden bien (se prueban en este orden); overpass-api.de suele estar saturado
+ENDPOINTS = ["https://overpass.openstreetmap.fr/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+             "https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
 from ltv import project
 
 LAT0, LAT1, LON0, LON1, STEP = 35.8, 44.0, -9.5, 4.5, 2.0
@@ -25,22 +27,23 @@ def tiles():
 
 
 def query(b):
+    """Consulta ligera: solo filtros de valor EXACTO (Overpass los resuelve por índice en segundos). El reparto entre Guardia
+    Civil y Cruz Roja se hace después, en kind_of(). Las consultas con expresiones regulares sobre todo el mapa agotan el tiempo."""
     s, w, n, e = b
     bb = f"({s},{w},{n},{e})"
-    return (f'[out:json][timeout:60];('
-            f'nwr["amenity"="police"]["operator"~"{GC_RE}",i]{bb};'
-            f'nwr["amenity"="police"]["name"~"{GC_RE}",i]{bb};'
-            f'nwr["operator"~"{CR_RE}",i]["amenity"~"^({CR_AMEN})$"]{bb};'
-            f'nwr["name"~"{CR_RE}",i]["amenity"~"^({CR_AMEN})$"]{bb};'
-            f'nwr["emergency"="ambulance_station"]["operator"~"{CR_RE}",i]{bb};'
-            f');out tags center qt;')
+    f = ['["amenity"="police"]', '["operator"="Cruz Roja Española"]', '["operator"="Cruz Roja"]', '["brand"="Cruz Roja"]',
+         '["emergency"="ambulance_station"]', '["amenity"="ambulance_station"]']
+    return "[out:json][timeout:30];(" + "".join(f"nwr{x}{bb};" for x in f) + ");out tags center qt;"
 
 
 def kind_of(tags):
     """'gc' | 'cr' | None, solo si el propio dato lo dice."""
     txt = f'{tags.get("operator", "")} {tags.get("name", "")}'.lower()
-    if tags.get("amenity") == "police" and ("guardia civil" in txt or "comandancia" in txt or "cuartel" in txt):
-        return "gc"
+    if tags.get("amenity") == "police":
+        return "gc" if ("guardia civil" in txt or "comandancia" in txt or "cuartel" in txt) else None
+    who = f'{tags.get("operator", "")} {tags.get("brand", "")}'.lower()
+    if "cruz roja" in who:
+        return "cr"
     if "cruz roja" in txt and (tags.get("amenity") in CR_AMEN.split("|") or tags.get("emergency") == "ambulance_station"):
         return "cr"
     return None
@@ -91,7 +94,7 @@ class Emergency:
     def _http(ep, q):
         req = urllib.request.Request(ep, data=("data=" + urllib.parse.quote(q)).encode(),
                                      headers={"User-Agent": "RailGuard/1.0 (WhiteMoon; contact whitemoon.es)"})
-        with urllib.request.urlopen(req, timeout=90) as r:
+        with urllib.request.urlopen(req, timeout=30) as r:
             return json.load(r)
 
     def refresh(self):
