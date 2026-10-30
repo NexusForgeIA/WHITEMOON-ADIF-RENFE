@@ -260,10 +260,10 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 
 <section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
   <div class="tb"><button id="zi" title="Acercar">+</button><button id="zo" title="Alejar">−</button><button id="zr" title="Ajustar a toda la red">⌂</button>
-    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lcl" hidden title="Cercanías: posición de parada, sin velocidad; solo informativo"><input type="checkbox" id="lc" checked>Cercanías <span id="lcn"></span></label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
+    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lcl" hidden title="Cercanías: posición de parada, sin velocidad; solo informativo"><input type="checkbox" id="lc" checked>Cercanías <span id="lcn"></span></label><label title="Resalta las líneas de alta velocidad (AVE) y su nombre"><input type="checkbox" id="lave" checked>AVE</label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
     <button id="lgb" title="Qué significan los colores y las etiquetas del mapa">? Leyenda</button><select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
   <div class="legend"><span><s style="background:var(--ok)"></s>libre</span><span><s style="background:var(--cau)"></s>precaución</span><span><s style="background:var(--res)"></s>restringido</span><span><s style="background:var(--stop)"></s>STOP</span>
-    <span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
+    <span style="color:#e8f1ff">┅ AVE alta velocidad</span><span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
   <div id="lg" hidden><div class="lh"><b>Estado de cada tren (orden de RailGuard)</b><button id="lgx" title="Cerrar">×</button></div>
     <div class="lr"><i style="background:var(--ok)"></i><em>NONE · libre</em><span>Sin orden. Ninguna barrera detecta riesgo; circula normal.</span></div>
     <div class="lr"><i style="background:var(--cau)"></i><em>CAUTION · precaución</em><span>Aviso leve: dato dudoso o ligero exceso de velocidad (3–8 %). Se avisa a cabina y centro; no frena.</span></div>
@@ -412,6 +412,19 @@ function draw(){
     (S.corridors||[]).forEach(c=>{const pts=c.stations.filter(k=>st[k]).map(k=>T(st[k].x,st[k].y));if(pts.length<2)return;
       cx.globalAlpha=.85;cx.strokeStyle=SIGCOL(c.signalling);cx.lineWidth=lw+1;cx.beginPath();pts.forEach((p,i)=>i?cx.lineTo(...p):cx.moveTo(...p));cx.stroke();
       cx.globalAlpha=.9;cx.strokeStyle='#0a1017';cx.lineWidth=Math.max(.8,lw-.6);cx.setLineDash([7,9]);cx.stroke();cx.setLineDash([]);cx.globalAlpha=1});
+  }
+  // líneas de alta velocidad (AVE): halo claro + nombre sobre el trazado
+  if($('lave')&&$('lave').checked){
+    const AVEID=['bcn-fig'];const seen={};
+    (S.corridors||[]).forEach(c=>{if(!(/\(AV\)/.test(c.name||'')||AVEID.includes(c.id)))return;
+      const pts=c.stations.filter(k=>st[k]).map(k=>T(st[k].x,st[k].y));if(pts.length<2)return;
+      cx.save();cx.lineCap='round';cx.lineJoin='round';cx.globalAlpha=.16;cx.strokeStyle='#e8f1ff';cx.lineWidth=lw+8;cx.beginPath();pts.forEach((q,i)=>i?cx.lineTo(...q):cx.moveTo(...q));cx.stroke();
+      cx.globalAlpha=.55;cx.strokeStyle='#e8f1ff';cx.lineWidth=1;cx.setLineDash([2,5]);cx.beginPath();pts.forEach((q,i)=>i?cx.lineTo(...q):cx.moveTo(...q));cx.stroke();cx.restore();
+      const nm='AVE '+(c.name||'').replace(/\s*\(AV\)/,'').replace(/ – .* – /,' – ').replace(/^(.*?) – (.*)$/,(m,a,b)=>a+' – '+b.split(' – ').pop());
+      if(seen[nm])return;seen[nm]=1;
+      let tot=0;for(let i=1;i<pts.length;i++)tot+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);
+      let acc=0,mx=pts[0][0],my=pts[0][1];for(let i=1;i<pts.length;i++){const L=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);if(acc+L>=tot/2){const f=(tot/2-acc)/(L||1);mx=pts[i-1][0]+(pts[i][0]-pts[i-1][0])*f;my=pts[i-1][1]+(pts[i][1]-pts[i-1][1])*f;break}acc+=L}
+      cx.save();cx.font='700 10px system-ui,sans-serif';const w=cx.measureText(nm).width+10;cx.fillStyle='rgba(10,16,23,.88)';cx.strokeStyle='#e8f1ff';cx.lineWidth=1;cx.beginPath();cx.roundRect(mx-w/2,my-17,w,15,7);cx.fill();cx.stroke();cx.fillStyle='#e8f1ff';cx.textAlign='center';cx.fillText(nm,mx,my-6);cx.restore()});
   }
   // estaciones
   if($('ls').checked){
