@@ -221,7 +221,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   body{height:auto;min-height:100vh;grid-template-rows:auto auto minmax(620px,auto) auto}
   .panel,#chain,#log,#cabins{overflow:visible;max-height:none}
   #right{overflow:visible;min-height:0}#right .panel{flex:none;max-height:none}
-  #mapwrap{height:auto;min-height:600px;align-self:stretch}#mapwrap canvas{position:absolute;inset:0}
+  #mapwrap{height:clamp(620px,calc(100vh - 150px),900px);min-height:620px;align-self:start}#mapwrap canvas{position:absolute;inset:0}
   #chain{display:flex;flex-direction:column}#chain .chain{flex:1}#chain .bar{flex:1;display:flex;flex-direction:column;justify-content:center}
   #log,#cabins{display:flex;flex-direction:column}#log .more{margin-top:auto}
   #right .panel:last-child{flex:1 1 auto}
@@ -376,7 +376,7 @@ function render(){
 const cv=$('cv'),cx=cv.getContext('2d'),tip=$('tip');
 let V={z:1,px:0,py:0},base=null,sel=null,opf='',drag=null,ptrs=new Map(),pinch0=0;
 const SIGCOL=sg=>!sg?'#8ea0b6':sg.includes('LZB')?'#ff9f43':sg.startsWith('ETCS')?'#4aa8ff':'#8ea0b6';
-function fit(){const r=cv.parentElement.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;cx.setTransform(d,0,0,d,0,0);return r}
+function fit(){const r=cv.parentElement.getBoundingClientRect(),d=devicePixelRatio||1,w=Math.round(r.width*d),hh=Math.round(r.height*d);if(cv.width!==w)cv.width=w;if(cv.height!==hh)cv.height=hh;cx.setTransform(d,0,0,d,0,0);return r}
 function setBase(W,H){
   const xs=S.stations.map(s=>s.x),ys=S.stations.map(s=>s.y),pad=44;
   const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
