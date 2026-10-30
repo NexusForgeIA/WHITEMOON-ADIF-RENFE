@@ -222,15 +222,17 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 @media(min-width:1101px){
   body{height:auto;min-height:100vh;grid-template-rows:auto auto auto auto auto}
   .panel,#chain,#log,#cabins{overflow:visible;max-height:none}
-  #right{overflow:visible;min-height:0}#right .panel{flex:none;max-height:none}
-  #right{display:contents}#rtop{grid-column:3;grid-row:3;display:flex;flex-direction:column;gap:10px;min-width:0}#rtop .panel{flex:none}
-  #chain{grid-row:3/6}#hzp{grid-column:2;grid-row:4;min-width:0}#cabins{grid-column:3;grid-row:4}#log{grid-column:2/4;grid-row:5}
-  body.full #rtop{display:contents}body.full #hzp{grid-column:auto;grid-row:auto}body.full #hz{display:block}
+  #right{display:contents}
+  /* Tres columnas sin huecos: izquierda (defensas) | centro (mapa, peligros, registro) | derecha (retrasos, cola, cabinas) */
+  #rtop{grid-column:3;grid-row:3;display:flex;flex-direction:column;gap:10px;min-width:0}#rtop .panel{flex:none}#rtop #cabins{flex:1 1 auto}
+  #chain{grid-row:3/6;display:flex;flex-direction:column}
+  #chain #bars{flex:1 1 auto;display:flex;flex-direction:column;gap:8px}#chain #bars>*{flex:1 1 auto;margin:0}
+  #hzp{grid-column:2/4;grid-row:4;min-width:0}#log{grid-column:2/4;grid-row:5;display:flex;flex-direction:column}#log .more{margin-top:auto}
+  body.full #rtop{display:contents}body.full #hzp{grid-column:auto;grid-row:auto}body.full #hz{display:block}body.full #cabins{display:none}
   #hz{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:start}#hz .hzc{margin:0}#hz>.empty,#hz>.ll,#hz>div:not(.hzc){grid-column:1/-1}
-  #mapwrap{height:clamp(520px,calc(100vh - 300px),720px);min-height:520px;align-self:start}#mapwrap canvas{position:absolute;inset:0}
-  #chain{display:flex;flex-direction:column}#chain .bar p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:10.5px;line-height:1.3;margin:2px 0 3px}#chain .bar .n{display:inline-block}
-  #log,#cabins{display:flex;flex-direction:column}#log .more{margin-top:auto}
-  #right .panel:last-child{flex:1 1 auto}
+  /* el mapa ocupa todo el alto de su fila (la fila la fija la columna derecha si es más alta): nunca queda hueco bajo él */
+  #mapwrap{height:auto;min-height:clamp(520px,calc(100vh - 300px),720px);align-self:stretch}#mapwrap canvas{position:absolute;inset:0}
+  #chain .bar p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:10.5px;line-height:1.3;margin:2px 0 3px}#chain .bar .n{display:inline-block}
 }
 .xsum{cursor:pointer;list-style:none;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#0d151e;color:var(--tx);font-weight:600;font-size:12px;display:flex;justify-content:space-between}.xsum::-webkit-details-marker{display:none}#xtra[open] .xsum span{transform:rotate(180deg)}
 @media(max-width:700px){
@@ -247,6 +249,11 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 .tb input[type=checkbox]{width:15px;height:15px;margin:0;cursor:pointer}
 .tb button,.tb select{min-height:28px}
 @media(pointer:coarse){.tb label{min-height:34px;padding:7px 10px}.tb button,.tb select{min-height:34px}.tb input[type=checkbox]{width:18px;height:18px}}
+@media(max-width:1100px){
+  #right{display:flex;flex-direction:column;gap:10px}#rtop{display:contents}
+  #dly{order:1}#rtop>.panel:not(#dly):not(#cabins){order:2}#hzp{order:3}#cabins{order:4}
+  body.full #right{display:grid}body.full #cabins{display:none}
+}
 </style>
 </head>
 <body>
@@ -300,17 +307,17 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   <section class="panel" id="dly"><h2 class="tabs"><button class="on" style="cursor:default">⏱ Trenes con retraso <span id="dln"></span></button></h2><div id="dlsum"></div><div id="dll"></div></section>
   <section class="panel"><h2>Cola del operador · B6 <span style="text-transform:none;letter-spacing:0">(solo situaciones ya contenidas)</span></h2><div id="queue"></div>
     <div class="man"><input id="mt" placeholder="Nº de tren (restricción manual)"><button id="mb">Restringir</button><button id="mr">Retirar</button></div></section>
-</div>
-  <section class="panel" id="hzp"><h2 class="tabs"><button id="tabhz" class="on">Peligros activos</button><button id="tabfc" title="Previsión de posibles conflictos en los próximos 20 min (informativa)">🔮 Previsión <span id="fcn"></span></button><button id="tabav" title="Avisos oficiales de Renfe Cercanías/Rodalies (informativo)" hidden>🚆 Avisos <span id="avn"></span></button></h2><div id="hz"></div><div id="fc" hidden></div><div id="av" hidden></div></section>
-</aside>
-
-<section class="panel" id="log"></section>
 <section class="panel" id="cabins"><h2>Cabinas · canal privado de tablets</h2>
   <div class="frm" id="pmrow"><span class="mut" style="color:var(--mut)">Aviso &lt; <b id="pk">3</b> km:</span><select id="pm"><option value="relevant">solo conflicto de vía (recomendado)</option><option value="strict">cualquier par &lt; 3 km</option></select></div>
   <div id="tabs"></div>
   <div id="issue"><h2 style="margin-top:10px">Emitir token de maquinista</h2>
   <div class="frm"><input id="di" placeholder="Id (seudónimo)"><input id="dt" placeholder="Nº tren"><select id="do"></select><button id="dg">Emitir</button></div>
   <div class="tokbox" id="tk"></div><div id="drv"></div></div></section>
+</div>
+  <section class="panel" id="hzp"><h2 class="tabs"><button id="tabhz" class="on">Peligros activos</button><button id="tabfc" title="Previsión de posibles conflictos en los próximos 20 min (informativa)">🔮 Previsión <span id="fcn"></span></button><button id="tabav" title="Avisos oficiales de Renfe Cercanías/Rodalies (informativo)" hidden>🚆 Avisos <span id="avn"></span></button></h2><div id="hz"></div><div id="fc" hidden></div><div id="av" hidden></div></section>
+</aside>
+
+<section class="panel" id="log"></section>
 
 <div id="toast"></div>
 <div id="sysov" hidden></div><div id="aboutov" hidden></div>
