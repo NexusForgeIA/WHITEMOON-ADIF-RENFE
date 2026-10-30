@@ -22,6 +22,7 @@ from engine import Engine
 from infra import Infra
 from ltv import Ltv
 from emergency import Emergency
+import persist
 import punctuality
 import systems
 import forecast
@@ -681,6 +682,13 @@ STATIC = {"/": ("index.html", "text/html"), "/index.html": ("index.html", "text/
 INFRA = None
 LTV = None
 EMG = None
+SYNC = None
+_remote = persist.from_env()
+if _remote:     # cachés en Supabase: sobreviven a los reinicios de Render. La descarga se acota para no retrasar el arranque.
+    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json")})
+    _t = threading.Thread(target=SYNC.restore, daemon=True)
+    _t.start()
+    _t.join(60)
 PUNCT = punctuality.History(os.path.join(ROOT, "data", "punct_history.json"))
 
 
@@ -822,6 +830,9 @@ def main():
     if a.source == "renfe" and os.environ.get("RG_EMG", "1") != "0":
         EMG = Emergency(os.path.join(ROOT, "data", "emergency_cache.json"))
         threading.Timer(20, EMG.start).start()
+
+    if SYNC:
+        SYNC.start()
 
     def loop(fn, period):
         while True:
