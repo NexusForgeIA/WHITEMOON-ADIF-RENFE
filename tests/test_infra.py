@@ -56,3 +56,11 @@ def test_extra_official_data_is_loaded_and_flagged(tmp_path):
     i = Infra(cache=str(tmp_path / "c.json"), extra=str(tmp_path / "x.json"))
     i._set({"ways": [], "points": []})
     assert i.data["meta"]["extra_source"] == "Adif (cesión)" and i.data["points"][0]["official"] and len(i.data["cantones"]) == 1
+
+
+def test_build_ignora_nodos_nulos_de_la_geometria():
+    """Overpass pone null en los nodos de una vía que caen fuera de la tesela; no debe tumbar la descarga."""
+    els = [{"type": "way", "id": 1, "tags": {"tracks": "2"}, "geometry": [{"lat": 40.0, "lon": -3.0}, None, {"lat": 40.1, "lon": -3.1}, None]},
+           {"type": "way", "id": 2, "tags": {}, "geometry": [None, None]}]
+    ways, _ = build(els)
+    assert len(ways) == 1 and ways[0]["t"] == 2

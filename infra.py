@@ -99,7 +99,8 @@ def build(elements):
     for e in elements:
         t = e.get("tags") or {}
         if e["type"] == "way" and e.get("geometry"):
-            pts = simplify([project(g["lat"], g["lon"]) for g in e["geometry"]])
+            # Overpass devuelve null en los nodos que quedan fuera de la tesela: se descartan
+            pts = simplify([project(g["lat"], g["lon"]) for g in e["geometry"] if g and "lat" in g])
             if len(pts) < 2:
                 continue
             ways[e["id"]] = {"t": _int(t.get("tracks")), "s": signalling_of(t), "v": _int(t.get("maxspeed")),
