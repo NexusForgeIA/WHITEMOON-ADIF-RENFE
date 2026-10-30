@@ -125,6 +125,15 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 #tvov .ib{display:grid;gap:12px;align-content:start}#tvov .r{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #e3eaf1;padding:5px 0;font-size:13px}#tvov .r span:first-child{color:#5b6f82}#tvov .r span:last-child{font-weight:600;text-align:right}
 #tvov .nt{font-size:11px;color:#5b6f82;padding:0 4px}
 @media(max-width:900px){#tvov .tiles{grid-template-columns:1fr 1fr}#tvov .tr5{grid-template-columns:repeat(2,1fr)}#tvov .bt{grid-template-columns:1fr}}
+
+body.full #right{position:fixed;inset:0;z-index:48;background:#070b10;padding:14px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px;align-content:start}
+body.full #right .panel{flex:none;overflow:visible;max-height:none}
+body.full #dll{max-height:none}
+body.full #hz:not([hidden]),body.full #fc:not([hidden]),body.full #av:not([hidden]){display:block;margin-bottom:12px}body.full #hz[hidden],body.full #fc[hidden],body.full #av[hidden]{display:none}
+body.full #hz::before,body.full #fc::before,body.full #av::before{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:6px 0}
+body.full #hz::before{content:"Peligros activos"}body.full #fc::before{content:"Previsión (informativa)"}body.full #av::before{content:"Avisos de Cercanías/Rodalies (informativo)"}
+body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
+#fullx{display:none}body.full #fullx{display:block;position:fixed;top:12px;right:16px;z-index:49;border:0;background:#d6e1ec;color:#0b121a;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer}
 #aboutov{position:fixed;inset:0;z-index:51;background:#070b10;overflow:auto;padding:18px max(18px,env(safe-area-inset-left,0px))}#aboutov[hidden]{display:none}
 #aboutov .ab{max-width:980px;margin:0 auto}#aboutov h1{font-size:22px;margin:6px 0}#aboutov h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:18px 0 6px}
 #aboutov table{width:100%;border-collapse:collapse;font-size:12.5px}#aboutov td,#aboutov th{border-top:1px solid #16212d;padding:6px 8px;text-align:left;vertical-align:top}#aboutov th{color:var(--mut);font-weight:600}
@@ -149,6 +158,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
   <h1>RAIL<span>GUARD</span></h1><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
   <div id="banner" class="banner"></div><div id="pbanner"></div>
   <button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
+  <button id="fullb" class="sysb" style="border-color:#2b6cb0;color:#cfe6ff" title="Abre a pantalla completa retrasos, cola del operador, peligros, previsión y avisos">⤢ Ver todo</button>
   <button id="abb" class="sysb" style="border-color:#3a4a5c;color:#d6e1ec" title="Qué datos son reales, qué es simulado y qué límites tiene este sistema">ℹ Alcance y fuentes</button>
   <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas de seguridad</button>
   <button id="adm" title="Token de administración (RAILGUARD_TOKEN)">🔑</button>
@@ -179,6 +189,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
   <div id="ovl"><div id="acting"></div><div id="outs"></div></div><div id="infnote" hidden></div><div class="scale" id="scale"></div>
 </section>
 
+<button id="fullx">✕ Cerrar vista completa</button>
 <div id="tvov" hidden></div>
 <aside id="right">
   <section class="panel" id="dly"><h2 class="tabs"><button class="on" style="cursor:default">⏱ Trenes con retraso <span id="dln"></span></button></h2><div id="dlsum"></div><div id="dll"></div></section>
@@ -468,26 +479,29 @@ function renderDelays(){
   const avg=n?Math.round(L.reduce((s,t)=>s+t.ret,0)/n):0;
   $('dlsum').textContent=n?n+' de '+all.length+' trenes con ≥ '+DLY_MIN+' min · máximo '+fmtDelay(L[0].ret)+' · media '+avg+' min':'Ningún tren con ≥ '+DLY_MIN+' min de retraso ('+all.length+' trenes). Retraso según el feed de Renfe; los trenes sin dato cuentan como a tiempo.';
   $('dll').replaceChildren(...L.map(t=>{const r=h('div','dr'+(t.ret>=30?' m3':t.ret>=15?' m2':''),null,[h('b',null,t.n),h('span','w',(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'hacia '+t.to:''))+(t.dest?' · destino '+t.dest:'')),h('span','d','+'+fmtDelay(t.ret))]);
-    r.onclick=()=>{sel=t.n;$('mt').value=t.n;openCard(t.n);draw()};return r}))}
+    r.onclick=()=>{if(FULL)setFull(false);sel=t.n;$('mt').value=t.n;openCard(t.n);draw()};return r}))}
 let fcTab=false,avTab=false;
-function renderForecast(){
-  const F=S.forecast||{items:[],total:0},n=F.items.length,b=$('fcn');b.textContent=F.total||n;b.className=(F.total||n)?'on':'';
-  const C=S.cercanias,AL=(C&&C.alerts)||[];$('tabav').hidden=!C;$('avn').textContent=AL.length||'';
-  if(!C)avTab=false;
-  $('tabhz').className=(fcTab||avTab)?'':'on';$('tabfc').className=fcTab?'on':'';$('tabav').className=avTab?'on':'';
-  $('hz').hidden=fcTab||avTab;$('fc').hidden=!fcTab;$('av').hidden=!avTab;
-  if(avTab){const bx=$('av');bx.replaceChildren(h('div',null,'Avisos oficiales de Renfe para Cercanías/Rodalies. Informativo: no interviene en la seguridad.'));bx.firstChild.id='fcnote';
-    if(!AL.length)bx.appendChild(h('div','empty',C.alerts_ok===false?'Sin datos de avisos (feed no disponible).':'Sin avisos de servicio activos.'));
-    AL.forEach(a=>bx.appendChild(h('div','fci',null,[h('div','t',null,[h('em',null,a.region+(a.lines.length?' · '+a.lines.join(' '):'')),h('small',null,a.age_h<1?'hace <1 h':'hace '+a.age_h+' h')]),h('div','m',a.text)])));
-    return}
-  if(!fcTab)return;
-  const box=$('fc');box.replaceChildren(h('div',null,'Posibles conflictos en los próximos '+Math.round((F.horizon_s||1200)/60)+' min «si nada cambia». Informativo: no ordena nada.'));box.firstChild.id='fcnote';
+let FULL=false;
+function drawAv(C,AL){const bx=$('av');bx.replaceChildren(h('div',null,'Avisos oficiales de Renfe para Cercanías/Rodalies. Informativo: no interviene en la seguridad.'));bx.firstChild.id='fcnote';
+  if(!AL.length)bx.appendChild(h('div','empty',C&&C.alerts_ok===false?'Sin datos de avisos (feed no disponible).':'Sin avisos de servicio activos.'));
+  AL.forEach(a=>bx.appendChild(h('div','fci',null,[h('div','t',null,[h('em',null,a.region+(a.lines.length?' · '+a.lines.join(' '):'')),h('small',null,a.age_h<1?'hace <1 h':'hace '+a.age_h+' h')]),h('div','m',a.text)])))}
+function drawFc(F){const n=F.items.length,box=$('fc');box.replaceChildren(h('div',null,'Posibles conflictos en los próximos '+Math.round((F.horizon_s||1200)/60)+' min «si nada cambia». Informativo: no ordena nada.'));box.firstChild.id='fcnote';
   if(!n){box.appendChild(h('div','empty','Sin conflictos previstos en la ventana.'));box.appendChild(h('div','sg2',F.note||''));return}
   F.items.forEach(f=>box.appendChild(h('div','fci'+(f.level==='PRÓXIMO'?' soon':''),null,[
     h('div','t',null,[h('em',null,f.kind),h('small',null,f.level),h('span',null,'≈ '+Math.round(f.in_s/60)+' min')]),
     h('div','m',f.msg),h('div','th',f.then),h('div','sg2','Tramo: '+f.seg+' · trenes: '+f.trains.join(' · '))])));
   if(F.total>n)box.appendChild(h('div','empty','… y '+(F.total-n)+' previsiones más.'));
   box.appendChild(h('div','sg2',F.note||''))}
+function renderForecast(){
+  const F=S.forecast||{items:[],total:0},n=F.items.length,b=$('fcn');b.textContent=F.total||n;b.className=(F.total||n)?'on':'';
+  const C=S.cercanias,AL=(C&&C.alerts)||[];$('tabav').hidden=!C;$('avn').textContent=AL.length||'';
+  if(!C)avTab=false;
+  $('tabhz').className=(fcTab||avTab)?'':'on';$('tabfc').className=fcTab?'on':'';$('tabav').className=avTab?'on':'';
+  const showHz=FULL||(!fcTab&&!avTab),showFc=FULL||fcTab,showAv=(FULL&&!!C)||avTab;
+  $('hz').hidden=!showHz;$('fc').hidden=!showFc;$('av').hidden=!showAv;
+  if(showAv)drawAv(C,AL);if(showFc)drawFc(F)}
+function setFull(v){FULL=v;document.body.classList.toggle('full',v);document.body.style.overflow=v?'hidden':'';if(S){renderForecast();renderDelays()}}
+$('fullb').onclick=()=>setFull(true);$('fullx').onclick=()=>setFull(false);addEventListener('keydown',e=>{if(e.key==='Escape'&&FULL&&$('tvov').hidden)setFull(false)});
 $('tabhz').onclick=()=>{fcTab=avTab=false;renderForecast()};$('tabfc').onclick=()=>{fcTab=true;avTab=false;renderForecast()};$('tabav').onclick=()=>{avTab=true;fcTab=false;renderForecast()};
 function renderActing(){
   const a=$('acting');a.replaceChildren();const stops=S.trains.filter(t=>t.cmd==='STOP'),rs=S.trains.filter(t=>t.cmd==='RESTRICT').length;
@@ -568,8 +582,14 @@ $('sysb').onclick=openSys;addEventListener('keydown',e=>{if(e.key==='Escape'&&!$
 // ---- Vista de tren: panel visual y claro de un tren (solo datos reales del supervisor) ----
 let tvN=null,tvD=null,tvT=0;
 const TVCOL={NONE:'#1fa35a',CAUTION:'#e0a800',RESTRICT:'#e8710a',STOP:'#d32f2f'},TVTXT={NONE:'Operación normal',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP · freno aplicado'};
-function tvGauge(v,max){const R=70,C=Math.PI*R,f=Math.max(0,Math.min(1,v/(max||300))),col=f>1?'#d32f2f':v>max*.92?'#e0a800':'#1fa35a';
-  return '<svg viewBox="0 0 180 105" width="100%" style="max-width:210px"><path d="M20 90A70 70 0 0 1 160 90" fill="none" stroke="#dbe4ec" stroke-width="14" stroke-linecap="round"/><path d="M20 90A70 70 0 0 1 160 90" fill="none" stroke="'+col+'" stroke-width="14" stroke-linecap="round" stroke-dasharray="'+(C*f)+' '+C+'"/><text x="90" y="82" text-anchor="middle" font-size="34" font-weight="800" fill="#0f2233">'+v+'</text><text x="90" y="100" text-anchor="middle" font-size="11" fill="#5b6f82">km/h</text></svg>'}
+function tvGauge(v,max){
+  // Escala por tramos de supervisión (equivale a la idea ETCS de velocidad permitida / aviso / intervención, con umbrales de RailGuard):
+  // hasta el límite = permitida · +3 % aviso (CAUTION) · +8 % restricción · +15 % freno de emergencia (STOP)
+  const S0=max*1.25,R=70,cx=90,cy=90,pt=(x,r)=>{const a=Math.PI*(1-Math.min(x,S0)/S0);return[cx+r*Math.cos(a),cy-r*Math.sin(a)]};
+  const seg=(x0,x1,c)=>{const[p0,q0]=pt(x0,R),[p1,q1]=pt(x1,R);return '<path d="M'+p0+' '+q0+'A'+R+' '+R+' 0 0 1 '+p1+' '+q1+'" fill="none" stroke="'+c+'" stroke-width="12"/>'};
+  const [nx,ny]=pt(v,R-22),[bx,by]=pt(v,R+9);
+  return '<svg viewBox="0 0 180 112" width="100%" style="max-width:230px">'+seg(0,max,'#8fd3a8')+seg(max,max*1.03,'#e9d27a')+seg(max*1.03,max*1.08,'#f2b27a')+seg(max*1.08,max*1.15,'#ee8f8f')+seg(max*1.15,S0,'#d32f2f')
+   +'<line x1="'+nx+'" y1="'+ny+'" x2="'+bx+'" y2="'+by+'" stroke="#0f2233" stroke-width="3.5" stroke-linecap="round"/><text x="90" y="86" text-anchor="middle" font-size="30" font-weight="800" fill="#0f2233">'+v+'</text><text x="90" y="101" text-anchor="middle" font-size="10" fill="#5b6f82">km/h · límite '+max+'</text></svg>'}
 function tvMini(t,near){const W=640,H=330,P=30;let xs=near.map(n=>n.x).concat(t.x),ys=near.map(n=>n.y).concat(t.y);
   const k=S.unit_km;let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const span=Math.max((x1-x0)*k,(y1-y0)*k,40),sc=(Math.min(W,H)-2*P)/span*1;
   const cx=(x0+x1)/2,cy=(y0+y1)/2,X=x=>W/2+(x-cx)*k*sc,Y=y=>H/2+(y-cy)*k*sc;
@@ -593,7 +613,7 @@ function renderTV(){
   const hd=el('div','hd','<div style="font-size:30px">🚆</div><div><h1>'+(d.product?d.product+' ':'')+t.n+'</h1><small>'+(d.ori&&d.des?d.ori+' → '+d.des:(t.from||'?')+' → '+(t.to||'?')+(t.dest?' (destino '+t.dest+')':''))+(t.line?' · '+t.line:'')+'</small></div><div class="st '+t.cmd+'">'+TVTXT[t.cmd]+'<small>'+(act.length?act.length+' aviso(s) de barreras':'Sin avisos de las barreras')+'</small></div><div class="sp"></div><div style="text-align:right;font-size:13px;color:#44586b">'+fmt(S.now)+'<br>ciclo '+S.cycle+' · '+(S.mode==='sim'?'SIMULACIÓN':'EN VIVO')+'</div>');
   const cb=h('button',null,'✕ Cerrar');cb.onclick=closeTV;hd.appendChild(cb);
   const tiles=el('div','tiles','');
-  tiles.append(tile('Velocidad actual',tvGauge(t.kmh,t.vmax)+'<div class="sub">Límite de referencia: '+t.vmax+' km/h <span title="Valor de RailGuard por tipo de tren; no es el límite oficial de la línea">ⓘ</span></div>'),
+  tiles.append(tile('Velocidad actual',tvGauge(t.kmh,t.vmax)+'<div class="sub">Verde: permitida · amarillo +3 % aviso · naranja +8 % restricción · rojo +15 % freno de emergencia. Límite de referencia de RailGuard, no el oficial de la línea.</div>'),
     tile('Dirección','<div class="big" style="font-size:20px">'+(t.to?'→ '+t.to:'—')+'</div><div class="sub">'+(t.dest?'Destino: '+t.dest:'')+'</div>'),
     tile('Posición actual','<div class="big" style="font-size:19px">'+(t.from&&t.to&&t.from!==t.to?'Entre '+t.from+' y '+t.to:(d.where||(t.to?'Hacia '+t.to:'—')))+'</div><div class="sub">'+(t.src==='tablet'?'GPS de la tablet de cabina':'Posición del feed de Renfe')+' · sin P.K. (pendiente de datos de Adif)</div>'),
     tile('Estado de seguridad','<div class="big" style="color:'+(t.cmd==='NONE'?'#14703a':TVCOL[t.cmd])+'">'+({NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[t.cmd])+'</div><div class="sub">'+(act.length?act.slice(0,2).map(x=>x.barrier+' · '+x.msg).join('<br>'):'Ninguna barrera detecta riesgo')+'</div>'),
