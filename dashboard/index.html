@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RailGuard</title>
+<meta name="description" content="Supervisión de seguridad ferroviaria en profundidad: capas automáticas sobre datos de Renfe en vivo. Prototipo asesor, no certificado.">
+<link rel="icon" type="image/svg+xml" href="/logo.svg"><link rel="apple-touch-icon" href="/favicon.png">
+<meta property="og:type" content="website"><meta property="og:site_name" content="RailGuard">
+<meta property="og:title" content="RailGuard · Supervisión de seguridad ferroviaria">
+<meta property="og:description" content="8 capas automáticas de supervisión sobre datos de Renfe en vivo (LZB · ETCS · ASFA). WhiteMoon Agencia IA.">
+<meta property="og:url" content="https://whitemoon-railguard.onrender.com/"><meta property="og:image" content="https://whitemoon-railguard.onrender.com/og-image.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Logo de RailGuard: escudo con vías hacia una señal verde">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="RailGuard · Supervisión de seguridad ferroviaria"><meta name="twitter:image" content="https://whitemoon-railguard.onrender.com/og-image.png">
+<meta name="theme-color" content="#0a1017">
 <style>
 :root{--bg:#0a1017;--panel:#111a24;--line:#203041;--tx:#d6e1ec;--mut:#7f92a6;--ok:#3ddc97;--cau:#f2c94c;--res:#ff9f43;--stop:#ff4d5e;--acc:#4aa8ff}
 *{box-sizing:border-box}
@@ -219,7 +228,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 <body>
 <div id="toasts" aria-live="polite"></div>
 <header>
-  <h1>RAIL<span>GUARD</span></h1><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
+  <a href="/" class="brand" style="display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit"><img src="/logo.svg" alt="" width="32" height="32" style="display:block"><h1>RAIL<span>GUARD</span></h1></a><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
   <div id="banner" class="banner"></div><div id="pbanner"></div>
   <button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
   <button id="cabb" class="sysb" title="Muestra u oculta la banda del tren en foco">▣ Cabina</button>
