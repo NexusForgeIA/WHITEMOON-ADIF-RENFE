@@ -46,7 +46,7 @@ def query(b):
             f'(way["railway"="rail"]["usage"~"^(main|branch)$"][!"service"]{bb};'
             f'way["railway"="rail"]["highspeed"="yes"]{bb};)->.r;'
             f'.r out tags geom qt;'
-            f'node(w.r)["railway"~"^(signal|switch|buffer_stop|railway_crossing|crossing|derail)$"];out tags qt;')
+            f'node(w.r)["railway"~"^(signal|switch|buffer_stop|railway_crossing|crossing|derail)$"];out body qt;')   # body: con coordenadas (con «tags» los nodos llegan sin lat/lon)
 
 
 def _int(v):

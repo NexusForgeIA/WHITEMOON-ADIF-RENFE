@@ -64,3 +64,10 @@ def test_build_ignora_nodos_nulos_de_la_geometria():
            {"type": "way", "id": 2, "tags": {}, "geometry": [None, None]}]
     ways, _ = build(els)
     assert len(ways) == 1 and ways[0]["t"] == 2
+
+
+def test_consulta_pide_coordenadas_de_los_nodos():
+    """Con «out tags» Overpass devuelve los nodos SIN lat/lon y se pierden todas las señales y desvíos."""
+    from infra import query
+    q = query((40, -4, 41, -3))
+    assert q.rstrip().endswith("out body qt;") and "out tags qt;" not in q.split("->.r;")[1].split("node(w.r)")[1]

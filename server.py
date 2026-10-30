@@ -687,7 +687,7 @@ TRAF = None
 SYNC = None
 _remote = persist.from_env()
 if _remote:     # cachés en Supabase: sobreviven a los reinicios de Render. La descarga se acota para no retrasar el arranque.
-    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json")})
+    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache_v2.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json")})
     _t = threading.Thread(target=SYNC.restore, daemon=True)
     _t.start()
     _t.join(60)
@@ -826,7 +826,7 @@ def main():
     a.period = a.period or (15.0 if a.source == "renfe" else 2.0)
     APP = App(a.source, a.gtfs)
     if a.source == "renfe" and os.environ.get("RG_INFRA", "1") != "0":
-        INFRA = Infra(os.path.join(ROOT, "data", "infra_cache.json"), os.path.join(ROOT, "data", "infra_extra.json"))
+        INFRA = Infra(os.path.join(ROOT, "data", "infra_cache_v2.json"), os.path.join(ROOT, "data", "infra_extra.json"))
         INFRA.start()
     if a.source == "renfe" and os.environ.get("RG_LTV", "1") != "0":
         LTV = Ltv(os.path.join(ROOT, "data", "ltv_cache.json"))

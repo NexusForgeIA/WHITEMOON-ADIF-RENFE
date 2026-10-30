@@ -11,3 +11,4 @@ data/punct_history.json
 data/ltv_cache.json
 data/emergency_cache.json
 data/traffic_cache.json
+data/infra_cache_v2.json
