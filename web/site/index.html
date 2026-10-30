@@ -236,10 +236,17 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 @media(max-width:700px){
   .tb{right:10px;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
   .tb>*{flex:0 0 auto}.tb select{max-width:150px}
-  #ovl{top:50px;max-height:30%}
+  #ovl{max-height:30%}
   .legend{max-width:calc(100% - 20px);bottom:34px}
   #mapwrap{height:max(520px,72vh)}
 }
+
+.tb{gap:4px 4px;padding:5px 6px}
+.tb label{padding:5px 8px;border-radius:7px;min-height:28px;user-select:none;-webkit-tap-highlight-color:transparent}
+.tb label:hover{background:#ffffff14}.tb label:has(input:checked){color:var(--tx)}
+.tb input[type=checkbox]{width:15px;height:15px;margin:0;cursor:pointer}
+.tb button,.tb select{min-height:28px}
+@media(pointer:coarse){.tb label{min-height:34px;padding:7px 10px}.tb button,.tb select{min-height:34px}.tb input[type=checkbox]{width:18px;height:18px}}
 </style>
 </head>
 <body>
@@ -523,6 +530,9 @@ const endP=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;
 
 
 // ---- infraestructura real (OpenStreetMap vía /api/infra) ----
+(function(){const tb=document.querySelector('#mapwrap .tb'),ov=document.getElementById('ovl');if(!tb||!ov)return;
+  const f=()=>{ov.style.top=(tb.offsetTop+tb.offsetHeight+8)+'px'};f();
+  if(window.ResizeObserver)new ResizeObserver(f).observe(tb);addEventListener('resize',f)})();
 let LTVD=null,LTVI={};
 function loadLtv(){fetch('/api/ltv',{cache:'no-store'}).then(r=>r.json()).then(j=>{LTVD=j.items&&j.items.length?j.items:null;LTVI=j;const e=$('ltn');if(e)e.textContent=LTVD?'('+LTVD.length+')':'';if(typeof draw==='function')draw()}).catch(()=>{})}
 loadLtv();setInterval(loadLtv,600000);
