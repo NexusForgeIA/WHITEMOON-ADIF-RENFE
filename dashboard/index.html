@@ -7,8 +7,9 @@
 <style>
 :root{--bg:#0a1017;--panel:#111a24;--line:#203041;--tx:#d6e1ec;--mut:#7f92a6;--ok:#3ddc97;--cau:#f2c94c;--res:#ff9f43;--stop:#ff4d5e;--acc:#4aa8ff}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;height:100vh;display:grid;grid-template-rows:52px 1fr 190px;grid-template-columns:292px 1fr 380px;gap:10px;padding:10px}
-header{grid-column:1/-1;display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 14px}
+body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;height:100vh;display:grid;grid-template-rows:52px auto 1fr 190px;grid-template-columns:292px 1fr 380px;gap:10px;padding:10px}
+header .sysb,header #ochip,header #adm{white-space:nowrap;padding:5px 9px;font-size:12px}
+header{grid-column:1/-1;display:flex;flex-wrap:nowrap;overflow:hidden;gap:8px!important;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 14px}
 header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:var(--acc)}
 .pill{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;border:1px solid var(--line);color:var(--mut)}
 .pill.sim{color:var(--cau);border-color:#5a4a1a}.pill.live{color:var(--ok);border-color:#1d5a40}
@@ -16,7 +17,7 @@ header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:var(
 .banner{display:none;background:#4a1219;color:#ffd5d9;border:1px solid var(--stop);border-radius:6px;padding:3px 10px;font-weight:600}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;min-height:0}
 .panel h2{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);margin:0 0 10px}
-#chain{grid-row:2/4}.chain{display:flex;flex-direction:column;gap:0}
+#chain{grid-row:3/5}.chain{display:flex;flex-direction:column;gap:0}
 .bar{border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:6px;padding:7px 9px;background:#0d151e}
 .bar.ALERT{border-left-color:var(--res);background:#1c1710}.bar.FAULT{border-left-color:var(--stop);background:#2a1216}.bar.OFF{opacity:.5}.bar.NODATA{border-left-color:var(--mut);opacity:.75}.bar.ext{border-style:dashed}
 .bar .t{display:flex;justify-content:space-between;font-weight:600}.bar .t i{font-style:normal;color:var(--mut);font-weight:500}
@@ -156,6 +157,21 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 .toast{background:#142130;border:1px solid #3a4a5c;border-left:6px solid #d9b84a;border-radius:8px;padding:9px 12px;color:#e8eef5;font-size:13px;cursor:pointer;box-shadow:0 6px 18px #0008}
 .toast.RESTRICT{border-left-color:#e07b2f}.toast.STOP{border-left-color:#e04040}.toast.SYS{border-left-color:#8a6de0}
 .toast b{display:block;font-size:12px;letter-spacing:.04em;margin-bottom:2px}
+
+/* Banda de cabina (siempre visible) */
+#cab{grid-column:1/-1;display:grid;grid-template-columns:1.25fr 1fr 1.25fr 1.1fr 1fr auto;gap:10px;align-items:stretch}
+#cab.off{display:none}
+#cab .ct{background:#f4f8fc;color:#0f2233;border-radius:12px;padding:6px 12px;min-width:0;box-shadow:0 1px 3px #0003}
+#cab .ct h4{margin:0 0 2px;font-size:11px;color:#44586b;font-weight:600;letter-spacing:.02em}
+#cab .big{font-size:19px;font-weight:800;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cab .sub{font-size:11px;color:#5b6f82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cab .bad{color:#b3261e}#cab .okc{color:#14703a}
+#cab .gz{display:flex;align-items:center;gap:8px}#cab .gz svg{max-width:92px;height:auto;flex:none}
+#cab .go{display:flex;flex-direction:column;gap:6px;justify-content:center}
+#cab .go button{border:1px solid #2b6cb0;background:#12304f;color:#cfe6ff;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;font-size:12px;white-space:nowrap}
+#cab .go button.g{border-color:#3a4a5c;background:transparent;color:#9fb2c5;font-weight:500}
+#cab .who{grid-column:1/-1;font-size:11px;color:var(--mut);margin:-2px 2px -4px}
+@media(max-width:1100px){#cab{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -164,13 +180,16 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   <h1>RAIL<span>GUARD</span></h1><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
   <div id="banner" class="banner"></div><div id="pbanner"></div>
   <button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
+  <button id="cabb" class="sysb" title="Muestra u oculta la banda del tren en foco">▣ Cabina</button>
   <button id="ntb" class="sysb" style="border-color:#6b5a2b;color:#ffe9a8" title="Avisos en pantalla, sonido y notificación del navegador cuando aparece un peligro nuevo o un sistema falla">🔔 Avisos: no</button>
   <button id="fullb" class="sysb" style="border-color:#2b6cb0;color:#cfe6ff" title="Abre a pantalla completa retrasos, cola del operador, peligros, previsión y avisos">⤢ Ver todo</button>
-  <button id="abb" class="sysb" style="border-color:#3a4a5c;color:#d6e1ec" title="Qué datos son reales, qué es simulado y qué límites tiene este sistema">ℹ Alcance y fuentes</button>
-  <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas de seguridad</button>
+  <button id="abb" class="sysb" style="border-color:#3a4a5c;color:#d6e1ec" title="Qué datos son reales, qué es simulado y qué límites tiene este sistema">ℹ Fuentes</button>
+  <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas</button>
   <button id="adm" title="Token de administración (RAILGUARD_TOKEN)">🔑</button>
   <div class="kpis" id="kpis"></div>
 </header>
+
+<section id="cab" aria-label="Tren en foco"></section>
 
 <section class="panel" id="chain"><h2>Defensa en profundidad</h2><div class="chain" id="bars"></div>
   <h2 style="margin-top:16px">Centros de control</h2><div id="board"></div><div id="ho"></div>
@@ -262,7 +281,7 @@ function render(){
   $('mode').textContent=S.mode==='sim'?'SIMULACIÓN sobre captura real':'EN VIVO';$('mode').className='pill '+S.mode;
   $('clock').textContent=fmt(S.now)+' · ciclo '+S.cycle;
   const b=$('banner');b.style.display=S.degraded?'block':'none';if(S.degraded)b.textContent='⚠ '+S.degraded;
-  renderOuts(S.outages||[]);renderForecast();renderDelays();renderTV();try{notifyCheck()}catch(e){}
+  renderOuts(S.outages||[]);renderForecast();renderDelays();renderTV();try{notifyCheck()}catch(e){}try{renderCab()}catch(e){}
   const k=S.kpi,ks=$('kpis');ks.replaceChildren(...[['trains','trenes'],['clear','libres'],['caution','precaución'],['restrict','restringidos'],['stop','STOP']].map(([a,l])=>h('div','kpi',null,[h('b',null,k[a]),h('small',null,l)])));
   // cadena
   const bars=$('bars');bars.replaceChildren();
@@ -400,7 +419,7 @@ cv.addEventListener('pointermove',e=>{
   draw()});
 const endP=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;
   if(drag&&!drag.moved&&e.type==='pointerup'&&S){const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
-    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);sel=t?t.n:null;if(t){$('mt').value=t.n;openCard(t.n)}else closeCard();draw()}
+    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);sel=t?t.n:null;if(t){$('mt').value=t.n;openCard(t.n)}else closeCard();try{renderCab()}catch(e){}draw()}
   if(!ptrs.size)drag=null};
 
 
@@ -519,6 +538,31 @@ function notifyCheck(){
 $('ntb')&&($('ntb').onclick=async()=>{NTF=!NTF;try{localStorage.setItem('rg_ntf',NTF?'1':'0')}catch(e){}
   if(NTF){beep('CAUTION');try{if(window.Notification&&Notification.permission==='default')await Notification.requestPermission()}catch(e){}}ntLabel()});
 ntLabel();
+
+// ── Banda de cabina: tren en foco (seleccionado, o el de mayor riesgo) ──
+const CABR={NONE:0,CAUTION:1,RESTRICT:2,STOP:3};
+let CABOFF=false;
+try{CABOFF=localStorage.getItem('rg_cab')==='0'}catch(e){}
+$('cabb')&&($('cabb').onclick=()=>{CABOFF=!CABOFF;try{localStorage.setItem('rg_cab',CABOFF?'0':'1')}catch(e){}renderCab();setTimeout(()=>{if(S)draw()},50)});
+function cabPick(){const T=S.trains||[];if(sel){const t=T.find(x=>x.n===sel);if(t)return[t,'Tren seleccionado']}
+  const w=T.filter(t=>t.cmd!=='NONE').sort((a,b)=>(CABR[b.cmd]-CABR[a.cmd])||(b.kmh-a.kmh))[0];
+  if(w)return[w,'Tren con mayor riesgo ahora'];const m=T.filter(t=>t.kmh>10).sort((a,b)=>b.kmh-a.kmh)[0];return m?[m,'Tren más rápido (sin peligros activos)']:[null,'']}
+function cabBar(v,max){const S0=max*1.25,pc=x=>Math.min(100,x/S0*100).toFixed(1),seg=(a,b,c)=>'<i style="position:absolute;left:'+pc(a)+'%;width:'+(pc(b)-pc(a)).toFixed(1)+'%;top:0;bottom:0;background:'+c+'"></i>';
+  return '<div style="position:relative;height:8px;border-radius:4px;overflow:hidden;margin-top:5px;background:#dde6ee">'+seg(0,max,'#8fd3a8')+seg(max,max*1.03,'#e9d27a')+seg(max*1.03,max*1.08,'#f2b27a')+seg(max*1.08,max*1.15,'#ee8f8f')+seg(max*1.15,S0,'#d32f2f')+'<b style="position:absolute;top:-2px;bottom:-2px;width:3px;background:#0f2233;left:'+pc(v)+'%"></b></div>'}
+function renderCab(){
+  const box=$('cab');if(!box||!S)return;box.classList.toggle('off',CABOFF);if(CABOFF){return}
+  const [t,why]=cabPick();if(!t){box.replaceChildren(h('div','who','Sin trenes en el feed.'));return}
+  const el=(cls,html)=>{const e=document.createElement('div');e.className=cls;e.innerHTML=html;return e};
+  const act=(S.hazards||[]).filter(x=>x.trains.includes(t.n));
+  const lab={NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[t.cmd],col=t.cmd==='NONE'?'#14703a':TVCOL[t.cmd];
+  const kids=[el('who','▣ '+why+': <b>'+t.n+'</b>'+(t.line?' · '+t.line:'')+(t.op&&t.op!=='?'?' · '+((S.operators||[]).find(o=>o.id===t.op)||{}).name:'')),
+    el('ct','<h4>Velocidad actual</h4><div class="big" style="font-size:28px">'+t.kmh+' <span style="font-size:12px;font-weight:600;color:#5b6f82">km/h · límite '+t.vmax+'</span></div>'+cabBar(t.kmh,t.vmax)),
+    el('ct','<h4>Dirección</h4><div class="big">'+(t.to?'→ '+t.to:'—')+'</div><div class="sub">'+(t.dest?'Destino '+t.dest:'')+'</div>'),
+    el('ct','<h4>Posición actual</h4><div class="big">'+(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'Hacia '+t.to:'—'))+'</div><div class="sub">'+(t.src==='tablet'?'GPS de tablet de cabina':'Posición del feed')+'</div>'),
+    el('ct','<h4>Estado de seguridad</h4><div class="big" style="color:'+col+'">'+lab+'</div><div class="sub">'+(act.length?act[0].msg:'Sin peligros detectados')+'</div>'),
+    el('ct','<h4>Puntualidad</h4><div class="big '+(t.ret>=5?'bad':'okc')+'">'+(t.ret>0?'+'+t.ret+' min':'A tiempo')+'</div><div class="sub">Según el feed de Renfe</div>')];
+  const go=el('go','');const b1=h('button',null,'▣ Vista de tren');b1.onclick=()=>openTV(t.n);const b2=h('button','g','Ocultar banda');b2.onclick=()=>{CABOFF=true;try{localStorage.setItem('rg_cab','0')}catch(e){}renderCab()};go.append(b1,b2);kids.push(go);
+  box.replaceChildren(...kids);}
 let fcTab=false,avTab=false;
 let FULL=false;
 function drawAv(C,AL){const bx=$('av');bx.replaceChildren(h('div',null,'Avisos oficiales de Renfe para Cercanías/Rodalies. Informativo: no interviene en la seguridad.'));bx.firstChild.id='fcnote';
