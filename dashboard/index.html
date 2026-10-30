@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RailGuard</title>
 <meta name="description" content="Supervisión de seguridad ferroviaria en profundidad: capas automáticas sobre datos de Renfe en vivo. Prototipo asesor, no certificado.">
-<link rel="icon" type="image/svg+xml" href="/logo.svg"><link rel="apple-touch-icon" href="/favicon.png">
+<link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/favicon.png">
 <meta property="og:type" content="website"><meta property="og:site_name" content="RailGuard">
 <meta property="og:title" content="RailGuard · Supervisión de seguridad ferroviaria">
 <meta property="og:description" content="8 capas automáticas de supervisión sobre datos de Renfe en vivo (LZB · ETCS · ASFA). WhiteMoon Agencia IA.">
 <meta property="og:url" content="https://whitemoon-railguard.onrender.com/"><meta property="og:image" content="https://whitemoon-railguard.onrender.com/og-image.png">
-<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Logo de RailGuard: escudo con vías hacia una señal verde">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Logo de RailGuard: letra R con vía ferroviaria">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="RailGuard · Supervisión de seguridad ferroviaria"><meta name="twitter:image" content="https://whitemoon-railguard.onrender.com/og-image.png">
 <meta name="theme-color" content="#0a1017">
 <style>
@@ -20,7 +20,7 @@ body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.45 system-ui,-app
 #pbanner,#banner{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 header .sysb,header #ochip,header #adm{white-space:nowrap;padding:5px 9px;font-size:12px}
 header{grid-column:1/-1;display:flex;flex-wrap:nowrap;overflow:hidden;gap:8px!important;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 14px}
-header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:var(--acc)}
+header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:#ff2a3a}
 .pill{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;border:1px solid var(--line);color:var(--mut)}
 .pill.sim{color:var(--cau);border-color:#5a4a1a}.pill.live{color:var(--ok);border-color:#1d5a40}
 .kpis{margin-left:auto;display:flex;gap:16px}.kpi{text-align:right}.kpi b{display:block;font-size:17px;line-height:1}.kpi small{color:var(--mut);font-size:10px}
@@ -228,7 +228,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 <body>
 <div id="toasts" aria-live="polite"></div>
 <header>
-  <a href="/" class="brand" style="display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit"><img src="/logo.svg" alt="" width="32" height="32" style="display:block"><h1>RAIL<span>GUARD</span></h1></a><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
+  <a href="/" class="brand" style="display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit"><img src="/logo.png" alt="" height="36" style="height:36px;width:auto;display:block;border-radius:4px" style="display:block"><h1>RAIL<span>GUARD</span></h1></a><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
   <div id="banner" class="banner"></div><div id="pbanner"></div>
   <button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
   <button id="cabb" class="sysb" title="Muestra u oculta la banda del tren en foco">▣ Cabina</button>

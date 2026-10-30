@@ -22,13 +22,13 @@ def main():
     os.makedirs(OUT)
     shutil.copytree(os.path.join(W, "rec"), os.path.join(OUT, "rec"))
     shutil.copy(os.path.join(W, "shim.js"), OUT)
-    for _f in ("icon.svg", "logo.svg", "og-image.png", "favicon.png"):
+    for _f in ("icon.svg", "logo.png", "og-image.png", "favicon.png"):
         shutil.copy(os.path.join(D, _f), OUT)
 
     idx = open(os.path.join(D, "index.html"), encoding="utf-8").read()
     idx = patch(idx, [
-        ('href="/logo.svg"', 'href="logo.svg"'), ('href="/favicon.png"', 'href="favicon.png"'),
-        ('src="/logo.svg"', 'src="logo.svg"'), ('<a href="/" class="brand"', '<a href="./" class="brand"'),
+        ('href="/logo.png"', 'href="logo.png"'), ('href="/favicon.png"', 'href="favicon.png"'),
+        ('src="/logo.png"', 'src="logo.png"'), ('<a href="/" class="brand"', '<a href="./" class="brand"'),
         ("<title>RailGuard</title>", "<title>RailGuard Demo</title>\n<script src=\"shim.js\"></script>\n"
          "<style>#adm,#pmrow,#issue{display:none!important}#dv{background:#0a1017;color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font:inherit}"
          "#dtab{color:var(--acc);border-color:var(--acc);cursor:pointer}</style>"),
