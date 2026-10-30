@@ -42,9 +42,9 @@ header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:#ff2
 #infnote{position:absolute;right:10px;bottom:52px;max-width:min(420px,60%);font-size:10.5px;line-height:1.35;color:var(--mut);background:#0a1017dd;padding:4px 8px;border-radius:6px;text-align:right}
 #tip{position:absolute;pointer-events:none;background:#06090dee;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px;display:none;white-space:nowrap}
 .legend{position:absolute;left:10px;bottom:8px;max-width:calc(100% - 170px);flex-wrap:wrap;display:flex;gap:4px 10px;font-size:11px;color:var(--mut);background:#0a1017cc;padding:3px 8px;border-radius:6px}
-#lg{position:absolute;left:10px;bottom:36px;z-index:8;max-height:calc(100% - 90px);overflow:auto;width:min(330px,calc(100% - 20px));background:#0a1017ee;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11px;line-height:1.35;color:var(--mut)}
-#lg b{color:#d6e1ec}#lg .lr{display:grid;grid-template-columns:12px 78px 1fr;gap:6px;align-items:start;padding:3px 0;border-top:1px solid #16212d}#lg .lr:first-of-type{border-top:0}
-#lg .lr i{width:10px;height:10px;border-radius:50%;margin-top:2px}#lg .lr em{font-style:normal;font-weight:700;color:#d6e1ec}
+#lg{position:absolute;left:10px;bottom:36px;z-index:8;max-height:calc(100% - 130px);overflow:auto;width:min(380px,calc(100% - 20px));background:#0a1017ee;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11px;line-height:1.35;color:var(--mut)}
+#lg b{color:#d6e1ec}#lg .lr{display:grid;grid-template-columns:14px 92px 1fr;gap:6px;align-items:start;padding:3px 0;border-top:1px solid #16212d}#lg .lr:first-of-type{border-top:0}
+#lg .lr i{width:10px;height:10px;border-radius:50%;margin-top:2px;box-sizing:border-box;display:block}#lg .lr i.ln{width:12px;height:0;border-radius:0;margin-top:6px}#lg .lr i.tri{width:0;height:0;border-radius:0;border:5px solid transparent;border-left-width:9px;border-left-color:#3ddc97;margin-top:1px;box-sizing:content-box}#lg .lt{margin:8px 0 2px;padding-top:6px;border-top:1px solid #16212d;color:#d6e1ec;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:10px}#lg .lt:first-of-type{border-top:0;margin-top:2px}#lg .lr em{font-style:normal;font-weight:700;color:#d6e1ec}
 #lg .lh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}#lg .lh button{background:none;border:0;color:var(--mut);font-size:15px;cursor:pointer}
 #lgb{background:#0a1017cc;border:1px solid var(--line);color:#d6e1ec;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer}
 #ovl{position:absolute;top:46px;left:10px;right:10px;z-index:6;display:flex;flex-direction:column;gap:5px;pointer-events:none;max-height:38%;overflow:auto}
@@ -303,12 +303,38 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
     <button id="lgb" title="Qué significan los colores y las etiquetas del mapa">? Leyenda</button><select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
   <div class="legend"><span><s style="background:var(--ok)"></s>libre</span><span><s style="background:var(--cau)"></s>precaución</span><span><s style="background:var(--res)"></s>restringido</span><span><s style="background:var(--stop)"></s>STOP</span><span><s style="background:#1e5bff;border-radius:50%"></s>Guardia Civil</span><span><s style="background:#5aa9ff;border-radius:50%"></s>Cruz Roja</span>
     <span style="color:#e8f1ff">┅ AVE alta velocidad</span><span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
-  <div id="lg" hidden><div class="lh"><b>Estado de cada tren (orden de RailGuard)</b><button id="lgx" title="Cerrar">×</button></div>
-    <div class="lr"><i style="background:var(--ok)"></i><em>NONE · libre</em><span>Sin orden. Ninguna barrera detecta riesgo; circula normal.</span></div>
-    <div class="lr"><i style="background:var(--cau)"></i><em>CAUTION · precaución</em><span>Aviso leve: dato dudoso o ligero exceso de velocidad (3–8 %). Se avisa a cabina y centro; no frena.</span></div>
-    <div class="lr"><i style="background:var(--res)"></i><em>RESTRICT · restringido</em><span>Riesgo real: limita la velocidad y avisa a cabina por GSM-R (exceso &gt;8 %, poca separación, alcance previsto, salto de GPS repetido).</span></div>
-    <div class="lr"><i style="background:var(--stop)"></i><em>STOP</em><span>Peligro inminente: freno de emergencia y bloque enclavado. Solo lo libera una persona con doble autorización (B7).</span></div>
-    <div style="margin-top:6px;border-top:1px solid #16212d;padding-top:5px"><b>Etiqueta junto al tren</b>: <code>T-9004 B3·B4</code> = barreras que están actuando sobre él (B1 datos · B2 velocidad · B3 separación · B4 predicción · B0 ATP). El mayor nivel manda si varias opinan a la vez.<br><b>▶</b> rumbo del tren · <b>círculo rojo pulsante</b> = STOP activo · <b>aro de 3 km</b> = radio de aviso a tablets.<br>Con el feed real hay "velocidad imposible" y saltos de GPS: se descartan como error de dato (aviso, sin frenar) y un exceso solo actúa si se repite 3 ciclos seguidos.</div></div>
+  <div id="lg" hidden><div class="lh"><b>Leyenda del mapa</b><button id="lgx" title="Cerrar">×</button></div>
+    <div class="lt">Trenes · orden de RailGuard</div>
+    <div class="lr"><i style="background:var(--ok);"></i><em>Libre</em><span>Ninguna barrera detecta riesgo (NONE).</span></div>
+    <div class="lr"><i style="background:var(--cau);"></i><em>Precaución</em><span>Aviso leve: dato dudoso o ligero exceso de velocidad (3–8 %). Avisa a cabina y centro; no frena (CAUTION).</span></div>
+    <div class="lr"><i style="background:var(--res);"></i><em>Restringido</em><span>Riesgo real: limita la velocidad y avisa por GSM-R (RESTRICT).</span></div>
+    <div class="lr"><i style="background:var(--stop);"></i><em>STOP</em><span>Peligro inminente: freno de emergencia y bloque enclavado. Solo lo libera una persona con doble autorización (B7).</span></div>
+    <div class="lr"><i class="tri"></i><em>Flecha</em><span>Tren con rumbo conocido; el cuadrado es un tren sin rumbo. Atenuado = tren entrante o fuera del operador filtrado.</span></div>
+    <div class="lt">Líneas y señalización (Vías / Red real)</div>
+    <div class="lr"><i class="ln" style="border-top:3px solid #4aa8ff;"></i><em>ETCS</em><span>Línea con ETCS (protección continua).</span></div>
+    <div class="lr"><i class="ln" style="border-top:3px solid #ff9f43;"></i><em>LZB→ETCS</em><span>Línea con LZB en transición a ETCS.</span></div>
+    <div class="lr"><i class="ln" style="border-top:3px solid #8ea0b6;"></i><em>ASFA / otras</em><span>Señalización puntual (ASFA) u otra sin clasificar.</span></div>
+    <div class="lr"><i class="ln" style="border-top:3px solid #51657a;border-top-style:dashed"></i><em>Esquema</em><span>Línea recta entre estaciones: trazado esquemático, no la geometría real.</span></div>
+    <div class="lr"><i class="ln" style="border-top:1px solid #8ea0b6;border-bottom:1px solid #8ea0b6;height:4px"></i><em>Nº de vías</em><span>Red real: más grosor = más vías (1 fina, 2 doble, 3 o más con eje discontinuo).</span></div>
+    <div class="lr"><i class="ln" style="border-top:3px solid #e8f1fa;border-top-style:dashed;border-top-width:2px"></i><em>Cantón</em><span>Cantón oficial de Adif (cuando hay dato).</span></div>
+    <div class="lr"><i class="ln" style="border-top:2px dotted #e8f1ff"></i><em>AVE</em><span>Corredor de alta velocidad, con su nombre en una etiqueta blanca.</span></div>
+    <div class="lt">Señales y desvíos (con zoom)</div>
+    <div class="lr"><i class="tri" style="border-bottom-color:#f2c94c"></i><em>Señal</em><span>Triángulo amarillo.</span></div>
+    <div class="lr"><i style="background:#c792ea;border-radius:2px;transform:rotate(45deg)"></i><em>Desvío</em><span>Rombo violeta: aparato de vía.</span></div>
+    <div class="lr"><i style="background:#3ddc97;border-radius:2px"></i><em>Otros (oficial)</em><span>Topes, pasos a nivel, descarriladores: cuadrado verde si el dato es de Adif, gris si es de OpenStreetMap.</span></div>
+    <div class="lr"><i style="border:2px solid #fff;background:none"></i><em>Cambio de sección</em><span>Aro blanco: cambio de tramo o de sistema.</span></div>
+    <div class="lt">Capas informativas</div>
+    <div class="lr"><i style="background:#ff9f43;border:1px solid #0a1017"></i><em>LTV</em><span>Limitación temporal de velocidad de Adif: punto o tramo naranja con su velocidad al acercar el zoom. Solo informativo.</span></div>
+    <div class="lr"><i style="background:#1e5bff;border:1.5px solid #fff"></i><em>Guardia Civil</em><span>Cuartel, puesto o comandancia (OpenStreetMap, no oficial). Pulse para ver su ficha.</span></div>
+    <div class="lr"><i style="background:#5aa9ff;border:1.5px solid #fff"></i><em>Cruz Roja</em><span>Sede, base o ambulancia de Cruz Roja (OpenStreetMap, no oficial).</span></div>
+    <div class="lr"><i style="border:1.5px solid #7aa7c7;background:none"></i><em>Cercanías</em><span>Aro azul grisáceo: posición de parada, sin velocidad. Solo informativo.</span></div>
+    <div class="lr"><i style="background:#8ea0b6;width:6px;height:6px"></i><em>Estaciones</em><span>Punto gris con nombre (las principales siempre, el resto con zoom).</span></div>
+    <div class="lt">Avisos sobre el mapa</div>
+    <div class="lr"><i class="ln" style="border-top:3px solid #ff1a1a;"></i><em>Proximidad</em><span>Línea roja con km entre dos trenes a menos de 3 km; blanca si es crítica. El círculo punteado es el radio de aviso.</span></div>
+    <div class="lr"><i class="ln" style="border-top:2px dotted #9b86ff"></i><em>Previsión</em><span>Conflicto posible «si nada cambia»: violeta, o naranja si es inminente. Solo informativo.</span></div>
+    <div class="lr"><i style="border:2px solid #ff4d5e;background:none"></i><em>STOP activo</em><span>Círculo rojo pulsante alrededor del tren.</span></div>
+    <div class="lr"><i style="border:2px solid #fff;background:none"></i><em>Seleccionado</em><span>Aro blanco alrededor del tren cuya ficha está abierta.</span></div>
+    <div style="margin-top:6px;border-top:1px solid #16212d;padding-top:5px"><b>Etiqueta junto al tren</b>: <code>09212 B2</code> = número de tren y barreras que actúan sobre él (B0 ATP · B1 datos · B2 velocidad · B3 separación · B4 predicción). Manda el nivel más alto si varias opinan.<br>Con el feed real hay saltos de GPS y velocidades imposibles: se avisan como error de dato, sin frenar, y un exceso solo actúa si se repite 3 ciclos seguidos.</div></div>
   <div id="ovl"><div id="acting"></div><div id="outs"></div></div><div id="infnote" hidden></div><div class="scale" id="scale"></div>
 </section>
 
