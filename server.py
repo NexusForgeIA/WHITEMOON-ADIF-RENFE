@@ -721,6 +721,8 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, APP.snapshot())
         if path == "/api/systems":
             return self._send(200, APP.systems())
+        if path == "/api/safety_systems":
+            return self._send(200, _load("safety_systems.json"))
         if path == "/api/infra":
             inf = INFRA
             if not inf or not inf.data:

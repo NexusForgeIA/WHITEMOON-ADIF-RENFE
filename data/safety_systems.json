@@ -1,0 +1,50 @@
+{
+ "_nota": "Fuente documental (no es telemetría en vivo): Anejo nº 10 «Instalaciones de seguridad y comunicaciones» del Estudio Informativo de la conexión de las LAV Madrid–Sevilla y Córdoba–Málaga en el entorno de Almodóvar del Río (Córdoba). Es un estudio informativo, no un inventario vigente: confirmar con Adif antes de usarlo como dato operativo. Solo se recoge lo leído en el documento.",
+ "source": "Anejo nº 10 · Estudio Informativo conexión LAV Madrid–Sevilla / Córdoba–Málaga (Almodóvar del Río)",
+ "lines": [
+  {
+   "id": "mad-sev", "name": "LAV Madrid – Sevilla", "kind": "Alta velocidad",
+   "summary": "LZB como protección principal y ASFA de respaldo. Sin ETCS.",
+   "facts": {
+    "Vía y energía": "Doble vía, ancho 1.435 mm, 1×25 kV 50 Hz. Velocidad máxima 300 km/h (220–250 km/h en el entorno de Almodóvar del Río).",
+    "Enclavamientos": "ENCE L90 (Thales) con módulos de mando de elementos (MME) distribuidos.",
+    "Protección de trenes": "LZB L72 (Thales), mando automático continuo, como sistema principal. ASFA 200 como respaldo. La línea NO está equipada con ERTMS/ETCS.",
+    "Bloqueo y detección": "Bloqueo de control automático (BCA) centralizado en cabina; circuitos de vía de audiofrecuencia FTG; señales laterales luminosas.",
+    "Detectores auxiliares": "Caída de objetos a la vía (DCO) y cajas calientes/frenos agarrotados (DCC).",
+    "Comunicaciones": "GSM-R (voz). Red de transmisión SDH STM-16 Madrid–Córdoba y STM-4 Córdoba–Sevilla.",
+    "Control centralizado": "CTC Dimetronic (Siemens) en Madrid-Delicias, integrado en el CRC de Madrid-Puerta de Atocha; central LZB y telemando de detectores integrados en ese CRC."
+   },
+   "railguard": "El mapa ya marca esta línea como LZB. Antes figuraba «LZB → ETCS (migración)»: según este documento no hay ETCS en esta línea."
+  },
+  {
+   "id": "cor-mal", "name": "LAV Córdoba – Málaga", "kind": "Alta velocidad",
+   "summary": "ETCS niveles 1 y 2 instalados (el material circula en nivel 1), LZB L72E y ASFA de respaldo.",
+   "facts": {
+    "Protección de trenes": "Equipada con ERTMS/ETCS niveles 1 y 2, pero el material rodante solo circula en nivel 1. LZB L72E (Thales) como respaldo nacional del ETCS nivel 1; ASFA como protección de respaldo en funcionamiento degradado, a velocidad reducida.",
+    "Limitaciones temporales de velocidad": "El sistema ETCS las gestiona con telegramas de eurobaliza: predefinidas y dinámicas, solicitadas desde el puesto local (PLO-E) o el puesto central (PCE) y anulables en cualquier momento.",
+    "Transición LZB → ASFA": "El maquinista debe reconocer el fin de LZB en unos ocho segundos; si no, actúa el freno de emergencia.",
+    "Detectores auxiliares": "DCO, DCC, viento lateral (DVL), objetos arrastrados (DOA) y comportamiento dinámico del pantógrafo (DCDP).",
+    "Comunicaciones": "Red IP Gigabit Ethernet sobre fibra óptica (cables de 32 y 96 fibras) con caminos redundantes.",
+    "Control centralizado": "Centro de regulación de Antequera-Santa Ana (PK 97+220); centrales LZB en Córdoba II y Puente Genil-Herrera (PK 61+664)."
+   },
+   "railguard": "Esta línea no está entre los corredores del mapa. Las limitaciones temporales (LTV) viajan en eurobalizas y no están en ningún feed público: la capa BP intenta inferirlas."
+  },
+  {
+   "id": "l400", "name": "Línea 400 Alcázar de San Juan – Cádiz (tramo de Almodóvar del Río)", "kind": "Red convencional",
+   "summary": "Protección ASFA; enclavamientos telemandados desde el CTC de Córdoba.",
+   "facts": {
+    "Protección de trenes": "Equipada con ASFA.",
+    "Control centralizado": "CTC (Alcatel) en el puesto de mando de Córdoba; telemando por fibra óptica y bloqueo electrónico entre estaciones.",
+    "Vía": "Vía única en el tramo estudiado."
+   },
+   "railguard": "Es el tipo de línea (convencional, ASFA, vía única) donde los márgenes de separación son menores."
+  }
+ ],
+ "available_at_adif": [
+  "Alarmas de detectores (DCO, DCC, DVL, DOA, DCDP) hacia el enclavamiento y el CRC",
+  "Estado de enclavamientos, circuitos de vía y señales (ENCE, CTC)",
+  "Limitaciones temporales de velocidad activas (sistema de gestión de LTV del ETCS)",
+  "Datos del LZB: posición, velocidad real y velocidad máxima admisible por tren",
+  "Sistema de ayuda al mantenimiento (SAM) con reconstrucción de eventos"
+ ]
+}

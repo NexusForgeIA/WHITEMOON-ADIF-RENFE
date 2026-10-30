@@ -1,5 +1,5 @@
 {
- "_nota": "ILUSTRATIVO · verified=false en todo. Trazado esquemático (recta entre estaciones), no geometría real. Usted indicó que existe LZB en migración a ETCS/ERTMS pero no en qué líneas: la asignación 'LZB→ETCS' a Madrid–Sevilla es conocimiento general mío y hay que confirmarla con Adif; el resto figura como 'por confirmar'.",
+ "_nota": "ILUSTRATIVO · verified=false en todo. Trazado esquemático (recta entre estaciones), no geometría real. Usted indicó que existe LZB en migración a ETCS/ERTMS pero no en qué líneas: Madrid–Sevilla: LZB principal + ASFA de respaldo y sin ETCS, según el Anejo 10 del Estudio Informativo de Almodóvar del Río (documento de estudio; confirmar con Adif). El resto figura como 'por confirmar'.",
  "corridors": [
   {
    "id": "mad-bcn",
@@ -25,7 +25,7 @@
     "50500",
     "51003"
    ],
-   "signalling": "LZB → ETCS (migración)",
+   "signalling": "LZB + ASFA (respaldo); sin ETCS",
    "atp_required": true,
    "max_kmh": 300,
    "verified": false

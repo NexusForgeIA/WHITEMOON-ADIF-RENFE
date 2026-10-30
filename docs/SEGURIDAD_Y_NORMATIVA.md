@@ -74,3 +74,10 @@ Implicaciones para RailGuard (límites honestos):
 ### Notificaciones
 - Botón «🔔 Avisos» (cabecera): toast en pantalla, sonido y notificación del navegador ante peligros nuevos (STOP/RESTRICT con sonido; CAUTION solo toast), degradado del supervisor y fallo de barrera. El título de la pestaña muestra el nº de peligros graves.
 - Son locales al navegador. No se envían correos ni mensajes a nadie; un canal externo (correo, Slack, SMS) requiere decidir destinatarios y autorización.
+
+### Instalaciones de seguridad por línea (Anejo 10, Estudio Informativo Almodóvar del Río)
+Datos en `data/safety_systems.json` y botón «📋 Líneas» del panel. Es un estudio informativo, no un inventario vigente: confirmar con Adif.
+- LAV Madrid–Sevilla: LZB L72 principal, ASFA 200 de respaldo, **sin ETCS** (corrige la hipótesis anterior «LZB → ETCS»). 300 km/h, 220–250 en el entorno de Almodóvar. Detectores DCO y DCC. CTC en el CRC de Madrid-Puerta de Atocha.
+- LAV Córdoba–Málaga: ETCS N1 y N2 instalados (el material circula en N1), LZB L72E y ASFA de respaldo; detectores DCO, DCC, DVL, DOA, DCDP; LTV gestionadas por eurobalizas. Transición LZB→ASFA: reconocimiento del maquinista en ~8 s o freno de emergencia.
+- Línea 400 (convencional): ASFA; CTC Alcatel en Córdoba.
+- Datos que Adif tiene y RailGuard no recibe: alarmas de detectores, estado de enclavamientos y circuitos de vía, LTV activas, datos LZB por tren, SAM.

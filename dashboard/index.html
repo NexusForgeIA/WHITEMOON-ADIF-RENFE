@@ -209,6 +209,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   <button id="cabb" class="sysb" title="Muestra u oculta la banda del tren en foco">▣ Cabina</button>
   <button id="ntb" class="sysb" style="border-color:#6b5a2b;color:#ffe9a8" title="Avisos en pantalla, sonido y notificación del navegador cuando aparece un peligro nuevo o un sistema falla">🔔 Avisos: no</button>
   <button id="fullb" class="sysb" style="border-color:#2b6cb0;color:#cfe6ff" title="Abre a pantalla completa retrasos, cola del operador, peligros, previsión y avisos">⤢ Ver todo</button>
+  <button id="ssb" class="sysb" style="border-color:#2b7a5a;color:#c9f2de" title="Instalaciones de seguridad por línea (señalización, ATP, detectores, CTC), de documentación de Adif">📋 Líneas</button>
   <button id="abb" class="sysb" style="border-color:#3a4a5c;color:#d6e1ec" title="Qué datos son reales, qué es simulado y qué límites tiene este sistema">ℹ Fuentes</button>
   <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas</button>
   <button id="adm" title="Token de administración (RAILGUARD_TOKEN)">🔑</button>
@@ -602,7 +603,7 @@ function showDM(title,sub,rows,foot){const d=$('dm');if(!d)return;
   const cb=h('button','x','✕ Cerrar');cb.onclick=closeDM;
   const box=h('div','box',null,[h('div','hd',null,[h('div',null,null,[h('h3',null,title),h('small',null,sub||'')]),h('div','sp'),cb])]);
   if(!rows.length)box.appendChild(h('div','none','Nada que mostrar ahora mismo.'));
-  rows.slice(0,60).forEach(r=>{const e=h('div','row '+(r.sev||''),null,[h('b',null,r.main),h('span',null,r.text||''),h('i',null,r.go||'ver en mapa ›')]);e.onclick=r.fn||(()=>focusTrain(r.main));box.appendChild(e)});
+  rows.slice(0,60).forEach(r=>{const e=h('div','row '+(r.sev||''),null,[h('b',null,r.main),h('span',null,r.text||''),h('i',null,r.go!==undefined?r.go:'ver en mapa ›')]);e.onclick=r.fn||(()=>focusTrain(r.main));box.appendChild(e)});
   if(rows.length>60)box.appendChild(h('div','none','… y '+(rows.length-60)+' más.'));
   if(foot)box.appendChild(h('div','none',foot));
   d.replaceChildren(box);d.hidden=false;d.onclick=ev=>{if(ev.target===d)closeDM()}}
@@ -625,6 +626,19 @@ function enhance(){
   const ev=[...document.querySelectorAll('#log>div')];(S.events||[]).forEach((e,i)=>{const row=ev[i];if(!row)return;const m=(e.msg||'').match(/\b(T-\d+|\d{5})\b/g)||[];const tr=m.find(n=>(S.trains||[]).some(t=>t.n===n));if(tr){row.title='Pulse para ver el tren '+tr;row.onclick=()=>focusTrain(tr)}else row.style.cursor='default'});
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDM()});
+
+// ── Instalaciones de seguridad por línea (documento de Adif) ──
+async function openSS(){
+  let D;try{D=await (await fetch('/api/safety_systems',{cache:'no-store'})).json()}catch(e){showDM('Instalaciones por línea','',[],'No se pudo cargar el documento.');return}
+  const rows=D.lines.map(l=>({main:l.id,sev:'NONE',text:l.name+' — '+l.summary,go:'ver detalle ›',fn:()=>ssLine(D,l)}));
+  showDM('Instalaciones de seguridad por línea','Fuente documental, no telemetría en vivo: '+D.source+'. Es un estudio informativo; confirmar con Adif.',rows,'Pulse una línea para ver señalización, protección de trenes, detectores y control centralizado.')}
+function ssLine(D,l){
+  const rows=Object.entries(l.facts).map(([k,v])=>({main:k.length>16?k.slice(0,15)+'…':k,sev:'NONE',text:v,go:'',fn:()=>{}}));
+  rows.forEach(r=>{r.fn=()=>{}});
+  showDM(l.name,l.kind+' · '+l.summary,rows.concat([{main:'RailGuard',sev:'CAUTION',text:l.railguard,go:'',fn:()=>{}}]),'Datos que Adif tiene y RailGuard no recibe: '+D.available_at_adif.join(' · '));
+  const box=document.querySelector('#dm .box');if(box){const b=h('button','x','‹ Volver a las líneas');b.style.marginTop='10px';b.onclick=openSS;box.appendChild(b);
+    box.querySelectorAll('.row').forEach((r,i)=>{r.style.cursor='default';const k=Object.keys(l.facts)[i];const b0=r.querySelector('b');if(k&&b0){b0.textContent=k;b0.style.minWidth='130px';b0.style.fontSize='12px'}})}}
+$('ssb')&&($('ssb').onclick=openSS);
 let fcTab=false,avTab=false;
 let FULL=false;
 function drawAv(C,AL){const bx=$('av');bx.replaceChildren(h('div',null,'Avisos oficiales de Renfe para Cercanías/Rodalies. Informativo: no interviene en la seguridad.'));bx.firstChild.id='fcnote';
