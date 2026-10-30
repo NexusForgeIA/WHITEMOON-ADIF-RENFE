@@ -44,3 +44,21 @@ def test_ign_parse_links_reads_gml_and_flags_fictitious():
     r = ign_wfs.parse_links(gml)
     assert [f for f, _ in r] == [True, False]
     assert r[1][1][0] == (41.0, -2.0) and len(r[1][1]) == 3
+
+
+def test_ign_tolera_una_pagina_caida(monkeypatch):
+    import ign_wfs, time
+    monkeypatch.setattr(time, "sleep", lambda s: None)
+    gml = b'<r xmlns:a="x"><a:RailwayLink><a:fictitious>false</a:fictitious><a:posList>40.0 -3.0 40.1 -3.1</a:posList></a:RailwayLink></r>'
+    n = {"c": 0}
+
+    def fake(url, timeout=0):
+        if "resultType=hits" in url:
+            return b'numberMatched="%d"' % (ign_wfs.PAGE * 10)
+        if "startIndex=%d" % (3 * ign_wfs.PAGE) in url:
+            raise OSError("502")
+        return gml
+    monkeypatch.setattr(ign_wfs, "_get", fake)
+    diag = {}
+    ways = ign_wfs.load(diag, lambda p: p)
+    assert len(ways) == 10 and diag["failed_pages"] == [3]

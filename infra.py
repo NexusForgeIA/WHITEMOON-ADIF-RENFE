@@ -196,7 +196,7 @@ class Infra:
                     data = {"ways": ways, "points": pts + section_changes(ways), "failed_tiles": 0, "source": "adif"}
                 else:
                     ways = ign_wfs.load(diag, simplify)
-                    data = {"ways": ways, "points": section_changes(ways), "failed_tiles": 0, "source": "ign"}
+                    data = {"ways": ways, "points": section_changes(ways), "failed_tiles": len(diag.get("failed_pages") or []), "source": "ign"}
                 diag["seconds"] = round(time.time() - t0, 1)
                 self._save(data)
                 return True

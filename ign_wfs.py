@@ -18,8 +18,9 @@ from renfe_adapter import project
 
 BASE = "https://servicios.idee.es/wfs-inspire/transportes"
 UA = {"User-Agent": "RailGuard/1.0 (WhiteMoon; supervision ferroviaria; contacto whitemoon.es)"}
-PAGE = 4000
-WORKERS = 4
+PAGE = 2000   # páginas más pequeñas: los offsets profundos con 4000 daban 502 del proxy del IGN
+WORKERS = 3
+MIN_COVERAGE = 0.85   # fracción mínima de páginas para publicar un trazado (si no, error)
 
 
 def _url(**kw):
@@ -51,7 +52,7 @@ def parse_links(xml_bytes):
     return out
 
 
-def load(diag, simplify, max_pages=40):
+def load(diag, simplify, max_pages=80):
     """Descarga y proyecta los tramos reales. `simplify` es infra.simplify (Douglas-Peucker en km)."""
     hits = _get(_url(service="WFS", version="2.0.0", request="GetFeature", typeNames="tn-ra:RailwayLink", resultType="hits"), 60)
     m = re.search(rb'numberMatched="(\d+)"', hits)
@@ -60,28 +61,44 @@ def load(diag, simplify, max_pages=40):
     ways, got, real = [], 0, 0
     pages = min(max_pages, (total // PAGE + 1) if total else max_pages)
 
-    def fetch(page):
-        for attempt in range(3):
+    def fetch(page, tries=6):
+        for attempt in range(tries):
             try:
                 return parse_links(_get(_url(service="WFS", version="2.0.0", request="GetFeature", typeNames="tn-ra:RailwayLink",
                                              srsName="urn:ogc:def:crs:EPSG::4326", count=PAGE, startIndex=page * PAGE), 180))
             except Exception as ex:
                 diag["last_error"] = repr(ex)[:120]
-                time.sleep(2 * (attempt + 1))
-        raise RuntimeError(f"página {page} del IGN no disponible: {diag.get('last_error')}")
+                time.sleep(min(30, 3 * (attempt + 1)))
+        return None   # no se aborta todo por una página: se reintenta al final
 
+    def add(links):
+        nonlocal got, real
+        got += len(links)
+        diag["downloaded"] = got
+        for fict, ll in links:
+            if fict:
+                continue   # conectores ficticios (enlaces de estación): no son vía
+            pts = simplify([project(la, lo) for la, lo in ll])
+            if len(pts) >= 2:
+                real += 1
+                ways.append({"t": None, "s": None, "v": None, "el": None, "src": "ign",
+                             "p": [[round(x, 2), round(y, 2)] for x, y in pts]})
+
+    failed = []
     with ThreadPoolExecutor(max_workers=WORKERS) as ex:   # páginas en paralelo: el servidor tarda más cuanto más profundo es el offset
-        for links in ex.map(fetch, range(pages)):
-            got += len(links)
-            diag["downloaded"] = got
-            for fict, ll in links:
-                if fict:
-                    continue   # conectores ficticios (enlaces de estación): no son vía
-                pts = simplify([project(la, lo) for la, lo in ll])
-                if len(pts) >= 2:
-                    real += 1
-                    ways.append({"t": None, "s": None, "v": None, "el": None, "src": "ign",
-                                 "p": [[round(x, 2), round(y, 2)] for x, y in pts]})
+        for page, links in enumerate(ex.map(fetch, range(pages))):
+            if links is None:
+                failed.append(page)
+            else:
+                add(links)
+    for page in list(failed):   # segunda pasada, en serie, con más paciencia
+        links = fetch(page, tries=8)
+        if links is not None:
+            add(links)
+            failed.remove(page)
+    diag["failed_pages"] = failed
+    if pages and len(failed) / pages > 1 - MIN_COVERAGE:
+        raise RuntimeError(f"IGN: {len(failed)} de {pages} páginas sin descargar ({diag.get('last_error')})")
     diag["real_links"] = real
     if not ways:
         raise RuntimeError("IGN WFS sin tramos utilizables")
