@@ -612,13 +612,17 @@ function renderHazards(){
 function llBox(){const L=S.learned_limits||[];if(!L.length)return null;
   const nm=c=>{const s=(S.stations||[]).find(x=>x.c===c);return s?s.n:c};
   return h('div','empty',null,[h('b',null,'Limitaciones probables (aprendidas de la flota, no oficiales): '),document.createTextNode(L.slice(0,6).map(x=>nm(x.seg[0])+'↔'+nm(x.seg[1])+' · ~'+x.median+' km/h (ref. '+x.ref+') · '+x.n+' trenes').join(' | ')+(L.length>6?' … +'+(L.length-6):''))])}
-const DLY_MIN=5;   // umbral de «retraso» (min): criterio habitual de puntualidad; ajustable
+const DLY_MIN=5;
+const hhmm=s=>s?new Date(s*1000).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}):'';
+// retrasos vigentes: sin duplicados (mismo nº y retraso) y ordenados por llegada estimada más cercana
+function delayList(){const seen=new Set();return(S.trains||[]).filter(t=>(t.ret||0)>=DLY_MIN).filter(t=>{const k=t.n+'|'+t.ret;if(seen.has(k))return false;seen.add(k);return true})
+  .sort((a,b)=>((a.eta||9e12)-(b.eta||9e12))||(b.ret-a.ret))}   // umbral de «retraso» (min): criterio habitual de puntualidad; ajustable
 function renderDelays(){
-  const all=S.trains||[],L=all.filter(t=>(t.ret||0)>=DLY_MIN).sort((a,b)=>b.ret-a.ret),n=L.length;
+  const all=S.trains||[],L=delayList(),n=L.length;
   $('dln').textContent='('+n+')';
-  const avg=n?Math.round(L.reduce((s,t)=>s+t.ret,0)/n):0;
+  const avg=n?Math.round(L.reduce((s,t)=>s+t.ret,0)/n):0,mx=n?Math.max(...L.map(t=>t.ret)):0;
   $('dlsum').textContent=n?n+' de '+all.length+' trenes con ≥ '+DLY_MIN+' min · máximo '+fmtDelay(L[0].ret)+' · media '+avg+' min':'Ningún tren con ≥ '+DLY_MIN+' min de retraso ('+all.length+' trenes). Retraso según el feed de Renfe; los trenes sin dato cuentan como a tiempo.';
-  const LV=FULL?L:L.slice(0,4);$('dll').replaceChildren(...LV.map(t=>{const r=h('div','dr'+(t.ret>=30?' m3':t.ret>=15?' m2':''),null,[h('b',null,t.n),h('span','w',(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'hacia '+t.to:''))+(t.dest?' · destino '+t.dest:'')),h('span','d','+'+fmtDelay(t.ret))]);
+  const LV=FULL?L:L.slice(0,4);$('dll').replaceChildren(...LV.map(t=>{const r=h('div','dr'+(t.ret>=30?' m3':t.ret>=15?' m2':''),null,[h('b',null,t.n),h('span','w',(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'hacia '+t.to:''))+(t.dest?' · destino '+t.dest:'')+(t.eta?' · llega ~'+hhmm(t.eta):'')),h('span','d','+'+fmtDelay(t.ret))]);
     r.onclick=()=>focusTrain(t.n);return r}),...(!FULL&&n>4?[moreBtn('Ver los '+n+' trenes con retraso ›',()=>kpiDelay())]:[]))}
 
 // ── Notificaciones locales (en pantalla, sonido y navegador). Nada sale del navegador: no se envían correos ni mensajes. ──
@@ -724,8 +728,8 @@ function ssLine(D,l){
 $('ssb')&&($('ssb').onclick=openSS);
 
 function moreBtn(txt,fn){const b=h('button','more',txt);b.onclick=ev=>{ev.stopPropagation();fn()};return b}
-function kpiDelay(){const rows=(S.trains||[]).filter(t=>(t.ret||0)>=DLY_MIN).sort((a,b)=>b.ret-a.ret).map(t=>({main:t.n,sev:t.ret>=30?'RESTRICT':'CAUTION',text:(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'→ '+t.to:''))+(t.dest?' · destino '+t.dest:'')+' · +'+fmtDelay(t.ret)}));
-  showDM('Trenes con retraso ('+rows.length+')','Retraso ≥ '+DLY_MIN+' min según el feed de Renfe. Pulse uno para verlo en el mapa.',rows)}
+function kpiDelay(){const rows=delayList().map(t=>({main:t.n,sev:t.ret>=30?'RESTRICT':'CAUTION',text:(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'→ '+t.to:''))+(t.dest?' · destino '+t.dest:'')+(t.eta?' · llega ~'+hhmm(t.eta):'')+' · +'+fmtDelay(t.ret)}));
+  showDM('Trenes con retraso ('+rows.length+')','Retraso ≥ '+DLY_MIN+' min según el feed de Renfe, solo viajes en curso, por llegada estimada más cercana. Pulse uno para verlo en el mapa.',rows)}
 function logModal(){const rows=(S.events||[]).map(e=>{const m=(e.msg||'').match(/\b(T-\d+|\d{5})\b/g)||[];const tr=m.find(n=>(S.trains||[]).some(t=>t.n===n));
   return{main:fmt(e.t),sev:e.kind==='HAZARD'?'RESTRICT':e.kind==='CLEAR'||e.kind==='RELEASE'?'NONE':'CAUTION',text:e.kind+' · '+e.msg,go:tr?'ver tren ›':'',fn:tr?()=>focusTrain(tr):()=>{}}});
   showDM('Registro de eventos','Auditoría (data/events.jsonl). Los más recientes primero.',rows)}

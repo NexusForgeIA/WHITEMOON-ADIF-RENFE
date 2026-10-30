@@ -25,6 +25,8 @@ import re
 import time
 import urllib.request
 import zipfile
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 URL_VP = "https://gtfsrt.renfe.com/vehicle_positions_LD.json"
 URL_TU = "https://gtfsrt.renfe.com/trip_updates_LD.json"
@@ -72,6 +74,33 @@ def _hms(t):
         return h * 3600 + m * 60 + sec
     except Exception:
         return None
+
+
+STALE_MIN = 20   # un retraso cuya llegada estimada lleva > 20 min en el pasado ya no describe un viaje en curso
+
+
+def eta_epoch(info, delay_s, now):
+    """Llegada estimada al destino (epoch s) = hora programada + retraso del feed; None si el GTFS no trae horas.
+    Los horarios GTFS son segundos desde las 00:00 del día de servicio (pueden pasar de 86400)."""
+    times = (info or {}).get("times") or []
+    if not times:
+        return None
+    arr = times[-1][0] if times[-1][0] is not None else times[-1][1]
+    if arr is None:
+        return None
+    mid = datetime.fromtimestamp(now, ZoneInfo("Europe/Madrid")).replace(hour=0, minute=0, second=0, microsecond=0)
+    sod = now - mid.timestamp()
+    base = mid.timestamp() - (86400 if arr >= 86400 and sod < 6 * 3600 else 0)   # viaje que cruza la medianoche
+    return base + arr + (delay_s or 0)
+
+
+def finished(info, sig, status, delay_s, now):
+    """True si el viaje ya terminó: parado en su última parada, o llegada estimada vencida hace más de STALE_MIN."""
+    stops = (info or {}).get("stops") or []
+    if stops and sig == stops[-1] and status == "STOPPED_AT":
+        return True
+    e = eta_epoch(info, delay_s, now)
+    return e is not None and now - e > STALE_MIN * 60
 
 
 def hhmm(sec):
@@ -189,7 +218,7 @@ class RenfeFeed:
             self.skew_ms = int(round(off / 1800.0) * 1800 * 1000) if abs(off) > 300 else 0
             self.skew_note = f"desfase de reloj del feed corregido: {self.skew_ms // 1000} s" if self.skew_ms else None
         ts_ms += self.skew_ms or 0
-        trains, seen, matched = [], set(), 0
+        trains, seen, matched, stale = [], set(), 0, 0
         for e in vp.get("entity", []):
             v = _g(e, "vehicle")
             pos = _g(v, "position")
@@ -241,17 +270,21 @@ class RenfeFeed:
                 self.detail[label] = self._detail(label, info, sig, ant, status, delays.get(trip_id))
             except Exception:
                 self.detail[label] = {"n": label}
+            dly = delays.get(trip_id, 0)
+            eta = eta_epoch(info, dly, self.now()) if info else None
+            if info and finished(info, sig, status, dly, self.now()):
+                dly, stale = 0, stale + 1       # el feed sigue publicando el retraso de un viaje ya terminado: no es vigente
             k = kmh / 3600
             trains.append({"n": label, "p": prod, "x": x, "y": y, "kmh": round(kmh, 1),
                            "vx": st["ux"] * k if kmh > 1 else 0.0, "vy": st["uy"] * k if kmh > 1 else 0.0,
-                           "ts": out_ts, "ret": round(delays.get(trip_id, 0) / 60), "ant": ant, "sig": sig,
+                           "ts": out_ts, "ret": round(dly / 60), "eta": round(eta) if eta else 0, "ant": ant, "sig": sig,
                            "ori": ori, "des": des, "mat": f"v{vid}", "op": "renfe-viajeros"})
         for gone in set(self.state) - seen:
             del self.state[gone]
         for gone in set(self.detail) - {t["n"] for t in trains}:
             del self.detail[gone]
         self.stats = {"entities": len(trains), "header_age_s": round(self.now() - ts_ms / 1000),
-                      "gtfs_matched": matched, "gtfs_loaded": bool(self.gtfs), "skew_s": (self.skew_ms or 0) // 1000}
+                      "gtfs_matched": matched, "retrasos_caducados": stale, "gtfs_loaded": bool(self.gtfs), "skew_s": (self.skew_ms or 0) // 1000}
         return self.est, trains
 
 

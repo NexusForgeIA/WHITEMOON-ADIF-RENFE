@@ -98,6 +98,7 @@ class Train:
     mat: str | None
     ret: int
     op: str = "?"
+    eta: int = 0
 
     @property
     def moving(self) -> bool:
@@ -125,7 +126,7 @@ def parse_train(d: dict, k: float) -> Train:
         vx=(d.get("vx") or 0) * k, vy=(d.get("vy") or 0) * k,
         kmh=float(d.get("kmh") or 0), ts=int(d["ts"]),
         ant=d.get("ant"), sig=d.get("sig"), des=d.get("des"),
-        mat=d.get("mat"), ret=int(d.get("ret") or 0), op=d.get("op") or "?",
+        mat=d.get("mat"), ret=int(d.get("ret") or 0), op=d.get("op") or "?", eta=int(d.get("eta") or 0),
     )
 
 
@@ -767,7 +768,7 @@ class Engine:
         for t in self.trains:
             hd = t.heading() if t.moving else None
             trains.append({"n": t.n, "x": t.x / self.cfg["km_per_px"], "y": t.y / self.cfg["km_per_px"],
-                           "kmh": round(t.kmh), "vmax": self.cfg["max_speed_by_product"].get(t.product, self.cfg["default_max_speed"]) if t.product else self.cfg["unknown_product_max_speed"], "ret": t.ret, "cmd": cmd.get(t.n, "NONE"),
+                           "kmh": round(t.kmh), "vmax": self.cfg["max_speed_by_product"].get(t.product, self.cfg["default_max_speed"]) if t.product else self.cfg["unknown_product_max_speed"], "ret": t.ret, "eta": t.eta, "cmd": cmd.get(t.n, "NONE"),
                            "from": names.get(t.ant, t.ant), "to": names.get(t.sig, t.sig), "dest": names.get(t.des, t.des),
                            "hx": round(hd[0], 3) if hd else None, "hy": round(hd[1], 3) if hd else None,
                            "op": t.op, "src": self.pos_src.get(t.n, "feed"),
