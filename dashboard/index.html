@@ -160,7 +160,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 .sc table td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .sc .fail{margin-top:10px;border-left:3px solid var(--stop);padding:4px 9px;background:#190b0f;border-radius:0 6px 6px 0;font-size:12px}
 .chip.bad{border-color:var(--stop);color:#ff9aa4;text-decoration:line-through}
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12384f;border:1px solid var(--acc);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;z-index:99;max-width:min(560px,90vw);display:none}
+#toast{z-index:60;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12384f;border:1px solid var(--acc);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;z-index:99;max-width:min(560px,90vw);display:none}
 @media(max-width:1100px){body{height:auto;grid-template-columns:1fr;grid-template-rows:auto}#chain{grid-row:auto}#mapwrap{height:max(560px,78vh)}#ovl{max-height:34%}#log{grid-column:1}#cabins{grid-column:1}}
 #toasts{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column-reverse;gap:6px;width:min(360px,90vw);pointer-events:none}
 .toast{pointer-events:auto}
@@ -308,13 +308,13 @@ const CENTRE=location.pathname.startsWith('/centro');
 const KEY=CENTRE?'rg_ctok':'rg_tok';
 const tok=()=>{try{return localStorage.getItem(KEY)||''}catch(e){return ''}};
 const hdr=()=>CENTRE?{'X-Centre-Token':tok()}:{'X-Token':tok()};
-let toastT=null;function toast(m,bad){const t=$('toast');t.textContent=m;t.style.borderColor=bad?'var(--res)':'var(--acc)';t.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>t.style.display='none',7000)}
+let toastT=null;function flash(m,bad){const t=$('toast');t.textContent=m;t.style.borderColor=bad?'var(--res)':'var(--acc)';t.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>t.style.display='none',7000)}
 const CN={nacional:'Centro Nacional',sistema:'Sistema','*':'Todos'};
 const cname=id=>CN[id]||((S&&S.centres||[]).find(c=>c.id===id)||{}).name||id;
 async function post(p,b){
   if(CENTRE&&p!=='/api/message')p=p.replace('/api/','/api/centre/');
   if(CENTRE&&p==='/api/message')p='/api/centre/message';
-  const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json',...hdr()},body:JSON.stringify({who,...b})});const j=await r.json();if(j.msg)toast(j.msg,!j.ok);load()}
+  const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json',...hdr()},body:JSON.stringify({who,...b})});const j=await r.json();if(j.msg)flash(j.msg,!j.ok);else if(r.status===401||r.status===403)flash('No autorizado: pulse 🔑 e introduzca la clave de administración',true);load()}
 let askedTok=false;
 async function load(){try{
   if(CENTRE&&!tok()&&!askedTok){askedTok=true;try{const v=prompt('Token de su centro de control');if(v)localStorage.setItem(KEY,v)}catch(e){}}
@@ -920,7 +920,9 @@ addEventListener('resize',()=>{base=null;draw()});
 $('mb').onclick=()=>{const t=$('mt').value.trim();if(t)post('/api/manual',{train:t})};
 $('mr').onclick=()=>{const t=$('mt').value.trim();if(t)post('/api/manual',{train:t,release:true})};
 $('reset').onclick=()=>post('/api/reset',{});
-$('adm').onclick=()=>{try{const v=prompt(CENTRE?'Token de su centro de control':'Token de administración (RAILGUARD_TOKEN)',tok());if(v!==null)localStorage.setItem(KEY,v)}catch(e){}load()};
+$('adm').onclick=async()=>{try{const v=prompt(CENTRE?'Token de su centro de control':'Token de administración (RAILGUARD_TOKEN)',tok());if(v!==null){localStorage.setItem(KEY,v);
+    try{const r=await fetch(CENTRE?'/api/centre/ping':'/api/ping',{method:'POST',headers:{'Content-Type':'application/json',...hdr()},body:'{}'});
+      if(r.status===401||r.status===403)flash('Clave incorrecta: las acciones seguirán bloqueadas',true);else flash(v?'Clave aceptada: acciones desbloqueadas ✓':'Clave borrada')}catch(e){flash('No se pudo comprobar la clave',true)}}}catch(e){}load()};
 $('msend').onclick=()=>{const t=$('mtx').value.trim();if(t){post('/api/message',{to:$('mto').value,text:t});$('mtx').value=''}};
 $('pm').onchange=()=>post('/api/proximity_mode',{mode:$('pm').value});
 $('dg').onclick=async()=>{
