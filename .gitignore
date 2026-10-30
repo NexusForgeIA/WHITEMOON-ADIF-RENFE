@@ -6,3 +6,4 @@ data/drivers.json
 data/centres_auth.json
 deploy/.env
 *.zip
+web/rec/
