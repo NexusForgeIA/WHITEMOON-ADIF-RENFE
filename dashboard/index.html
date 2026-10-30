@@ -217,10 +217,14 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 .more:hover{background:#12304f}
 
 /* Pantallas bajas: una sola barra de scroll de la página (sin paneles con scroll propio) */
-@media(min-width:1101px) and (max-height:900px){
-  body{height:auto;min-height:100vh;grid-template-rows:auto auto auto auto}
+@media(min-width:1101px){
+  body{height:auto;min-height:100vh;grid-template-rows:auto auto auto auto auto}
   .panel,#chain,#log,#cabins{overflow:visible;max-height:none}
   #right{overflow:visible;min-height:0}#right .panel{flex:none;max-height:none}
+  #right{display:contents}#rtop{grid-column:3;grid-row:3;display:flex;flex-direction:column;gap:10px;min-width:0}#rtop .panel{flex:none}
+  #chain{grid-row:3/6}#hzp{grid-column:2;grid-row:4;min-width:0}#cabins{grid-column:3;grid-row:4}#log{grid-column:2/4;grid-row:5}
+  body.full #rtop{display:contents}body.full #hzp{grid-column:auto;grid-row:auto}body.full #hz{display:block}
+  #hz{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:start}#hz .hzc{margin:0}#hz>.empty,#hz>.ll,#hz>div:not(.hzc){grid-column:1/-1}
   #mapwrap{height:clamp(520px,calc(100vh - 300px),720px);min-height:520px;align-self:start}#mapwrap canvas{position:absolute;inset:0}
   #chain{display:flex;flex-direction:column}#chain .bar p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:10.5px;line-height:1.3;margin:2px 0 3px}#chain .bar .n{display:inline-block}
   #log,#cabins{display:flex;flex-direction:column}#log .more{margin-top:auto}
@@ -276,11 +280,12 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 <button id="fullx">✕ Cerrar vista completa</button>
 <div id="tvov" hidden></div>
 <div id="dm" hidden></div>
-<aside id="right">
+<aside id="right"><div id="rtop">
   <section class="panel" id="dly"><h2 class="tabs"><button class="on" style="cursor:default">⏱ Trenes con retraso <span id="dln"></span></button></h2><div id="dlsum"></div><div id="dll"></div></section>
   <section class="panel"><h2>Cola del operador · B6 <span style="text-transform:none;letter-spacing:0">(solo situaciones ya contenidas)</span></h2><div id="queue"></div>
     <div class="man"><input id="mt" placeholder="Nº de tren (restricción manual)"><button id="mb">Restringir</button><button id="mr">Retirar</button></div></section>
-  <section class="panel"><h2 class="tabs"><button id="tabhz" class="on">Peligros activos</button><button id="tabfc" title="Previsión de posibles conflictos en los próximos 20 min (informativa)">🔮 Previsión <span id="fcn"></span></button><button id="tabav" title="Avisos oficiales de Renfe Cercanías/Rodalies (informativo)" hidden>🚆 Avisos <span id="avn"></span></button></h2><div id="hz"></div><div id="fc" hidden></div><div id="av" hidden></div></section>
+</div>
+  <section class="panel" id="hzp"><h2 class="tabs"><button id="tabhz" class="on">Peligros activos</button><button id="tabfc" title="Previsión de posibles conflictos en los próximos 20 min (informativa)">🔮 Previsión <span id="fcn"></span></button><button id="tabav" title="Avisos oficiales de Renfe Cercanías/Rodalies (informativo)" hidden>🚆 Avisos <span id="avn"></span></button></h2><div id="hz"></div><div id="fc" hidden></div><div id="av" hidden></div></section>
 </aside>
 
 <section class="panel" id="log"></section>
