@@ -5,20 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RailGuard Demo</title>
 <script src="shim.js"></script>
-<style>#adm,#pmrow,#issue{display:none!important}#dv{background:#0a1017;color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font:inherit}#dtab{color:var(--acc);border-color:var(--acc);cursor:pointer}</style>
+<style>#adm,#pmrow,#issue,label:has(#llt){display:none!important}#dv{background:#0a1017;color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font:inherit}#dtab{color:var(--acc);border-color:var(--acc);cursor:pointer}</style>
+<meta name="description" content="Supervisión de seguridad ferroviaria en profundidad: capas automáticas sobre datos de Renfe en vivo. Prototipo asesor, no certificado.">
+<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="favicon.png">
+<meta property="og:type" content="website"><meta property="og:site_name" content="RailGuard">
+<meta property="og:title" content="RailGuard · Supervisión de seguridad ferroviaria">
+<meta property="og:description" content="8 capas automáticas de supervisión sobre datos de Renfe en vivo (LZB · ETCS · ASFA). WhiteMoon Agencia IA.">
+<meta property="og:url" content="https://whitemoon-railguard.onrender.com/"><meta property="og:image" content="https://whitemoon-railguard.onrender.com/og-image.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Logo de RailGuard: letra R con vía ferroviaria">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="RailGuard · Supervisión de seguridad ferroviaria"><meta name="twitter:image" content="https://whitemoon-railguard.onrender.com/og-image.png">
+<meta name="theme-color" content="#0a1017">
 <style>
 :root{--bg:#0a1017;--panel:#111a24;--line:#203041;--tx:#d6e1ec;--mut:#7f92a6;--ok:#3ddc97;--cau:#f2c94c;--res:#ff9f43;--stop:#ff4d5e;--acc:#4aa8ff}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;height:100vh;display:grid;grid-template-rows:52px 1fr 190px;grid-template-columns:292px 1fr 380px;gap:10px;padding:10px}
-header{grid-column:1/-1;display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 14px}
-header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:var(--acc)}
+body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;height:100vh;display:grid;grid-template-rows:auto auto 1fr 190px;grid-template-columns:292px 1fr 380px;gap:10px;padding:10px}
+#pbanner,#banner{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+header .pill{white-space:nowrap;flex:none}header .kpis{white-space:nowrap;flex:0 1 auto}header #ochip,header .sysb,header #adm{flex:none}header .sysb,header #ochip,header #adm{white-space:nowrap;padding:5px 9px;font-size:12px}
+header{grid-column:1/-1;display:flex;flex-wrap:wrap;row-gap:6px;min-height:52px;padding-top:6px;padding-bottom:6px;gap:6px!important;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 14px}
+header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:#ff2a3a}
 .pill{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;border:1px solid var(--line);color:var(--mut)}
 .pill.sim{color:var(--cau);border-color:#5a4a1a}.pill.live{color:var(--ok);border-color:#1d5a40}
-.kpis{margin-left:auto;display:flex;gap:16px}.kpi{text-align:right}.kpi b{display:block;font-size:17px;line-height:1}.kpi small{color:var(--mut);font-size:10px}
+.kpis{margin-left:auto;display:flex;gap:4px}.kpi{text-align:right}.kpi b{display:block;font-size:17px;line-height:1}.kpi small{color:var(--mut);font-size:10px}
 .banner{display:none;background:#4a1219;color:#ffd5d9;border:1px solid var(--stop);border-radius:6px;padding:3px 10px;font-weight:600}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;min-height:0}
 .panel h2{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);margin:0 0 10px}
-#chain{grid-row:2/4}.chain{display:flex;flex-direction:column;gap:0}
+#chain{grid-row:3/5}.chain{display:flex;flex-direction:column;gap:0}
 .bar{border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:6px;padding:7px 9px;background:#0d151e}
 .bar.ALERT{border-left-color:var(--res);background:#1c1710}.bar.FAULT{border-left-color:var(--stop);background:#2a1216}.bar.OFF{opacity:.5}.bar.NODATA{border-left-color:var(--mut);opacity:.75}.bar.ext{border-style:dashed}
 .bar .t{display:flex;justify-content:space-between;font-weight:600}.bar .t i{font-style:normal;color:var(--mut);font-weight:500}
@@ -26,8 +37,39 @@ header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:var(
 .arrow{align-self:center;color:var(--mut);font-size:11px;line-height:14px}
 .human{border-left-color:var(--acc)}
 #mapwrap{position:relative;padding:0;overflow:hidden}canvas{width:100%;height:100%;display:block}
+#card{position:absolute;top:12px;right:12px;width:min(320px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;background:#0b121aF2;border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:8px;padding:12px 14px;font-size:13px;z-index:5}
+#card h3{margin:0;font-size:19px;letter-spacing:.3px}#card .sub{color:var(--mut);margin:2px 0 8px}#card .x{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--mut);font-size:20px;cursor:pointer}
+#card .r{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-top:1px solid #16212d}#card .r span:first-child{color:var(--mut)}#card .r span:last-child{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+#card .bad{color:var(--stop)}#card .al{margin-top:8px;font-size:12px;color:var(--res)}
+#infnote{position:absolute;right:10px;bottom:52px;max-width:min(420px,60%);font-size:10.5px;line-height:1.35;color:var(--mut);background:#0a1017dd;padding:4px 8px;border-radius:6px;text-align:right}
 #tip{position:absolute;pointer-events:none;background:#06090dee;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px;display:none;white-space:nowrap}
-.legend{position:absolute;left:10px;bottom:8px;display:flex;gap:10px;font-size:11px;color:var(--mut);background:#0a1017cc;padding:3px 8px;border-radius:6px}
+.legend{position:absolute;left:10px;bottom:8px;max-width:calc(100% - 170px);flex-wrap:wrap;display:flex;gap:4px 10px;font-size:11px;color:var(--mut);background:#0a1017cc;padding:3px 8px;border-radius:6px}
+#lg{position:absolute;left:10px;bottom:36px;z-index:8;max-height:calc(100% - 90px);overflow:auto;width:min(330px,calc(100% - 20px));background:#0a1017ee;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11px;line-height:1.35;color:var(--mut)}
+#lg b{color:#d6e1ec}#lg .lr{display:grid;grid-template-columns:12px 78px 1fr;gap:6px;align-items:start;padding:3px 0;border-top:1px solid #16212d}#lg .lr:first-of-type{border-top:0}
+#lg .lr i{width:10px;height:10px;border-radius:50%;margin-top:2px}#lg .lr em{font-style:normal;font-weight:700;color:#d6e1ec}
+#lg .lh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}#lg .lh button{background:none;border:0;color:var(--mut);font-size:15px;cursor:pointer}
+#lgb{background:#0a1017cc;border:1px solid var(--line);color:#d6e1ec;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer}
+#ovl{position:absolute;top:46px;left:10px;right:10px;z-index:6;display:flex;flex-direction:column;gap:5px;pointer-events:none;max-height:38%;overflow:auto}
+#ovl>*{pointer-events:auto}#outs{display:flex;flex-direction:column;gap:5px}
+.og{border-radius:7px;padding:6px 10px;font-size:12px;line-height:1.35;border:1px solid;box-shadow:0 2px 10px #000a}
+.og.CRIT{background:#5a0f18f2;border-color:var(--stop);color:#ffe3e6;animation:ogp 1.4s ease-in-out infinite}.og.WARN{background:#4a3a0cf2;border-color:var(--cau);color:#fff3c9}
+.og b{font-size:12.5px}.og .ap{margin-top:2px}.og .ap u{text-decoration:none;font-weight:700}.og .cv{margin-top:3px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.og .cv span{border-radius:10px;padding:0 7px;font-size:10.5px;font-weight:700;background:#0b3a22;color:#7dffbd;border:1px solid #1f7a4a}.og .cv span.no{background:#4a1219;color:#ff9aa5;border-color:var(--stop)}
+.og .tr{margin-top:2px;opacity:.9;font-size:11px}
+.og .ap,.og .tr,.og .d1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.og{padding:4px 10px}.og .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.og .top .cv{margin:0 0 0 auto}
+.oi{align-self:flex-start;background:#0a1017dd;border:1px solid var(--line);color:var(--mut);border-radius:14px;padding:2px 10px;font-size:11px;cursor:pointer}
+@keyframes ogp{50%{box-shadow:0 0 0 2px #ff4d5e88,0 2px 10px #000a}}
+#ochip{border-radius:14px;padding:3px 10px;font-weight:700;font-size:12px;cursor:pointer;border:1px solid;background:#0b3a22;color:#7dffbd;border-color:#1f7a4a;white-space:nowrap}
+#ochip.CRIT{background:#b00012;color:#fff;border-color:#ff4d5e;animation:bl 1s ease-in-out infinite}#ochip.WARN{background:#4a3a0c;color:#ffe08a;border-color:var(--cau)}
+.tabs{display:flex;gap:6px}.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:0 2px 3px}.tabs button.on{color:#d6e1ec;border-bottom-color:var(--acc)}
+#fcn{background:#7c5cff;color:#fff;border-radius:9px;padding:0 6px;font-size:10px;display:none}#fcn.on{display:inline}
+.fci{border:1px solid #3b2f78;border-left:3px solid #7c5cff;border-radius:6px;padding:7px 8px;margin-bottom:8px;background:#0f0d24}.fci.soon{border-left-color:#ff9f43}
+.fci .t{display:flex;gap:8px;align-items:baseline;font-size:11px}.fci .t em{font-style:normal;font-weight:700;color:#b9a8ff}.fci.soon .t em{color:#ffb86b}.fci .t span{margin-left:auto;font-weight:700;color:#d6e1ec}
+#dly{border-color:#7a5a1d}#dlsum{font-size:11px;color:var(--mut);margin-bottom:6px}#dll{max-height:230px;overflow:auto}
+.dr{display:flex;gap:8px;align-items:baseline;padding:4px 6px;margin-bottom:3px;border-left:3px solid var(--cau);background:#13171d;border-radius:4px;cursor:pointer;font-size:12px}
+.dr:hover{background:#1b222b}.dr b{min-width:70px}.dr .w{color:var(--mut);font-size:10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dr .d{margin-left:auto;font-weight:700}
+.dr.m2{border-left-color:var(--res)}.dr.m3{border-left-color:var(--stop)}.fci .m{margin-top:3px}.fci .th{margin-top:3px;color:var(--mut);font-size:11px}.fci .sg2{font-size:10px;color:var(--mut);margin-top:2px}
+#fcnote{font-size:10.5px;color:var(--mut);margin:0 0 8px;line-height:1.35}
 .legend s{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;text-decoration:none}
 #right{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}#right .panel{flex:1}
 .item{border:1px solid var(--line);border-radius:6px;padding:8px;margin-bottom:8px;background:#0d151e}
@@ -61,39 +103,191 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 .ops div{display:flex;justify-content:space-between;gap:6px;padding:2px 0;font-size:12px;border-bottom:1px solid #182533;cursor:pointer}.ops div:hover{color:var(--acc)}.ops small{color:var(--mut)}
 .frm{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.frm input,.frm select{background:#0a1017;border:1px solid var(--line);color:var(--tx);border-radius:5px;padding:3px 6px;font:inherit;min-width:0}.frm input{width:92px}
 .tokbox{background:#12384f;border:1px solid var(--acc);border-radius:6px;padding:6px;margin:4px 0;word-break:break-all;font-family:ui-monospace,monospace;display:none}
-@media(max-width:1100px){body{height:auto;grid-template-columns:1fr;grid-template-rows:auto}#chain{grid-row:auto}#mapwrap{height:420px}#log{grid-column:1}#cabins{grid-column:1}}
+
+.hzc{--c:var(--cau);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:#0d151e}
+.hzc.RESTRICT{--c:var(--res)}.hzc.STOP{--c:var(--stop);animation:glow 1.5s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 2px #ff4d5e55,0 0 14px #ff4d5e55}}
+.hzc .t{display:flex;gap:7px;align-items:baseline;font-weight:700}.hzc .t em{font-style:normal;color:var(--c);font-size:11px;letter-spacing:.06em}
+.hzc .m{color:var(--tx);font-size:12px;margin:3px 0}.hzc .a{font-size:11.5px;color:var(--mut)}.hzc .a b{color:var(--c)}
+.chips{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin:6px 0}.chips small{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.07em}
+.chip{font-size:10.5px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--mut);background:#0a1017;white-space:nowrap}
+.chip.det{border-color:var(--cau);color:var(--cau);background:#2a2312}.chip.exe{border-color:var(--stop);color:#fff;background:#5a000a}.chip.hum{border-color:var(--acc);color:var(--acc)}.chip.ok{border-color:#1f5a40;color:var(--ok)}
+#acting{display:none;flex-direction:column;gap:4px}
+#acting div{background:#5a000aee;border:1px solid #ff4d5e;color:#fff;border-radius:8px;padding:5px 10px;font-size:12px;line-height:1.35}
+#acting div.am{background:#3a2a10ee;border-color:var(--res)}#acting b{letter-spacing:.03em}
+.sysb{font-weight:700;color:var(--acc);border-color:var(--acc)}
+#sysov{position:fixed;inset:0;z-index:50;background:#070b10;overflow:auto;padding:18px max(18px,env(safe-area-inset-left,0px))}
+
+#tvov{position:fixed;inset:0;z-index:52;background:#e9eff5;color:#0f2233;overflow:auto;padding:14px max(14px,env(safe-area-inset-left,0px));font-family:system-ui,sans-serif}#tvov[hidden]{display:none}
+#tvov .w{max-width:1180px;margin:0 auto;display:grid;gap:12px}
+#tvov .hd{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border-radius:14px;padding:12px 16px;box-shadow:0 1px 4px #0002}
+#tvov .hd h1{margin:0;font-size:22px}#tvov .hd small{display:block;color:#5b6f82;font-size:13px}
+#tvov .st{padding:8px 14px;border-radius:10px;font-weight:700;border:1px solid}#tvov .st small{font-weight:400;color:inherit;opacity:.8}
+#tvov .st.NONE{background:#e5f7ec;border-color:#9bd9b3;color:#14703a}#tvov .st.CAUTION{background:#fff7dc;border-color:#ecd277;color:#8a6a00}#tvov .st.RESTRICT{background:#ffeedd;border-color:#f0b27a;color:#a14a00}#tvov .st.STOP{background:#ffe3e3;border-color:#f08a8a;color:#a60b0b}
+#tvov .hd .sp{flex:1}#tvov .hd button{border:0;background:#0f2233;color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;cursor:pointer}
+#tvov .tiles{display:grid;grid-template-columns:1.3fr 1fr 1.2fr 1.2fr 1fr;gap:12px}
+#tvov .tl{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 4px #0002;min-width:0}#tvov .tl h4{margin:0 0 6px;font-size:13px;color:#44586b}
+#tvov .big{font-size:26px;font-weight:800}#tvov .sub{color:#5b6f82;font-size:12px;margin-top:2px}
+#tvov .bad{color:#b3261e}#tvov .ok{color:#14703a}
+#tvov .strip{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 4px #0002}#tvov .strip h4{margin:0 0 8px;font-size:14px}
+#tvov .tr5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+#tvov .tc{border:1px solid #d3dde7;border-radius:10px;padding:8px 10px;background:#f8fafc;font-size:12px;min-width:0}#tvov .tc b{font-size:14px}
+#tvov .tc.me{border:2px solid #1d6fd6;background:#eaf3ff}#tvov .tc.e{border-style:dashed;color:#8a9bab;text-align:center;display:flex;align-items:center;justify-content:center}
+#tvov .tc .dk{font-weight:700;margin-top:4px}
+#tvov .bt{display:grid;grid-template-columns:1fr 330px;gap:12px}#tvov .mp{background:#fff;border-radius:14px;padding:8px;box-shadow:0 1px 4px #0002}
+#tvov .ib{display:grid;gap:12px;align-content:start}#tvov .r{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #e3eaf1;padding:5px 0;font-size:13px}#tvov .r span:first-child{color:#5b6f82}#tvov .r span:last-child{font-weight:600;text-align:right}
+#tvov .nt{font-size:11px;color:#5b6f82;padding:0 4px}
+@media(max-width:900px){#tvov .tiles{grid-template-columns:1fr 1fr}#tvov .tr5{grid-template-columns:repeat(2,1fr)}#tvov .bt{grid-template-columns:1fr}}
+
+body.full #right{position:fixed;inset:0;z-index:48;background:#070b10;padding:14px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px;align-content:start}
+body.full #right .panel{flex:none;overflow:visible;max-height:none}
+body.full #dll{max-height:none}
+body.full #hz:not([hidden]),body.full #fc:not([hidden]),body.full #av:not([hidden]){display:block;margin-bottom:12px}body.full #hz[hidden],body.full #fc[hidden],body.full #av[hidden]{display:none}
+body.full #hz::before,body.full #fc::before,body.full #av::before{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:6px 0}
+body.full #hz::before{content:"Peligros activos"}body.full #fc::before{content:"Previsión (informativa)"}body.full #av::before{content:"Avisos de Cercanías/Rodalies (informativo)"}
+body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
+#fullx{display:none}body.full #fullx{display:block;position:fixed;top:12px;right:16px;z-index:49;border:0;background:#d6e1ec;color:#0b121a;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer}
+#aboutov{position:fixed;inset:0;z-index:51;background:#070b10;overflow:auto;padding:18px max(18px,env(safe-area-inset-left,0px))}#aboutov[hidden]{display:none}
+#aboutov .ab{max-width:980px;margin:0 auto}#aboutov h1{font-size:22px;margin:6px 0}#aboutov h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:18px 0 6px}
+#aboutov table{width:100%;border-collapse:collapse;font-size:12.5px}#aboutov td,#aboutov th{border-top:1px solid #16212d;padding:6px 8px;text-align:left;vertical-align:top}#aboutov th{color:var(--mut);font-weight:600}
+#aboutov .ok{color:#7dffbd;font-weight:700}#aboutov .no{color:#ff9aa5;font-weight:700}#aboutov .mid{color:#ffe08a;font-weight:700}#aboutov p{margin:6px 0;line-height:1.5}#aboutov .box{border:1px solid var(--line);border-left:3px solid var(--acc);background:#0d151e;border-radius:6px;padding:8px 12px;margin:8px 0}#sysov[hidden]{display:none}.sh{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.sh h1{margin:0;font-size:22px}.sh .sub{color:var(--mut);font-size:12px;flex:1;min-width:200px}
+.flow{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin:10px 0 16px}.flow .n{font-size:11px;padding:4px 9px;border-radius:6px;border:1px solid var(--line);background:#0d151e;font-weight:700}.flow .n.OK{border-color:#1f5a40;color:var(--ok)}.flow .n.ALERT{border-color:var(--res);color:var(--res);background:#2a1d0c}.flow .n.FAULT{border-color:var(--stop);color:#fff;background:#5a000a;animation:bl 1s infinite}.flow .n.NODATA,.flow .n.OFF{color:var(--mut)}.flow i{color:var(--mut);font-style:normal}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:12px}
+.sc{border:1px solid var(--line);border-top:4px solid var(--c);border-radius:10px;background:#0d151e;padding:12px 14px;--c:var(--ok);min-width:0}
+.sc.ALERT{--c:var(--res)}.sc.FAULT{--c:var(--stop)}.sc.NODATA,.sc.OFF{--c:#51657a}
+.sc h3{margin:0;font-size:15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sc h3 .id{background:var(--c);color:#06090d;border-radius:5px;padding:0 7px;font-size:12px}.sc h3 .st{margin-left:auto;font-size:11px;color:var(--c);border:1px solid var(--c);border-radius:999px;padding:1px 8px}
+.sc .grp{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin:2px 0 6px}
+.sc h4{margin:10px 0 3px;font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}.sc p,.sc li{font-size:12.5px;line-height:1.4;margin:0}.sc ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.sc .live{margin-top:10px;padding:7px 9px;border-radius:7px;background:#0a1017;font-size:12px}.sc .live b{color:var(--c)}
+.sc table td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.sc .fail{margin-top:10px;border-left:3px solid var(--stop);padding:4px 9px;background:#190b0f;border-radius:0 6px 6px 0;font-size:12px}
+.chip.bad{border-color:var(--stop);color:#ff9aa4;text-decoration:line-through}
+#toast{z-index:60;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12384f;border:1px solid var(--acc);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;z-index:99;max-width:min(560px,90vw);display:none}
+@media(max-width:1100px){body{height:auto;grid-template-columns:1fr;grid-template-rows:auto}#chain{grid-row:auto}#mapwrap{height:max(560px,78vh)}#ovl{max-height:34%}#log{grid-column:1}#cabins{grid-column:1}}
+#toasts{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column-reverse;gap:6px;width:min(360px,90vw);pointer-events:none}
+.toast{pointer-events:auto}
+.toast{background:#142130;border:1px solid #3a4a5c;border-left:6px solid #d9b84a;border-radius:8px;padding:9px 12px;color:#e8eef5;font-size:13px;cursor:pointer;box-shadow:0 6px 18px #0008}
+.toast.RESTRICT{border-left-color:#e07b2f}.toast.STOP{border-left-color:#e04040}.toast.SYS{border-left-color:#8a6de0}
+.toast b{display:block;font-size:12px;letter-spacing:.04em;margin-bottom:2px}
+
+/* Banda de cabina (siempre visible) */
+#cab{grid-column:1/-1;display:grid;grid-template-columns:1.25fr 1fr 1.25fr 1.1fr 1fr auto;gap:10px;align-items:stretch}
+#cab.off{display:none}
+#cab .ct{background:#f4f8fc;color:#0f2233;border-radius:12px;padding:6px 12px;min-width:0;box-shadow:0 1px 3px #0003}
+#cab .ct h4{margin:0 0 2px;font-size:11px;color:#44586b;font-weight:600;letter-spacing:.02em}
+#cab .big{font-size:19px;font-weight:800;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cab .sub{font-size:11px;color:#5b6f82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cab .bad{color:#b3261e}#cab .okc{color:#14703a}
+#cab .gz{display:flex;align-items:center;gap:8px}#cab .gz svg{max-width:92px;height:auto;flex:none}
+#cab .go{display:flex;flex-direction:column;gap:6px;justify-content:center}
+#cab .go button{border:1px solid #2b6cb0;background:#12304f;color:#cfe6ff;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer;font-size:12px;white-space:nowrap}
+#cab .go button.g{border-color:#3a4a5c;background:transparent;color:#9fb2c5;font-weight:500}
+#cab .who{grid-column:1/-1;font-size:11px;color:var(--mut);margin:-2px 2px -4px}
+@media(max-width:1100px){#cab{grid-template-columns:1fr 1fr}}
+
+/* Tarjetas claras e interactivas */
+.bar,.hzc,.dr{background:#f4f8fc!important;color:#0f2233;--tx:#0f2233;--mut:#5b6f82;border-color:#d3dde8;box-shadow:0 1px 3px #0003;cursor:pointer;transition:transform .12s,box-shadow .12s}
+.bar:hover,.hzc:hover,.dr:hover{transform:translateY(-1px);box-shadow:0 4px 10px #0006}
+.bar.ALERT{background:#fff3e2!important}.bar.FAULT{background:#fde6e8!important}.bar.OFF{opacity:.7}.bar.human{cursor:pointer}
+.hzc.RESTRICT{background:#fff0e0!important}.hzc.STOP{background:#fde6e8!important}
+.bar .t i{background:#e3ebf3;color:#44586b;border-radius:10px;padding:1px 8px;font-size:11px}
+.bar.ALERT .t i{background:#f7d9a8;color:#7a4a00}.bar.FAULT .t i{background:#f5b9be;color:#8a1520}.bar.OK .t i{background:#cfeedd;color:#14703a}
+.bar::after{content:"ver detalle ›";display:block;text-align:right;font-size:10px;color:#2b6cb0;margin-top:2px}
+.dr{color:#0f2233}.dr .w{color:#5b6f82}.dr .d{color:#b3261e}
+.hzc .acts{display:flex;gap:6px;margin-top:6px}
+.hzc .acts button,#dm button.x{border:1px solid #2b6cb0;background:#12304f;color:#cfe6ff;border-radius:8px;padding:5px 10px;font-size:11.5px;cursor:pointer;font-weight:600}
+.hzc .acts button.g{background:#fff;color:#2b6cb0}
+.kpi{cursor:pointer;border-radius:8px;padding:2px 6px}.kpi:hover{background:#1b2a3a}
+#log>div{cursor:pointer}#log>div:hover{background:#16212d}
+#cab .ct{cursor:pointer;transition:transform .12s,box-shadow .12s}#cab .ct:hover{transform:translateY(-1px);box-shadow:0 4px 10px #0006}
+#cab .ct::after{content:"›";position:absolute;right:10px;top:6px;color:#9db0c2;font-size:16px}#cab .ct{position:relative}
+#dm{position:fixed;inset:0;background:#000a;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px}
+#dm[hidden]{display:none}
+#dm .box{background:#f4f8fc;color:#0f2233;border-radius:14px;width:min(640px,96vw);max-height:82vh;overflow:auto;padding:16px 18px;box-shadow:0 10px 40px #000a}
+#dm .hd{display:flex;align-items:flex-start;gap:10px}#dm .hd h3{margin:0;font-size:18px}#dm .hd small{display:block;color:#5b6f82;font-size:12px;margin-top:2px}#dm .hd .sp{flex:1}
+#dm .row{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #d3dde8;border-left:5px solid #8fd3a8;border-radius:10px;padding:8px 10px;margin-top:8px;cursor:pointer}
+#dm .row:hover{background:#eaf2fa}#dm .row.CAUTION{border-left-color:#e0a800}#dm .row.RESTRICT{border-left-color:#e8710a}#dm .row.STOP{border-left-color:#d32f2f}
+#dm .row b{min-width:62px}#dm .row span{flex:1;font-size:12.5px}#dm .row i{font-style:normal;font-size:11px;color:#2b6cb0;white-space:nowrap}
+#dm .none{color:#5b6f82;margin-top:10px}
+
+/* Sin barras de scroll toscas: finas y discretas; listas resumidas con «ver todo» */
+*{scrollbar-width:thin;scrollbar-color:#2c3e5299 transparent}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#2c3e5299;border-radius:3px}::-webkit-scrollbar-track{background:transparent}
+.bar p{display:none}.bar{padding:5px 9px}.bar .n{display:inline-block;margin:0 10px 0 0;font-size:11px}.bar::after{display:none}
+.chain .arrow{font-size:0;height:6px;line-height:0}.chain .arrow::before{content:"";display:block;width:2px;height:6px;background:#2c3e52;margin:0 auto}
+.more{display:block;width:100%;text-align:center;padding:7px;border-radius:8px;border:1px dashed #2b6cb0;background:transparent;color:#9fcbff;font-weight:600;cursor:pointer;margin-top:6px;font-size:12px}
+.more:hover{background:#12304f}
+
+/* Pantallas bajas: una sola barra de scroll de la página (sin paneles con scroll propio) */
+@media(min-width:1101px){
+  body{height:auto;min-height:100vh;grid-template-rows:auto auto auto auto auto}
+  .panel,#chain,#log,#cabins{overflow:visible;max-height:none}
+  #right{overflow:visible;min-height:0}#right .panel{flex:none;max-height:none}
+  #right{display:contents}#rtop{grid-column:3;grid-row:3;display:flex;flex-direction:column;gap:10px;min-width:0}#rtop .panel{flex:none}
+  #chain{grid-row:3/6}#hzp{grid-column:2;grid-row:4;min-width:0}#cabins{grid-column:3;grid-row:4}#log{grid-column:2/4;grid-row:5}
+  body.full #rtop{display:contents}body.full #hzp{grid-column:auto;grid-row:auto}body.full #hz{display:block}
+  #hz{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:start}#hz .hzc{margin:0}#hz>.empty,#hz>.ll,#hz>div:not(.hzc){grid-column:1/-1}
+  #mapwrap{height:clamp(520px,calc(100vh - 300px),720px);min-height:520px;align-self:start}#mapwrap canvas{position:absolute;inset:0}
+  #chain{display:flex;flex-direction:column}#chain .bar p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:10.5px;line-height:1.3;margin:2px 0 3px}#chain .bar .n{display:inline-block}
+  #log,#cabins{display:flex;flex-direction:column}#log .more{margin-top:auto}
+  #right .panel:last-child{flex:1 1 auto}
+}
+.xsum{cursor:pointer;list-style:none;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#0d151e;color:var(--tx);font-weight:600;font-size:12px;display:flex;justify-content:space-between}.xsum::-webkit-details-marker{display:none}#xtra[open] .xsum span{transform:rotate(180deg)}
 </style>
 </head>
 <body>
+<div id="toasts" aria-live="polite"></div>
 <header>
-  <h1>RAIL<span>GUARD</span></h1><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><select id="dv" title="Vista"><option value="nacional">Centro Nacional</option><option value="madrid">Madrid · Atocha</option><option value="barcelona">Barcelona · Sants</option><option value="sevilla">Sevilla · Santa Justa</option></select><a id="dtab" class="pill" href="tablet.html" style="text-decoration:none">📱 App de cabina</a><span id="dprog" class="pill"></span><button id="drs" title="Reiniciar la reproducción">↻</button><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
+  <a href="./" class="brand" style="display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit"><img src="logo.png" alt="" height="36" style="height:36px;width:auto;display:block;border-radius:4px" style="display:block"><h1>RAIL<span>GUARD</span></h1></a><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><select id="dv" title="Vista"><option value="nacional">Centro Nacional</option><option value="madrid">Madrid · Atocha</option><option value="barcelona">Barcelona · Sants</option><option value="sevilla">Sevilla · Santa Justa</option></select><a id="dtab" class="pill" href="tablet.html" style="text-decoration:none">📱 App de cabina</a><span id="dprog" class="pill"></span><button id="drs" title="Reiniciar la reproducción">↻</button><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
   <div id="banner" class="banner"></div><div id="pbanner"></div>
+  <button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
+  <button id="cabb" class="sysb" title="Muestra u oculta la banda del tren en foco">▣ Cabina</button>
+  <button id="ntb" class="sysb" style="border-color:#6b5a2b;color:#ffe9a8" title="Avisos en pantalla, sonido y notificación del navegador cuando aparece un peligro nuevo o un sistema falla">🔔 Avisos: no</button>
+  <button id="fullb" class="sysb" style="border-color:#2b6cb0;color:#cfe6ff" title="Abre a pantalla completa retrasos, cola del operador, peligros, previsión y avisos">⤢ Ver todo</button>
+  <button id="ssb" class="sysb" style="border-color:#2b7a5a;color:#c9f2de" title="Instalaciones de seguridad por línea (señalización, ATP, detectores, CTC), de documentación de Adif">📋 Líneas</button>
+  <button id="abb" class="sysb" style="border-color:#3a4a5c;color:#d6e1ec" title="Qué datos son reales, qué es simulado y qué límites tiene este sistema">ℹ Fuentes</button>
+  <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas</button>
   <button id="adm" title="Token de administración (RAILGUARD_TOKEN)">🔑</button>
   <div class="kpis" id="kpis"></div>
 </header>
 
+<section id="cab" aria-label="Tren en foco"></section>
+
 <section class="panel" id="chain"><h2>Defensa en profundidad</h2><div class="chain" id="bars"></div>
-  <h2 style="margin-top:16px">Centros de control</h2><div id="board"></div><div id="ho"></div>
+  <details id="xtra" style="margin-top:14px"><summary class="xsum">Centros, mensajes y simulación <span>▾</span></summary>
+  <h2 style="margin-top:10px">Centros de control</h2><div id="board"></div><div id="ho"></div>
   <h2 style="margin-top:12px">Mensajes entre centros</h2><div id="msgs" style="max-height:130px;overflow:auto"></div>
   <div class="frm"><select id="mto"></select><input id="mtx" maxlength="300" placeholder="Mensaje" style="flex:1;width:auto"><button id="msend">Enviar</button></div>
   <details class="ops"><summary>Operadores en España</summary><div class="empty" style="cursor:default">Pulse uno para filtrar el mapa.</div><div id="oplist" style="display:block;border:0;cursor:default"></div></details>
   <div id="simctl" style="display:none"><h2 style="margin-top:16px">Inyectar fallo (simulación)</h2><div class="ctl" id="scn"></div>
   <div class="ctl"><button id="reset">Reiniciar simulación</button></div></div>
+  </details>
 </section>
 
-<section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div>
+<section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
   <div class="tb"><button id="zi" title="Acercar">+</button><button id="zo" title="Alejar">−</button><button id="zr" title="Ajustar a toda la red">⌂</button>
-    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label>
-    <select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
+    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lcl" hidden title="Cercanías: posición de parada, sin velocidad; solo informativo"><input type="checkbox" id="lc" checked>Cercanías <span id="lcn"></span></label><label title="Dibuja el contorno de España y países vecinos"><input type="checkbox" id="lbm" checked>Mapa</label><label title="Resalta las líneas de alta velocidad (AVE) y su nombre"><input type="checkbox" id="lave" checked>AVE</label><label title="Limitaciones temporales de velocidad publicadas por Adif (informativo)"><input type="checkbox" id="llt" checked>LTV <span id="ltn"></span></label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
+    <button id="lgb" title="Qué significan los colores y las etiquetas del mapa">? Leyenda</button><select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
   <div class="legend"><span><s style="background:var(--ok)"></s>libre</span><span><s style="background:var(--cau)"></s>precaución</span><span><s style="background:var(--res)"></s>restringido</span><span><s style="background:var(--stop)"></s>STOP</span>
-    <span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
-  <div class="scale" id="scale"></div>
+    <span style="color:#e8f1ff">┅ AVE alta velocidad</span><span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
+  <div id="lg" hidden><div class="lh"><b>Estado de cada tren (orden de RailGuard)</b><button id="lgx" title="Cerrar">×</button></div>
+    <div class="lr"><i style="background:var(--ok)"></i><em>NONE · libre</em><span>Sin orden. Ninguna barrera detecta riesgo; circula normal.</span></div>
+    <div class="lr"><i style="background:var(--cau)"></i><em>CAUTION · precaución</em><span>Aviso leve: dato dudoso o ligero exceso de velocidad (3–8 %). Se avisa a cabina y centro; no frena.</span></div>
+    <div class="lr"><i style="background:var(--res)"></i><em>RESTRICT · restringido</em><span>Riesgo real: limita la velocidad y avisa a cabina por GSM-R (exceso &gt;8 %, poca separación, alcance previsto, salto de GPS repetido).</span></div>
+    <div class="lr"><i style="background:var(--stop)"></i><em>STOP</em><span>Peligro inminente: freno de emergencia y bloque enclavado. Solo lo libera una persona con doble autorización (B7).</span></div>
+    <div style="margin-top:6px;border-top:1px solid #16212d;padding-top:5px"><b>Etiqueta junto al tren</b>: <code>T-9004 B3·B4</code> = barreras que están actuando sobre él (B1 datos · B2 velocidad · B3 separación · B4 predicción · B0 ATP). El mayor nivel manda si varias opinan a la vez.<br><b>▶</b> rumbo del tren · <b>círculo rojo pulsante</b> = STOP activo · <b>aro de 3 km</b> = radio de aviso a tablets.<br>Con el feed real hay "velocidad imposible" y saltos de GPS: se descartan como error de dato (aviso, sin frenar) y un exceso solo actúa si se repite 3 ciclos seguidos.</div></div>
+  <div id="ovl"><div id="acting"></div><div id="outs"></div></div><div id="infnote" hidden></div><div class="scale" id="scale"></div>
 </section>
 
-<aside id="right">
+<button id="fullx">✕ Cerrar vista completa</button>
+<div id="tvov" hidden></div>
+<div id="dm" hidden></div>
+<aside id="right"><div id="rtop">
+  <section class="panel" id="dly"><h2 class="tabs"><button class="on" style="cursor:default">⏱ Trenes con retraso <span id="dln"></span></button></h2><div id="dlsum"></div><div id="dll"></div></section>
   <section class="panel"><h2>Cola del operador · B6 <span style="text-transform:none;letter-spacing:0">(solo situaciones ya contenidas)</span></h2><div id="queue"></div>
     <div class="man"><input id="mt" placeholder="Nº de tren (restricción manual)"><button id="mb">Restringir</button><button id="mr">Retirar</button></div></section>
-  <section class="panel"><h2>Peligros activos</h2><div id="hz"></div></section>
+</div>
+  <section class="panel" id="hzp"><h2 class="tabs"><button id="tabhz" class="on">Peligros activos</button><button id="tabfc" title="Previsión de posibles conflictos en los próximos 20 min (informativa)">🔮 Previsión <span id="fcn"></span></button><button id="tabav" title="Avisos oficiales de Renfe Cercanías/Rodalies (informativo)" hidden>🚆 Avisos <span id="avn"></span></button></h2><div id="hz"></div><div id="fc" hidden></div><div id="av" hidden></div></section>
 </aside>
 
 <section class="panel" id="log"></section>
@@ -104,6 +298,8 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
   <div class="frm"><input id="di" placeholder="Id (seudónimo)"><input id="dt" placeholder="Nº tren"><select id="do"></select><button id="dg">Emitir</button></div>
   <div class="tokbox" id="tk"></div><div id="drv"></div></div></section>
 
+<div id="toast"></div>
+<div id="sysov" hidden></div><div id="aboutov" hidden></div>
 <script>
 const $=id=>document.getElementById(id);
 function h(tag,cls,text,kids){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;(kids||[]).forEach(k=>e.appendChild(k));return e}
@@ -114,29 +310,49 @@ const CENTRE=!!RG_DEMO.centre;
 const KEY=CENTRE?'rg_ctok':'rg_tok';
 const tok=()=>{try{return localStorage.getItem(KEY)||''}catch(e){return ''}};
 const hdr=()=>CENTRE?{'X-Centre-Token':tok()}:{'X-Token':tok()};
+let toastT=null;function flash(m,bad){const t=$('toast');t.textContent=m;t.style.borderColor=bad?'var(--res)':'var(--acc)';t.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>t.style.display='none',7000)}
 const CN={nacional:'Centro Nacional',sistema:'Sistema','*':'Todos'};
 const cname=id=>CN[id]||((S&&S.centres||[]).find(c=>c.id===id)||{}).name||id;
 async function post(p,b){
   if(CENTRE&&p!=='/api/message')p=p.replace('/api/','/api/centre/');
   if(CENTRE&&p==='/api/message')p='/api/centre/message';
-  const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json',...hdr()},body:JSON.stringify({who,...b})});const j=await r.json();if(!j.ok&&j.msg)alert(j.msg);load()}
+  const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json',...hdr()},body:JSON.stringify({who,...b})});const j=await r.json();if(j.msg)flash(j.msg,!j.ok);else if(r.status===401||r.status===403)flash('No autorizado: pulse 🔑 e introduzca la clave de administración',true);load()}
 let askedTok=false;
 async function load(){try{
   if(false){askedTok=true;try{const v=prompt('Token de su centro de control');if(v)localStorage.setItem(KEY,v)}catch(e){}}
   const r=await fetch(CENTRE?'/api/centre/snapshot':'/api/snapshot',{cache:'no-store',headers:CENTRE?hdr():{}});
   if(r.status===401){const b=$('banner');b.style.display='block';b.textContent='Token de centro no válido: pulse 🔑 para introducirlo';return}
-  S=await r.json();render()}catch(e){const b=$('banner');b.style.display='block';b.textContent='Sin conexión con el servidor de supervisión'}}
+  S=await r.json();{const c=S.cercanias;if($('lcl')){$('lcl').hidden=!c;if(c)$('lcn').textContent='('+(c.ok?c.count:'sin datos')+')'}}render()}catch(e){const b=$('banner');b.style.display='block';b.textContent='Sin conexión con el servidor de supervisión';renderOuts([{sev:'CRIT',title:'Sin conexión con el supervisor de RailGuard',system:'Servidor de supervisión',detail:'Este panel no recibe datos nuevos',trains:[],applying:'Los trenes siguen protegidos por su ATP de a bordo (B0) y por el enclavamiento ya aplicado; los centros pierden visión hasta reconectar.',covering:[{id:'B0',healthy:true},{id:'B5',healthy:true}]}])}}
 const fmt=ms=>new Date(ms).toLocaleTimeString('es-ES',{timeZone:'Europe/Madrid'});
 
+
+// Sistemas caídos o degradados: SIEMPRE en pantalla mientras duren (no se pueden cerrar) + qué sistemas los cubren
+function renderOuts(list){
+  const box=$('outs'),chip=$('ochip');if(!box)return;
+  const hard=list.filter(o=>o.sev==='CRIT'||o.sev==='WARN'),info=list.filter(o=>o.sev==='INFO');
+  const worst=hard.some(o=>o.sev==='CRIT')?'CRIT':hard.length?'WARN':'';
+  chip.className=worst;chip.title=worst?'Hay sistemas de seguridad caídos o degradados. Pulse para ver cuáles y qué hace RailGuard mientras tanto':'Estado global de los sistemas de seguridad. Pulse para ver el detalle';chip.textContent=worst?('⚠ '+hard.length+' sistema'+(hard.length>1?'s':'')+' de seguridad '+(worst==='CRIT'?'caído':'degradado')+(hard.length>1?'s':'')+' · ver'):'🛡 Sistemas operativos'+(info.length?' · '+info.length+' sin cobertura':'');
+  chip.onclick=openSys;
+  const kids=hard.slice(0,2).map(o=>{
+    const top=h('div','top',null,[h('b',null,(o.sev==='CRIT'?'⛔ ':'⚠ ')+o.title)]);
+    if(o.covering&&o.covering.length){const c=h('div','cv',null,[h('small',null,'Cubren:')]);o.covering.forEach(x=>c.append(h('span',x.healthy?'':'no',x.id+' '+(x.healthy?'✓':'✗'))));top.append(c)}
+    const d=h('div','og '+o.sev,null,[top]);d.title=[o.system,o.detail,o.applying].filter(Boolean).join('\n');
+    if(o.applying){d.append(h('div','ap',null,[h('u',null,'Aplicando: '),document.createTextNode(o.applying)]))}
+    if(o.trains&&o.trains.length)d.append(h('div','tr','Trenes: '+o.trains.slice(0,8).join(', ')+(o.trains.length>8?' +'+(o.trains.length-8):'')));
+    d.style.cursor='pointer';d.onclick=openSys;return d});
+  if(hard.length>2){const m=h('div','oi','+'+(hard.length-2)+' más · ver todos');m.onclick=openSys;kids.push(m)}
+  if(info.length){const m=h('div','oi','ℹ '+info.map(o=>o.title).join(' · '));m.title='Cobertura no disponible (no es una avería). Pulse para ver cómo se compensa.';m.onclick=openSys;kids.push(m)}
+  box.replaceChildren(...kids)}
 function render(){
   $('mode').textContent='DEMO · ejecución real grabada';$('mode').title='Reproducción de una ejecución real del motor sobre una captura de trenes reales (30-oct-2026). No son datos en vivo.';$('mode').className='pill '+S.mode;
   $('clock').textContent=fmt(S.now)+' · ciclo '+S.cycle;
   const b=$('banner');b.style.display=S.degraded?'block':'none';if(S.degraded)b.textContent='⚠ '+S.degraded;
+  renderOuts(S.outages||[]);renderForecast();renderDelays();renderTV();try{notifyCheck()}catch(e){}try{renderCab()}catch(e){}
   const k=S.kpi,ks=$('kpis');ks.replaceChildren(...[['trains','trenes'],['clear','libres'],['caution','precaución'],['restrict','restringidos'],['stop','STOP']].map(([a,l])=>h('div','kpi',null,[h('b',null,k[a]),h('small',null,l)])));
   // cadena
   const bars=$('bars');bars.replaceChildren();
   S.barriers.forEach((x,i)=>{
-    bars.appendChild(h('div','bar '+x.status+(x.id==='B0'?' ext':''),null,[h('div','t',null,[h('span',null,x.id+' · '+x.name),h('i',null,x.id==='B0'&&x.status==='NODATA'?'sin telemetría':x.status)]),h('p',null,x.desc),h('div','n',x.active?x.active+' activo(s) · '+x.total+' disparos':x.total+' disparos')]));
+    bars.appendChild(h('div','bar '+x.status+(x.id==='B0'?' ext':''),null,[h('div','t',null,[h('span',null,x.id+' · '+x.name),h('i',null,x.id==='B0'&&x.status==='NODATA'?'sin telemetría':x.status)]),h('p',null,x.desc),h('div','n',x.active?x.active+' activo(s) · '+x.total+' disparos':x.total+' disparos'),(x.active&&x.id!=='B5'?h('div','n',(()=>{const ts=[...new Set(S.hazards.filter(z=>z.barrier===x.id).flatMap(z=>z.trains))];return 'Actúa sobre: '+ts.slice(0,4).join(', ')+(ts.length>4?' +'+(ts.length-4):'')})()):h('span'))]));
     bars.appendChild(h('div','arrow',i<S.barriers.length-1?'▼ si falla, la siguiente actúa':'▼ solo ahora llega a una persona'));
   });
   const q=S.operator.length;if(CENTRE&&S.centre){const cn=$('cname');cn.style.display='inline-block';cn.textContent=S.centre.name+' · '+S.centre.role;document.title='RailGuard · '+S.centre.name}
@@ -152,24 +368,22 @@ function render(){
     const row=h('div',null,null,[]);row.style.display='flex';row.style.gap='6px';row.style.alignItems='center';
     const ak=h('button',null,it.ack?'Reconocido':'Reconocer');ak.disabled=it.ack;ak.onclick=()=>post('/api/ack',{key:it.key});
     row.appendChild(ak);
-    if(it.train){const own=!CENTRE||S.centre.role==='nacional'||!it.zone||!it.zone.length||it.zone.includes(S.centre.id);const rb=h('button',it.can_rearm&&own?'go':'',!own?'Zona de otro centro':it.can_rearm?'Autorizar rearme':'Rearme bloqueado');rb.disabled=!(it.can_rearm&&own);rb.onclick=()=>post('/api/rearm',{train:it.train});row.appendChild(rb)}
+    if(it.train){const own=!CENTRE||S.centre.role==='nacional'||!it.zone||!it.zone.length||it.zone.includes(S.centre.id);const me=CENTRE&&S.centre?S.centre.id:'nacional',pd=it.rearm_pending,mine=pd&&pd.principal===me;const lbl=!own?'Zona de otro centro':!it.can_rearm?'Rearme bloqueado':pd?(mine?'1ª dada · falta otro centro ('+pd.left_s+' s)':'Dar 2ª autorización y rearmar'):'Autorizar rearme (1ª de 2)';const rb=h('button',it.can_rearm&&own&&!mine?'go':'',lbl);rb.disabled=!(it.can_rearm&&own)||mine;rb.onclick=()=>post('/api/rearm',{train:it.train});row.appendChild(rb)}
     row.appendChild(h('span',null,it.action));row.lastChild.style.color='var(--mut)';row.lastChild.style.fontSize='11px';
     qe.appendChild(h('div','item '+it.level,null,[h('div','h',null,[it.escalated?h('span','tag ESC','ESCALADO'):h('span','tag '+it.level,it.level),h('span',null,it.title)]),h('div','auto',(it.zone&&it.zone.length?'Zona: '+it.zone.map(cname).join(', ')+(it.escalated?' · escalada a todos los centros':''):'Afecta a todos los centros')),a,row]));
   });
   // peligros
-  const hz=$('hz');hz.replaceChildren();
-  if(!S.hazards.length)hz.appendChild(h('div','empty','Sin peligros detectados.'));
-  else{const t=h('table');S.hazards.forEach(x=>t.appendChild(h('tr',null,null,[h('td','sev '+x.sev,x.sev),h('td',null,x.barrier),h('td',null,x.trains.join(', ')),h('td',null,x.msg)])));hz.appendChild(t)}
+  renderHazards();renderActing();
   // log
-  const lg=$('log');lg.replaceChildren(h('h2',null,'Registro de eventos (auditoría: data/events.jsonl)'),...S.events.map(e=>h('div',e.kind,null,[h('span','k',fmt(e.t)),h('span','k',e.kind),document.createTextNode(e.msg)])));
-  aux();draw();
+  const lg=$('log');lg.replaceChildren(h('h2',null,'Registro de eventos (auditoría: data/events.jsonl)'),...S.events.slice(0,FULL?60:7).map(e=>h('div',e.kind,null,[h('span','k',fmt(e.t)),h('span','k',e.kind),document.createTextNode(e.msg)])),...(FULL?[]:[moreBtn('Ver el registro completo ›',logModal)]));
+  aux();draw();try{enhance()}catch(e){console.error(e)}
 }
 
 // ---- mapa ----
 const cv=$('cv'),cx=cv.getContext('2d'),tip=$('tip');
 let V={z:1,px:0,py:0},base=null,sel=null,opf='',drag=null,ptrs=new Map(),pinch0=0;
 const SIGCOL=sg=>!sg?'#8ea0b6':sg.includes('LZB')?'#ff9f43':sg.startsWith('ETCS')?'#4aa8ff':'#8ea0b6';
-function fit(){const r=cv.parentElement.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;cx.setTransform(d,0,0,d,0,0);return r}
+function fit(){const r=cv.parentElement.getBoundingClientRect(),d=devicePixelRatio||1,w=Math.round(r.width*d),hh=Math.round(r.height*d);if(cv.width!==w)cv.width=w;if(cv.height!==hh)cv.height=hh;cx.setTransform(d,0,0,d,0,0);return r}
 function setBase(W,H){
   const xs=S.stations.map(s=>s.x),ys=S.stations.map(s=>s.y),pad=44;
   const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
@@ -196,14 +410,41 @@ function draw(){
   const sc=base.sc*V.z;                 // px de pantalla por unidad de datos
   const kmpx=S.unit_km/sc;              // km por px de pantalla
   const lw=Math.min(4,1.2+V.z*.35);
+  // mapa base: tierra (España resaltada) y mar
+  if(BASE&&$('lbm')&&$('lbm').checked){
+    const u=S.unit_km||1;cx.save();cx.lineJoin='round';
+    BASE.countries.forEach(c=>{const es=c.n==='Spain';
+      cx.beginPath();c.rings.forEach(r=>{r.forEach((q,i)=>{const [x,y]=T(q[0]/u,q[1]/u);i?cx.lineTo(x,y):cx.moveTo(x,y)});cx.closePath()});
+      cx.fillStyle=es?'#182a3d':'#0f1a26';cx.fill();cx.strokeStyle=es?'#4f7194':'#22364a';cx.lineWidth=es?1.4:1;cx.stroke()});
+    cx.restore();
+  }
+  const INFON=$('lv').checked&&drawInfra(W,H);
   // vías
-  if($('lv').checked){
+  if($('lv').checked&&!INFON){
     cx.lineCap='round';cx.lineJoin='round';
     cx.strokeStyle='#22364b';cx.lineWidth=lw;
     (S.segments||[]).forEach(([a,b])=>{if(!st[a]||!st[b])return;cx.beginPath();cx.moveTo(...T(st[a].x,st[a].y));cx.lineTo(...T(st[b].x,st[b].y));cx.stroke()});
     (S.corridors||[]).forEach(c=>{const pts=c.stations.filter(k=>st[k]).map(k=>T(st[k].x,st[k].y));if(pts.length<2)return;
       cx.globalAlpha=.85;cx.strokeStyle=SIGCOL(c.signalling);cx.lineWidth=lw+1;cx.beginPath();pts.forEach((p,i)=>i?cx.lineTo(...p):cx.moveTo(...p));cx.stroke();
       cx.globalAlpha=.9;cx.strokeStyle='#0a1017';cx.lineWidth=Math.max(.8,lw-.6);cx.setLineDash([7,9]);cx.stroke();cx.setLineDash([]);cx.globalAlpha=1});
+  }
+  // LTV de Adif: punto naranja con la velocidad límite (informativo)
+  if(LTVD&&$('llt')&&$('llt').checked){const u=S.unit_km||1,z=V.z;cx.save();cx.font='600 10px system-ui';cx.textAlign='center';cx.lineCap='round';cx.lineJoin='round';
+    LTVD.forEach(i=>{if(i.g)i.g.forEach(pl=>{cx.beginPath();pl.forEach((q,k)=>{const [a,b]=T(q[0]/u,q[1]/u);k?cx.lineTo(a,b):cx.moveTo(a,b)});cx.strokeStyle='rgba(255,159,67,.95)';cx.lineWidth=Math.min(6,2.5+z*.4);cx.stroke()});const [x,y]=T(i.x/u,i.y/u);if(x<-20||y<-20||x>W+20||y>H+20)return;
+      cx.fillStyle='rgba(255,159,67,.85)';cx.strokeStyle='#0a1017';cx.lineWidth=1;cx.beginPath();cx.arc(x,y,z>3?5:3,0,6.3);cx.fill();cx.stroke();
+      if(z>3){cx.fillStyle='#ffd9a8';cx.fillText(i.kmh,x,y-8)}});cx.restore()}
+  // líneas de alta velocidad (AVE): halo claro + nombre sobre el trazado
+  if($('lave')&&$('lave').checked){
+    const AVEID=['bcn-fig'];const seen={};
+    (S.corridors||[]).forEach(c=>{if(!(/\(AV\)/.test(c.name||'')||AVEID.includes(c.id)))return;
+      const pts=c.stations.filter(k=>st[k]).map(k=>T(st[k].x,st[k].y));if(pts.length<2)return;
+      cx.save();cx.lineCap='round';cx.lineJoin='round';cx.globalAlpha=.16;cx.strokeStyle='#e8f1ff';cx.lineWidth=lw+8;cx.beginPath();pts.forEach((q,i)=>i?cx.lineTo(...q):cx.moveTo(...q));cx.stroke();
+      cx.globalAlpha=.55;cx.strokeStyle='#e8f1ff';cx.lineWidth=1;cx.setLineDash([2,5]);cx.beginPath();pts.forEach((q,i)=>i?cx.lineTo(...q):cx.moveTo(...q));cx.stroke();cx.restore();
+      const nm='AVE '+(c.name||'').replace(/\s*\(AV\)/,'').replace(/ – .* – /,' – ').replace(/^(.*?) – (.*)$/,(m,a,b)=>a+' – '+b.split(' – ').pop());
+      if(seen[nm])return;seen[nm]=1;
+      let tot=0;for(let i=1;i<pts.length;i++)tot+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);
+      let acc=0,mx=pts[0][0],my=pts[0][1];for(let i=1;i<pts.length;i++){const L=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);if(acc+L>=tot/2){const f=(tot/2-acc)/(L||1);mx=pts[i-1][0]+(pts[i][0]-pts[i-1][0])*f;my=pts[i-1][1]+(pts[i][1]-pts[i-1][1])*f;break}acc+=L}
+      cx.save();cx.font='700 10px system-ui,sans-serif';const w=cx.measureText(nm).width+10;cx.fillStyle='rgba(10,16,23,.88)';cx.strokeStyle='#e8f1ff';cx.lineWidth=1;cx.beginPath();cx.roundRect(mx-w/2,my-17,w,15,7);cx.fill();cx.stroke();cx.fillStyle='#e8f1ff';cx.textAlign='center';cx.fillText(nm,mx,my-6);cx.restore()});
   }
   // estaciones
   if($('ls').checked){
@@ -228,13 +469,21 @@ function draw(){
   red.forEach(x=>{const A=by[x.a],B=by[x.b];if(!A||!B)return;
     cx.strokeStyle=x.critical?'#fff':'#ff1a1a';cx.lineWidth=3;cx.globalAlpha=.5+.5*(1-pulse);cx.beginPath();cx.moveTo(A._p,A._q);cx.lineTo(B._p,B._q);cx.stroke();cx.globalAlpha=1;
     cx.fillStyle='#ff1a1a';cx.font='bold 12px system-ui';const mx=(A._p+B._p)/2,my=(A._q+B._q)/2;cx.fillText(x.dist_km.toFixed(1).replace('.',',')+' km',mx+6,my-6)});
+  // previsión (informativa): línea violeta discontinua entre los trenes implicados
+  if($('lf').checked&&S.forecast)S.forecast.items.slice(0,8).forEach(f=>{const A=by[f.trains[0]],B=by[f.trains[1]];if(!A||!B)return;
+    cx.strokeStyle=f.level==='PRÓXIMO'?'#ffb86b':'#9b86ff';cx.lineWidth=2;cx.setLineDash([3,5]);cx.beginPath();cx.moveTo(A._p,A._q);cx.lineTo(B._p,B._q);cx.stroke();cx.setLineDash([]);
+    cx.fillStyle=cx.strokeStyle;cx.font='bold 11px system-ui';cx.fillText('🔮 ≈'+Math.round(f.in_s/60)+' min',(A._p+B._p)/2+6,(A._q+B._q)/2-6)});
+  // Cercanías (informativo, sin velocidad; posición = parada, no GPS)
+  if($('lc')&&$('lc').checked&&S.cercanias&&S.cercanias.trains){cx.strokeStyle='#7aa7c7';cx.lineWidth=1.2;cx.fillStyle='#d6e1ec';cx.font='9px system-ui';
+    S.cercanias.trains.forEach(c=>{const[p,q]=T(c[1],c[2]);if(p<-10||q<-10||p>W+10||q>H+10)return;
+      cx.beginPath();cx.arc(p,q,3.2,0,7);cx.stroke();if(V.z>=3.5)cx.fillText(c[0],p+6,q+3)})}
   // trenes
   S.trains.forEach(t=>{const p=t._p,q=t._q;if(p<-30||q<-30||p>W+30||q>H+30)return;
     const vis=visible(t);if(!vis&&opf){drawTrain(t,p,q,.12);return}
     if(t.cmd==='STOP'){cx.strokeStyle=COL.STOP;cx.globalAlpha=1-pulse;cx.lineWidth=2;cx.beginPath();cx.arc(p,q,8+pulse*18,0,7);cx.stroke();cx.globalAlpha=1}
     drawTrain(t,p,q,t.incoming?.55:1);
     if(sel===t.n){cx.strokeStyle='#fff';cx.lineWidth=2;cx.beginPath();cx.arc(p,q,13,0,7);cx.stroke()}
-    if(t.cmd!=='NONE'||hover===t||sel===t.n||V.z>=2.8){cx.fillStyle='#d6e1ec';cx.font='10px system-ui';cx.fillText(t.n,p+11,q+3)}});
+    if(t.cmd!=='NONE'||hover===t||sel===t.n||V.z>=2.8){cx.fillStyle='#d6e1ec';cx.font='10px system-ui';cx.fillText(t.n+(t.by&&t.by.length?'  '+t.by.filter(x=>x!=='B5').join('·'):''),p+11,q+3)}});
   // escala
   const target=90*kmpx,nice=[.1,.2,.5,1,2,5,10,20,50,100,200,500].reduce((b,v)=>Math.abs(v-target)<Math.abs(b-target)?v:b);
   const el=$('scale');el.replaceChildren(h('i'),document.createTextNode(nice+' km'));el.firstChild.style.width=(nice/kmpx)+'px';
@@ -253,27 +502,437 @@ cv.addEventListener('pointermove',e=>{
   hover=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10)||null;
   if(hover){tip.style.display='block';tip.style.left=(mx+14>r.width-340?Math.max(4,mx-340):mx+14)+'px';tip.style.top=(my+14)+'px';
     const o=(S.operators||[]).find(x=>x.id===hover.op);
-    tip.replaceChildren(h('b',null,hover.n+' · '+hover.cmd+' · '+hover.kmh+' km/h'),h('div',null,(o?o.name:hover.op)+' · retraso '+hover.ret+' min'),
+    tip.replaceChildren(h('b',null,hover.n+' · '+({NONE:'NONE (libre)',CAUTION:'CAUTION (precaución)',RESTRICT:'RESTRICT (restringido)',STOP:'STOP'}[hover.cmd]||hover.cmd)+' · '+hover.kmh+' km/h'),h('div',null,(o?o.name:hover.op)+' · retraso '+hover.ret+' min'),
       h('div',null,(hover.from||'?')+' → '+(hover.to||'?')+(hover.dest?'  (destino '+hover.dest+')':'')),
       h('div',null,hover.line?hover.line+' · '+hover.signalling:'línea sin catalogar'),
       h('div',null,'ATP a bordo: '+(hover.atp||'sin telemetría')+' · posición: '+(hover.src==='tablet'?'GPS tablet':'feed')))}
-  else tip.style.display='none';
+  else{const hp=pointAt(mx,my);if(hp){tip.style.display='block';tip.style.left=(mx+14>r.width-260?Math.max(4,mx-260):mx+14)+'px';tip.style.top=(my+14)+'px';
+      tip.replaceChildren(h('b',null,KIND[hp.k]||hp.k),h('div',null,(hp.d?hp.d+' · ':'')+(hp.off?'dato oficial':'OpenStreetMap (no oficial)')))}else tip.style.display='none'}
   draw()});
 const endP=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;
   if(drag&&!drag.moved&&e.type==='pointerup'&&S){const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
-    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);sel=t?t.n:null;if(t)$('mt').value=t.n;draw()}
+    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);sel=t?t.n:null;if(t){$('mt').value=t.n;openCard(t.n)}else closeCard();try{renderCab()}catch(e){}draw()}
   if(!ptrs.size)drag=null};
+
+
+// ---- infraestructura real (OpenStreetMap vía /api/infra) ----
+let LTVD=null,LTVI={};
+function loadLtv(){fetch('/api/ltv',{cache:'no-store'}).then(r=>r.json()).then(j=>{LTVD=j.items&&j.items.length?j.items:null;LTVI=j;const e=$('ltn');if(e)e.textContent=LTVD?'('+LTVD.length+')':'';if(typeof draw==='function')draw()}).catch(()=>{})}
+loadLtv();setInterval(loadLtv,600000);
+let BASE=null;fetch('basemap.json').then(r=>r.json()).then(j=>{BASE=j;if(typeof draw==='function')draw()}).catch(()=>{});
+let INF=null,infCache=null,infKey='',hoverP=null;
+const IC={ETCS:'#4aa8ff',LZB:'#ff9f43',ASFA:'#8ea0b6'},KIND={signal:'Señal',switch:'Desvío (aparato de vía)',buffer:'Tope de vía',crossing:'Paso a nivel',derail:'Descarrilador',change:'Cambio de sección',balise:'Baliza',lzb_loop:'Bucle LZB',other:'Elemento'};
+function prepInfra(j){
+  const u=S.unit_km||1;INF={meta:j.meta,ways:j.ways.map(w=>{const p=w.p.map(q=>[q[0]/u,q[1]/u]);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;p.forEach(q=>{x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0]);y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1])});return{t:w.t,s:w.s,v:w.v,p,b:[x0,y0,x1,y1]}}),
+    pts:j.points.map(p=>({k:p.k,x:p.x/u,y:p.y/u,d:p.d,off:!!p.official})),cant:(j.cantones||[]).map(c=>({id:c.id,line:c.line,p:c.p.map(q=>[q[0]/u,q[1]/u])}))};
+  $('lil').hidden=$('lpl').hidden=false;
+  const c=j.meta.counts,n=$('infnote');n.hidden=false;
+  n.textContent='Fuente: '+j.meta.source+' · no oficial de Adif · nº de vías con dato en '+c.with_tracks+' de '+c.ways+' tramos · señales mapeadas: '+c.signals+' · desvíos: '+c.switches+(c.cantones?' · cantones oficiales: '+c.cantones:' · cantones, balizas y bucles LZB: pendientes de dato oficial de Adif');
+  infKey='';draw();
+}
+async function infraPoll(){
+  if(INF||!S||S.mode!=='live')return;
+  try{const r=await fetch('/api/infra');if(!r.ok)return;const j=await r.json();
+    if(j.ready)prepInfra(j);else{const st=j.status||{},n=$('infnote');n.hidden=false;n.textContent='Infraestructura: '+(st.state||'pendiente')+(st.tiles_total?' ('+st.tiles_done+'/'+st.tiles_total+' zonas)':'')+(st.error?' · '+st.error:'')}}catch(e){}
+}
+function infraRender(W,H,d){
+  const c=infCache.getContext('2d');c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,W,H);const z=V.z,u=1;
+  const unitT=(x,y)=>T(x,y),base1=Math.min(3,.8+z*.12),BG='#111a24';
+  c.lineCap='round';c.lineJoin='round';
+  const vis=w=>{const a=unitT(w.b[0],w.b[1]),b=unitT(w.b[2],w.b[3]);return !(Math.max(a[0],b[0])<-5||Math.min(a[0],b[0])>W+5||Math.max(a[1],b[1])<-5||Math.min(a[1],b[1])>H+5)};
+  const path=w=>{c.beginPath();w.p.forEach((q,i)=>{const[p,r]=unitT(q[0],q[1]);i?c.lineTo(p,r):c.moveTo(p,r)})};
+  const list=INF.ways.filter(vis);
+  list.forEach(w=>{path(w);const col=IC[w.s]||'#51657a',n=w.t||0;
+    if(n>=3){c.strokeStyle=col;c.lineWidth=base1*3.8;c.stroke();c.strokeStyle=BG;c.lineWidth=base1*2.2;c.stroke();c.strokeStyle=col;c.lineWidth=Math.max(.8,base1*.7);c.setLineDash([2,3]);c.stroke();c.setLineDash([])}
+    else if(n===2){c.strokeStyle=col;c.lineWidth=base1*2.6;c.stroke();c.strokeStyle=BG;c.lineWidth=base1*1.1;c.stroke()}
+    else{c.strokeStyle=col;c.globalAlpha=n===1?1:.55;c.lineWidth=base1;c.stroke();c.globalAlpha=1}});
+  INF.cant.forEach(k=>{c.strokeStyle='#e8f1fa';c.lineWidth=1.5;c.setLineDash([8,5]);c.beginPath();k.p.forEach((q,i)=>{const[p,r]=unitT(q[0],q[1]);i?c.lineTo(p,r):c.moveTo(p,r)});c.stroke();c.setLineDash([])});
+  if($('lp').checked)INF.pts.forEach(p=>{
+    const need={change:3.5,switch:5,signal:7,balise:6,lzb_loop:6,buffer:9,crossing:9,derail:9,other:7}[p.k]||8;if(z<need)return;
+    const[x,y]=unitT(p.x,p.y);if(x<-8||y<-8||x>W+8||y>H+8)return;const s=Math.min(6,2.5+z*.18);
+    c.beginPath();
+    if(p.k==='switch'){c.fillStyle='#c792ea';c.moveTo(x,y-s);c.lineTo(x+s,y);c.lineTo(x,y+s);c.lineTo(x-s,y)}
+    else if(p.k==='signal'){c.fillStyle='#f2c94c';c.moveTo(x,y-s);c.lineTo(x+s*.9,y+s*.8);c.lineTo(x-s*.9,y+s*.8)}
+    else if(p.k==='change'){c.strokeStyle='#fff';c.lineWidth=1.6;c.arc(x,y,s+1.5,0,7);c.stroke();if(z>=5.5){c.fillStyle='#d6e1ec';c.font='10px system-ui';c.fillText(p.d,x+s+4,y+3)}c.beginPath();c.fillStyle='#ffffff55';c.arc(x,y,s*.5,0,7)}
+    else{c.fillStyle=p.off?'#3ddc97':'#8ea0b6';c.rect(x-s*.7,y-s*.7,s*1.4,s*1.4)}
+    c.fill()});
+}
+function drawInfra(W,H){
+  if(!INF||!$('li').checked)return false;
+  const d=devicePixelRatio||1,key=[V.z.toFixed(4),V.px.toFixed(1),V.py.toFixed(1),W,H,d,$('lp').checked].join('|');
+  if(key!==infKey||!infCache){infCache=infCache||document.createElement('canvas');infCache.width=W*d;infCache.height=H*d;infraRender(W,H,d);infKey=key}
+  cx.save();cx.setTransform(1,0,0,1,0,0);cx.drawImage(infCache,0,0);cx.restore();return true;
+}
+function pointAt(mx,my){
+  if(!INF||!$('li').checked||!$('lp').checked)return null;const z=V.z;let best=null,bd=9;
+  for(const p of INF.pts){const need={change:3.5,switch:5,signal:7}[p.k]||6;if(z<need)continue;const[x,y]=T(p.x,p.y),dd=Math.hypot(x-mx,y-my);if(dd<bd){bd=dd;best=p}}
+  return best;
+}
+setInterval(infraPoll,4000);
+
+// ---- alertas visuales: qué sistema detecta, cuál ejecuta y qué respalda ----
+const BN=id=>((S.barriers||[]).find(b=>b.id===id)||{}).name||id;
+const ACTION={STOP:'Freno de emergencia ordenado · bloque enclavado · trenes cercanos restringidos',RESTRICT:'Restricción de velocidad ordenada por B5',CAUTION:'Precaución ordenada por B5: reducir velocidad y vigilar',NONE:'Solo aviso: ninguna orden activa todavía'};
+const SEVN={STOP:3,RESTRICT:2,CAUTION:1};
+const ORDER=['B0','B1','B2','B3','B4','SYS'];
+function groupHazards(){const g={};S.hazards.forEach(x=>x.trains.forEach(n=>{(g[n]=g[n]||{n,sev:0,hz:[]});g[n].sev=Math.max(g[n].sev,SEVN[x.sev]||0);g[n].hz.push(x)}));return Object.values(g).sort((a,b)=>b.sev-a.sev||a.n.localeCompare(b.n))}
+function chainChips(g,t){
+  const det=[...new Set(g.hz.map(x=>x.barrier))].sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b));
+  const cmd=t?t.cmd:'NONE',kids=[h('small',null,'detecta')];
+  det.forEach(b=>kids.push(h('span','chip det',b+' · '+BN(b))));
+  kids.push(h('small',null,'ejecuta'));kids.push(h('span',cmd!=='NONE'?'chip exe':'chip',cmd!=='NONE'?'B5 · Enclavamiento':'B5 · en espera'));
+  const back=ORDER.filter(b=>!det.includes(b)&&b!=='SYS'&&(S.barriers||[]).some(x=>x.id===b&&(x.status==='OK'||x.status==='ALERT')));
+  if(back.length){kids.push(h('small',null,'respaldo vigilando'));back.forEach(b=>kids.push(h('span','chip ok',b)))}
+  kids.push(h('small',null,'persona'));kids.push(h('span','chip hum',cmd==='STOP'?'B6 informado · B7 exige 2 autorizaciones':'B6 · sin intervención'));
+  return h('div','chips',null,kids)}
+function renderHazards(){
+  const hz=$('hz');hz.replaceChildren();const gs=groupHazards();
+  if(!gs.length){hz.appendChild(h('div','empty','Sin peligros detectados.'));{const l=llBox();if(l)hz.appendChild(l)}return}
+  const by={};S.trains.forEach(t=>by[t.n]=t);
+  gs.slice(0,FULL?30:3).forEach(g=>{const t=by[g.n],sev=['','CAUTION','RESTRICT','STOP'][g.sev];
+    const main=g.hz.slice().sort((a,b)=>(SEVN[b.sev]||0)-(SEVN[a.sev]||0))[0];
+    hz.appendChild(h('div','hzc '+sev,null,[h('div','t',null,[h('em',null,sev),h('span',null,'Tren '+g.n)]),h('div','m',main.msg+(g.hz.length>1?'  (+'+(g.hz.length-1)+' más)':'')),chainChips(g,t),
+      h('div','a',null,[h('b',null,'Aplicado: '),document.createTextNode(ACTION[t?t.cmd:'NONE'])])]))});
+  if(!FULL&&gs.length>3)hz.appendChild(moreBtn('Ver los '+gs.length+' trenes con peligros ›',()=>kpiModal('trains','Trenes con peligros activos',t=>t.cmd!=='NONE')));if(FULL&&gs.length>30)hz.appendChild(h('div','empty','… y '+(gs.length-30)+' trenes más con avisos.'));{const l=llBox();if(l)hz.appendChild(l)}}
+function llBox(){const L=S.learned_limits||[];if(!L.length)return null;
+  const nm=c=>{const s=(S.stations||[]).find(x=>x.c===c);return s?s.n:c};
+  return h('div','empty',null,[h('b',null,'Limitaciones probables (aprendidas de la flota, no oficiales): '),document.createTextNode(L.slice(0,6).map(x=>nm(x.seg[0])+'↔'+nm(x.seg[1])+' · ~'+x.median+' km/h (ref. '+x.ref+') · '+x.n+' trenes').join(' | ')+(L.length>6?' … +'+(L.length-6):''))])}
+const DLY_MIN=5;   // umbral de «retraso» (min): criterio habitual de puntualidad; ajustable
+function renderDelays(){
+  const all=S.trains||[],L=all.filter(t=>(t.ret||0)>=DLY_MIN).sort((a,b)=>b.ret-a.ret),n=L.length;
+  $('dln').textContent='('+n+')';
+  const avg=n?Math.round(L.reduce((s,t)=>s+t.ret,0)/n):0;
+  $('dlsum').textContent=n?n+' de '+all.length+' trenes con ≥ '+DLY_MIN+' min · máximo '+fmtDelay(L[0].ret)+' · media '+avg+' min':'Ningún tren con ≥ '+DLY_MIN+' min de retraso ('+all.length+' trenes). Retraso según el feed de Renfe; los trenes sin dato cuentan como a tiempo.';
+  const LV=FULL?L:L.slice(0,4);$('dll').replaceChildren(...LV.map(t=>{const r=h('div','dr'+(t.ret>=30?' m3':t.ret>=15?' m2':''),null,[h('b',null,t.n),h('span','w',(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'hacia '+t.to:''))+(t.dest?' · destino '+t.dest:'')),h('span','d','+'+fmtDelay(t.ret))]);
+    r.onclick=()=>focusTrain(t.n);return r}),...(!FULL&&n>4?[moreBtn('Ver los '+n+' trenes con retraso ›',()=>kpiDelay())]:[]))}
+
+// ── Notificaciones locales (en pantalla, sonido y navegador). Nada sale del navegador: no se envían correos ni mensajes. ──
+let NTF=false,ntSeen=null,ntSys=null,ntLast={},ntBeep=0;
+try{NTF=localStorage.getItem('rg_ntf')==='1'}catch(e){}
+function ntLabel(){const b=$('ntb');if(b)b.textContent='🔔 Avisos: '+(NTF?'sí':'no')}
+function beep(sev){try{const A=window.__ac||(window.__ac=new (window.AudioContext||window.webkitAudioContext)());const o=A.createOscillator(),g=A.createGain();o.frequency.value=sev==='STOP'?880:660;g.gain.value=.08;o.connect(g);g.connect(A.destination);o.start();o.stop(A.currentTime+(sev==='STOP'?.5:.25))}catch(e){}}
+function toast(sev,title,msg,train){const bx=$('toasts');if(!bx)return;const d=h('div','toast '+sev,null,[h('b',null,title),document.createTextNode(msg)]);
+  d.onclick=()=>{d.remove();if(train){sel=train;$('mt').value=train;openCard(train);draw()}};bx.append(d);while(bx.children.length>3)bx.firstChild.remove();setTimeout(()=>d.remove(),sev==='CAUTION'?6000:10000)}
+function osNotify(title,msg){try{if(window.Notification&&Notification.permission==='granted')new Notification(title,{body:msg,tag:title+msg})}catch(e){}}
+function notifyCheck(){
+  const hz=S.hazards||[],cur=new Set(hz.map(x=>x.barrier+'|'+x.code+'|'+x.trains.join(',')));
+  const sysNow=(S.degraded?'D:'+S.degraded:'')+'|'+(S.barriers||[]).filter(b=>b.status==='FAULT').map(b=>b.id).join(',');
+  const bad=hz.filter(x=>x.sev==='RESTRICT'||x.sev==='STOP').length;
+  document.title=(bad?'('+bad+') ':'')+'RailGuard';
+  if(ntSeen===null){ntSeen=cur;ntSys=sysNow;return}   // primera carga: no se avisa de lo que ya estaba
+  if(NTF){
+    const now=Date.now(),fresh=hz.filter(x=>{const k=x.barrier+'|'+x.code+'|'+x.trains.join(',');return !ntSeen.has(k)&&!(ntLast[k]&&now-ntLast[k]<600000)})
+      .sort((a,b)=>(SEVN[b.sev]||0)-(SEVN[a.sev]||0));
+    fresh.forEach(x=>{ntLast[x.barrier+'|'+x.code+'|'+x.trains.join(',')]=now});   // mismo aviso: no se repite en 10 min
+    const show=fresh.slice(0,2);
+    show.forEach(x=>{const t='['+x.barrier+'] '+x.sev+' · tren '+x.trains.join(', ');toast(x.sev,t,x.msg,x.trains[0]);if(x.sev!=='CAUTION')osNotify(t,x.msg)});
+    if(fresh.length>2)toast(fresh[2].sev,'+'+(fresh.length-2)+' avisos nuevos','Abra «Ver todo» para la lista completa');
+    if(fresh.some(x=>x.sev!=='CAUTION')&&now-ntBeep>5000){ntBeep=now;beep(fresh.some(x=>x.sev==='STOP')?'STOP':'RESTRICT')}
+    if(sysNow!==ntSys&&sysNow!=='|'){toast('SYS','SISTEMA',(S.degraded||'Barrera en fallo: '+(S.barriers||[]).filter(b=>b.status==='FAULT').map(b=>b.id).join(', ')));beep('RESTRICT');osNotify('RailGuard · sistema',S.degraded||'Barrera en fallo')}
+  }
+  ntSeen=cur;ntSys=sysNow}
+$('ntb')&&($('ntb').onclick=async()=>{NTF=!NTF;try{localStorage.setItem('rg_ntf',NTF?'1':'0')}catch(e){}
+  if(NTF){beep('CAUTION');try{if(window.Notification&&Notification.permission==='default')await Notification.requestPermission()}catch(e){}}ntLabel()});
+ntLabel();
+
+// ── Banda de cabina: tren en foco (seleccionado, o el de mayor riesgo) ──
+const CABR={NONE:0,CAUTION:1,RESTRICT:2,STOP:3};
+let CABOFF=false;
+try{CABOFF=localStorage.getItem('rg_cab')==='0'}catch(e){}
+$('cabb')&&($('cabb').onclick=()=>{CABOFF=!CABOFF;try{localStorage.setItem('rg_cab',CABOFF?'0':'1')}catch(e){}renderCab();setTimeout(()=>{if(S)draw()},50)});
+function cabPick(){const T=S.trains||[];if(sel){const t=T.find(x=>x.n===sel);if(t)return[t,'Tren seleccionado']}
+  const w=T.filter(t=>t.cmd!=='NONE').sort((a,b)=>(CABR[b.cmd]-CABR[a.cmd])||(b.kmh-a.kmh))[0];
+  if(w)return[w,'Tren con mayor riesgo ahora'];const m=T.filter(t=>t.kmh>10).sort((a,b)=>b.kmh-a.kmh)[0];return m?[m,'Tren más rápido (sin peligros activos)']:[null,'']}
+function cabBar(v,max){const S0=max*1.25,pc=x=>Math.min(100,x/S0*100).toFixed(1),seg=(a,b,c)=>'<i style="position:absolute;left:'+pc(a)+'%;width:'+(pc(b)-pc(a)).toFixed(1)+'%;top:0;bottom:0;background:'+c+'"></i>';
+  return '<div style="position:relative;height:8px;border-radius:4px;overflow:hidden;margin-top:5px;background:#dde6ee">'+seg(0,max,'#8fd3a8')+seg(max,max*1.03,'#e9d27a')+seg(max*1.03,max*1.08,'#f2b27a')+seg(max*1.08,max*1.15,'#ee8f8f')+seg(max*1.15,S0,'#d32f2f')+'<b style="position:absolute;top:-2px;bottom:-2px;width:3px;background:#0f2233;left:'+pc(v)+'%"></b></div>'}
+function renderCab(){
+  const box=$('cab');if(!box||!S)return;box.classList.toggle('off',CABOFF);if(CABOFF){return}
+  const [t,why]=cabPick();if(!t){box.replaceChildren(h('div','who','Sin trenes en el feed.'));return}
+  const el=(cls,html)=>{const e=document.createElement('div');e.className=cls;e.innerHTML=html;return e};
+  const act=(S.hazards||[]).filter(x=>x.trains.includes(t.n));
+  const lab={NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[t.cmd],col=t.cmd==='NONE'?'#14703a':TVCOL[t.cmd];
+  const kids=[el('who','▣ '+why+': <b>'+t.n+'</b>'+(t.line?' · '+t.line:'')+(t.op&&t.op!=='?'?' · '+((S.operators||[]).find(o=>o.id===t.op)||{}).name:'')),
+    el('ct','<h4>Velocidad actual</h4><div class="big" style="font-size:28px">'+t.kmh+' <span style="font-size:12px;font-weight:600;color:#5b6f82">km/h · límite '+t.vmax+'</span></div>'+cabBar(t.kmh,t.vmax)),
+    el('ct','<h4>Dirección</h4><div class="big">'+(t.to?'→ '+t.to:'—')+'</div><div class="sub">'+(t.dest?'Destino '+t.dest:'')+'</div>'),
+    el('ct','<h4>Posición actual</h4><div class="big">'+(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'Hacia '+t.to:'—'))+'</div><div class="sub">'+(t.src==='tablet'?'GPS de tablet de cabina':'Posición del feed')+'</div>'),
+    el('ct','<h4>Estado de seguridad</h4><div class="big" style="color:'+col+'">'+lab+'</div><div class="sub">'+(act.length?act[0].msg:'Sin peligros detectados')+'</div>'),
+    el('ct','<h4>Puntualidad</h4><div class="big '+(t.ret>=5?'bad':'okc')+'">'+(t.ret>0?'+'+t.ret+' min':'A tiempo')+'</div><div class="sub">Según el feed de Renfe</div>')];
+  const go=el('go','');const b1=h('button',null,'▣ Vista de tren');b1.onclick=()=>openTV(t.n);const b2=h('button','g','Ocultar banda');b2.onclick=()=>{CABOFF=true;try{localStorage.setItem('rg_cab','0')}catch(e){}renderCab()};go.append(b1,b2);kids.push(go);
+  const tiles=kids.filter(k=>k.classList.contains('ct'));
+  const act2=[()=>openTV(t.n),()=>focusTrain(t.n),()=>focusTrain(t.n),()=>showDM('Estado de seguridad · tren '+t.n,'Peligros activos sobre este tren',(S.hazards||[]).filter(x=>x.trains.includes(t.n)).map(x=>({main:t.n,sev:x.sev,text:'['+x.barrier+'] '+x.msg,fn:()=>openTV(t.n),go:'vista de tren ›'})),'Estado vigente: '+SEVL[t.cmd]),()=>openTV(t.n)];
+  tiles.forEach((e,i)=>{e.onclick=act2[i];e.title=['Abrir vista de tren','Centrar el mapa en el tren','Centrar el mapa en el tren','Ver los peligros de este tren','Abrir vista de tren con horarios'][i]});
+  box.replaceChildren(...kids);}
+
+// ── Interacción: enfocar tren en el mapa y ventana de detalle ──
+function focusTrain(n){const t=(S.trains||[]).find(x=>x.n===n);if(!t)return;closeDM();if(FULL)setFull(false);sel=n;$('mt').value=n;openCard(n);if(V.z<3)V.z=3;draw();
+  try{const[p,q]=T(t.x,t.y);V.px+=base.W/2-p;V.py+=base.H/2-q}catch(e){}draw();try{renderCab()}catch(e){}}
+function closeDM(){const d=$('dm');if(d)d.hidden=true}
+function showDM(title,sub,rows,foot){const d=$('dm');if(!d)return;
+  const cb=h('button','x','✕ Cerrar');cb.onclick=closeDM;
+  const box=h('div','box',null,[h('div','hd',null,[h('div',null,null,[h('h3',null,title),h('small',null,sub||'')]),h('div','sp'),cb])]);
+  if(!rows.length)box.appendChild(h('div','none','Nada que mostrar ahora mismo.'));
+  rows.slice(0,60).forEach(r=>{const e=h('div','row '+(r.sev||''),null,[h('b',null,r.main),h('span',null,r.text||''),h('i',null,r.go!==undefined?r.go:'ver en mapa ›')]);e.onclick=r.fn||(()=>focusTrain(r.main));box.appendChild(e)});
+  if(rows.length>60)box.appendChild(h('div','none','… y '+(rows.length-60)+' más.'));
+  if(foot)box.appendChild(h('div','none',foot));
+  d.replaceChildren(box);d.hidden=false;d.onclick=ev=>{if(ev.target===d)closeDM()}}
+const SEVL={NONE:'libre',CAUTION:'precaución',RESTRICT:'restringido',STOP:'STOP'};
+function trainRows(f){return (S.trains||[]).filter(f).sort((a,b)=>(CABR[b.cmd]-CABR[a.cmd])||(b.ret-a.ret)).map(t=>{const hz=(S.hazards||[]).filter(x=>x.trains.includes(t.n));
+  return{main:t.n,sev:t.cmd,text:(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'→ '+t.to:''))+' · '+t.kmh+' km/h'+(t.ret>=5?' · +'+t.ret+' min':'')+(hz.length?' · '+hz[0].msg:'')}})}
+function kpiModal(key,label,f0){const f=f0||{trains:()=>true,clear:t=>t.cmd==='NONE',caution:t=>t.cmd==='CAUTION',restrict:t=>t.cmd==='RESTRICT',stop:t=>t.cmd==='STOP'}[key]||(()=>true);
+  const rows=trainRows(f0?f0:(key==='trains'?()=>true:f));showDM(label+' ('+rows.length+')','Pulse un tren para verlo en el mapa. Estado según la orden vigente de RailGuard.',rows)}
+function barrierModal(x){
+  if(x.id==='B6'){showDM('B6 · Operador','Reconoce, decide la recuperación y autoriza el rearme. Nunca es la última defensa.',(S.operator||[]).map(it=>({main:String(it.train||it.tn||it.n||'—'),sev:'RESTRICT',text:it.msg||it.title||it.why||'En cola del operador',fn:()=>{closeDM();const q=document.getElementById('queue');q&&q.scrollIntoView({behavior:'smooth'})},go:'ver cola ›'})));return}
+  if(x.id==='B5'){showDM('B5 · Enclavamiento','Ejecuta, bloquea y exige prueba para liberar. Trenes con orden vigente:',trainRows(t=>t.cmd!=='NONE'));return}
+  const hz=(S.hazards||[]).filter(z=>z.barrier===x.id),rows=hz.map(z=>({main:z.trains[0]||'—',sev:z.sev,text:z.msg}));
+  showDM(x.id+' · '+x.name,x.desc+' · Estado: '+x.status+' · '+x.total+' disparos acumulados',rows,rows.length?'':'Esta barrera no tiene peligros activos.')}
+function enhance(){
+  const ks=[['trains','Trenes'],['clear','Trenes libres'],['caution','En precaución'],['restrict','Restringidos'],['stop','En STOP']];
+  [...document.querySelectorAll('#kpis .kpi')].forEach((e,i)=>{if(!ks[i])return;e.title='Pulse para ver la lista';e.onclick=()=>kpiModal(ks[i][0],ks[i][1])});
+  const bl=[...document.querySelectorAll('#bars .bar')];bl.forEach((e,i)=>{const x=i<S.barriers.length?S.barriers[i]:{id:'B6',name:'Operador',desc:'',status:'',total:0};e.onclick=()=>barrierModal(x)});
+  const hzs=[...document.querySelectorAll('#hz .hzc')],gs=groupHazards();hzs.forEach((e,i)=>{const g=gs[i];if(!g||e.dataset.e)return;e.dataset.e=1;e.onclick=()=>focusTrain(g.n);
+    const a=h('div','acts');const b1=h('button',null,'📍 Ver en mapa');b1.onclick=ev=>{ev.stopPropagation();focusTrain(g.n)};const b2=h('button','g','▣ Vista de tren');b2.onclick=ev=>{ev.stopPropagation();openTV(g.n)};a.append(b1,b2);e.appendChild(a)});
+  const ev=[...document.querySelectorAll('#log>div')];(S.events||[]).forEach((e,i)=>{const row=ev[i];if(!row)return;const m=(e.msg||'').match(/\b(T-\d+|\d{5})\b/g)||[];const tr=m.find(n=>(S.trains||[]).some(t=>t.n===n));if(tr){row.title='Pulse para ver el tren '+tr;row.onclick=()=>focusTrain(tr)}else row.style.cursor='default'});
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDM()});
+
+// ── Instalaciones de seguridad por línea (documento de Adif) ──
+async function openSS(){
+  let D;try{D=await (await fetch('/api/safety_systems',{cache:'no-store'})).json()}catch(e){showDM('Instalaciones por línea','',[],'No se pudo cargar el documento.');return}
+  const rows=D.lines.map(l=>({main:l.id,sev:'NONE',text:l.name+' — '+l.summary,go:'ver detalle ›',fn:()=>ssLine(D,l)}));
+  showDM('Instalaciones de seguridad por línea','Fuente documental, no telemetría en vivo: '+D.source+'. Es un estudio informativo; confirmar con Adif.',rows,'Pulse una línea para ver señalización, protección de trenes, detectores y control centralizado.')}
+function ssLine(D,l){
+  const rows=Object.entries(l.facts).map(([k,v])=>({main:k.length>16?k.slice(0,15)+'…':k,sev:'NONE',text:v,go:'',fn:()=>{}}));
+  rows.forEach(r=>{r.fn=()=>{}});
+  showDM(l.name,l.kind+' · '+l.summary,rows.concat([{main:'RailGuard',sev:'CAUTION',text:l.railguard,go:'',fn:()=>{}}]),'Datos que Adif tiene y RailGuard no recibe: '+D.available_at_adif.join(' · '));
+  const box=document.querySelector('#dm .box');if(box){const b=h('button','x','‹ Volver a las líneas');b.style.marginTop='10px';b.onclick=openSS;box.appendChild(b);
+    box.querySelectorAll('.row').forEach((r,i)=>{r.style.cursor='default';const k=Object.keys(l.facts)[i];const b0=r.querySelector('b');if(k&&b0){b0.textContent=k;b0.style.minWidth='130px';b0.style.fontSize='12px'}})}}
+$('ssb')&&($('ssb').onclick=openSS);
+
+function moreBtn(txt,fn){const b=h('button','more',txt);b.onclick=ev=>{ev.stopPropagation();fn()};return b}
+function kpiDelay(){const rows=(S.trains||[]).filter(t=>(t.ret||0)>=DLY_MIN).sort((a,b)=>b.ret-a.ret).map(t=>({main:t.n,sev:t.ret>=30?'RESTRICT':'CAUTION',text:(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'→ '+t.to:''))+(t.dest?' · destino '+t.dest:'')+' · +'+fmtDelay(t.ret)}));
+  showDM('Trenes con retraso ('+rows.length+')','Retraso ≥ '+DLY_MIN+' min según el feed de Renfe. Pulse uno para verlo en el mapa.',rows)}
+function logModal(){const rows=(S.events||[]).map(e=>{const m=(e.msg||'').match(/\b(T-\d+|\d{5})\b/g)||[];const tr=m.find(n=>(S.trains||[]).some(t=>t.n===n));
+  return{main:fmt(e.t),sev:e.kind==='HAZARD'?'RESTRICT':e.kind==='CLEAR'||e.kind==='RELEASE'?'NONE':'CAUTION',text:e.kind+' · '+e.msg,go:tr?'ver tren ›':'',fn:tr?()=>focusTrain(tr):()=>{}}});
+  showDM('Registro de eventos','Auditoría (data/events.jsonl). Los más recientes primero.',rows)}
+let fcTab=false,avTab=false;
+let FULL=false;
+function drawAv(C,AL){const bx=$('av');bx.replaceChildren(h('div',null,'Avisos oficiales de Renfe para Cercanías/Rodalies. Informativo: no interviene en la seguridad.'));bx.firstChild.id='fcnote';
+  if(!AL.length)bx.appendChild(h('div','empty',C&&C.alerts_ok===false?'Sin datos de avisos (feed no disponible).':'Sin avisos de servicio activos.'));
+  AL.forEach(a=>bx.appendChild(h('div','fci',null,[h('div','t',null,[h('em',null,a.region+(a.lines.length?' · '+a.lines.join(' '):'')),h('small',null,a.age_h<1?'hace <1 h':'hace '+a.age_h+' h')]),h('div','m',a.text)])))}
+function drawFc(F){const n=F.items.length,box=$('fc');box.replaceChildren(h('div',null,'Posibles conflictos en los próximos '+Math.round((F.horizon_s||1200)/60)+' min «si nada cambia». Informativo: no ordena nada.'));box.firstChild.id='fcnote';
+  if(!n){box.appendChild(h('div','empty','Sin conflictos previstos en la ventana.'));box.appendChild(h('div','sg2',F.note||''));return}
+  F.items.forEach(f=>box.appendChild(h('div','fci'+(f.level==='PRÓXIMO'?' soon':''),null,[
+    h('div','t',null,[h('em',null,f.kind),h('small',null,f.level),h('span',null,'≈ '+Math.round(f.in_s/60)+' min')]),
+    h('div','m',f.msg),h('div','th',f.then),h('div','sg2','Tramo: '+f.seg+' · trenes: '+f.trains.join(' · '))])));
+  if(F.total>n)box.appendChild(h('div','empty','… y '+(F.total-n)+' previsiones más.'));
+  box.appendChild(h('div','sg2',F.note||''))}
+function renderForecast(){
+  const F=S.forecast||{items:[],total:0},n=F.items.length,b=$('fcn');b.textContent=F.total||n;b.className=(F.total||n)?'on':'';
+  const C=S.cercanias,AL=(C&&C.alerts)||[];$('tabav').hidden=!C;$('avn').textContent=AL.length||'';
+  if(!C)avTab=false;
+  $('tabhz').className=(fcTab||avTab)?'':'on';$('tabfc').className=fcTab?'on':'';$('tabav').className=avTab?'on':'';
+  const showHz=FULL||(!fcTab&&!avTab),showFc=FULL||fcTab,showAv=(FULL&&!!C)||avTab;
+  $('hz').hidden=!showHz;$('fc').hidden=!showFc;$('av').hidden=!showAv;
+  if(showAv)drawAv(C,AL);if(showFc)drawFc(F)}
+function setFull(v){FULL=v;document.body.classList.toggle('full',v);document.body.style.overflow=v?'hidden':'';if(S){renderForecast();renderDelays()}}
+$('fullb').onclick=()=>setFull(true);$('fullx').onclick=()=>setFull(false);addEventListener('keydown',e=>{if(e.key==='Escape'&&FULL&&$('tvov').hidden)setFull(false)});
+$('tabhz').onclick=()=>{fcTab=avTab=false;renderForecast()};$('tabfc').onclick=()=>{fcTab=true;avTab=false;renderForecast()};$('tabav').onclick=()=>{avTab=true;fcTab=false;renderForecast()};
+function renderActing(){
+  const a=$('acting');a.replaceChildren();const stops=S.trains.filter(t=>t.cmd==='STOP'),rs=S.trains.filter(t=>t.cmd==='RESTRICT').length;
+  if(stops.length===1){const t=stops[0],dets=[...new Set(S.hazards.filter(x=>x.trains.includes(t.n)).map(x=>x.barrier))].join('+')||'B5';
+    a.appendChild(h('div',null,null,[h('b',null,'⛔ TREN '+t.n+' · STOP'),document.createTextNode(' — '+dets+' detecta → B5 frena y enclava el bloque → B7 exigirá prueba de vía libre y 2 autorizaciones')]))}
+  else if(stops.length>1)a.appendChild(h('div',null,null,[h('b',null,'⛔ '+stops.length+' TRENES EN STOP'),document.createTextNode(' — '+stops.slice(0,6).map(t=>t.n).join(', ')+(stops.length>6?' …':'')+' · B5 frena y enclava · B7 exigirá prueba de vía libre y 2 autorizaciones para cada uno')]));
+  if(rs&&!stops.length)a.appendChild(h('div','am',null,[h('b',null,'🟠 '+rs+' tren(es) con restricción de velocidad'),document.createTextNode(' — ordenada automáticamente por B5; se libera sola tras varios ciclos limpios')]));
+  a.style.display=a.children.length?'flex':'none'}
+
+// ---- pantalla de sistemas de seguridad ----
+const STL={OK:'Operativo',ALERT:'Actuando',FAULT:'EN FALLO',NODATA:'Sin datos',OFF:'Desactivado'};
+let sysTimer=null;
+const ago=ms=>{if(!ms)return 'nunca';const s=Math.max(0,Math.round(((S?S.now:Date.now())-ms)/1000));return s<90?'hace '+s+' s':s<5400?'hace '+Math.round(s/60)+' min':'hace '+Math.round(s/3600)+' h'};
+function sysCard(x){
+  const kids=[h('h3',null,null,[h('span','id',x.id),h('span',null,x.name),h('span','st',STL[x.status]||x.status)]),h('div','grp',x.group+(x.external?' · sistema externo, solo se contrasta':'')),
+    h('h4',null,'Qué hace'),h('p',null,x.does),h('h4',null,'Cómo funciona'),h('ul',null,null,x.how.map(t=>h('li',null,t)))];
+  if(x.params.length){const t=h('table');x.params.forEach(p=>t.appendChild(h('tr',null,null,[h('td',null,p.label),h('td',null,p.value+(p.unit?' '+p.unit:''))])));kids.push(h('h4',null,'Parámetros en vigor (configurados en RailGuard, no oficiales de Adif)'),t)}
+  const live=[];if(x.detail)live.push(x.detail);if(x.fired!=null)live.push(x.fired+' disparos');if(x.active)live.push(x.active+' activos ahora');if(x.last_fire)live.push('último '+ago(x.last_fire));
+  kids.push(h('div','live',null,[h('b',null,'En vivo: '),document.createTextNode(live.length?live.join(' · '):'sin incidencias')]));
+  kids.push(h('div','fail',null,[h('b',null,'Si falla: '),document.createTextNode(x.on_failure)]));
+  kids.push(h('div','chips',null,[h('small',null,'responde detrás')].concat(x.covering.map(c=>h('span','chip '+(c.healthy?'ok':'bad'),c.id+' · '+c.name)))));
+  return h('section','sc '+x.status,null,kids)}
+function renderSys(j){
+  const ov=$('sysov');const x=document.createElement('div');
+  const close=h('button',null,'← Volver al panel');close.onclick=closeSys;
+  x.appendChild(h('div','sh',null,[close,h('h1',null,'Sistemas de seguridad'),h('div','sub',j.healthy+' de '+j.total+' sistemas operativos · '+(j.mode==='sim'?'simulación':'en vivo')+' · se actualiza cada 2 s. Cada capa es independiente: si una falla, las de detrás siguen protegiendo y la red se degrada hacia el lado seguro.')]));
+  const flow=h('div','flow');j.systems.forEach((s,i)=>{if(i)flow.appendChild(h('i',null,'→'));flow.appendChild(h('span','n '+s.status,s.id+(s.status==='FAULT'?' ✖':'')))});x.appendChild(flow);
+  if(j.pending&&j.pending.length){x.appendChild(h('div','sc ALERT',null,[h('h3',null,'Rearmes esperando segunda autorización'),h('ul',null,null,j.pending.map(p=>h('li',null,'Tren '+p.train+': 1ª autorización de '+p.by+' · falta otro centro u operador distinto ('+p.left_s+' s)')))]));x.lastChild.style.marginBottom='12px'}
+  const g=h('div','sg');j.systems.forEach(s=>g.appendChild(sysCard(s)));x.appendChild(g);
+  ov.replaceChildren(...x.childNodes)}
+async function loadSys(){try{const r=await fetch('/api/systems',{cache:'no-store'});const j=await r.json();
+  if(!j.systems){$('sysov').replaceChildren(h('div','sh',null,[(()=>{const b=h('button',null,'← Volver');b.onclick=closeSys;return b})(),h('div','sub','Esta pantalla necesita el servidor de RailGuard en ejecución (python3 server.py). La demo grabada no incluye el estado vivo de cada sistema.')]));return}
+  renderSys(j)}catch(e){}}
+
+// ---- pantalla «Alcance y fuentes» (para auditoría: qué es real, qué es simulado, límites) ----
+async function openAbout(){
+  const ov=$('aboutov');ov.hidden=false;document.body.style.overflow='hidden';
+  let hl=null;try{hl=await (await fetch('/api/health',{cache:'no-store'})).json()}catch(e){}
+  const live=S&&S.mode==='live',f=hl&&hl.feed,inf=hl&&hl.infra,src=inf&&(inf.ign||inf.adif)||{};
+  const row=(a,st,cls,b)=>{const tr=h('tr');tr.append(h('td',null,a),h('td',cls,st),h('td',null,b));return tr};
+  const row3=(a,b,c)=>{const tr=h('tr');tr.append(h('td',null,a),h('td',null,b),h('td',null,c));return tr};
+  const T=(head,rows)=>{const t=h('table');t.append(h('tr',null,null,head.map(x=>h('th',null,x))));rows.forEach(r=>t.append(r));return t};
+  const close=h('button',null,'← Volver al panel');close.onclick=closeAbout;
+  const A=h('div','ab');
+  A.append(h('div','sh',null,[close]),h('h1',null,'RailGuard · alcance, fuentes y límites'),
+    h('p',null,'Capa de supervisión independiente en tierra, con defensa en profundidad (B1–B7). No sustituye al ATP de a bordo (LZB/ETCS/ASFA) ni a los enclavamientos de Adif: los contrasta y añade barreras. Prototipo de demostración, sin certificación (no se han aplicado EN 50126/50128/50129 ni se ha evaluado el SIL).'),
+    h('div','box',null,[h('b',null,'Modo actual: '),document.createTextNode(live?'EN VIVO con datos reales de posición de Renfe.':'SIMULACIÓN sobre una captura real: los trenes T-90xx y los escenarios son sintéticos.')]));
+  A.append(h('h2',null,'Datos: qué es real hoy'));
+  A.append(T(['Dato','Estado','Detalle'],[
+    row('Posición de los trenes',live?'REAL':'SIMULADO',live?'ok':'mid',live?('Feed GTFS-RT de Renfe (Larga Distancia, Avant, AVE). '+(f?f.entities+' entidades, retraso de cabecera '+f.header_age_s+' s, desfase del reloj corregido '+(f.skew_s||0)+' s. ':'')+'La velocidad se deriva de posiciones GPS: es ruidosa.'):'Captura de Renfe + trenes sintéticos.'),
+    row('Horarios y paradas',live?'REAL':'SIMULADO',live?'ok':'mid','GTFS de Renfe (data.renfe.com): origen, destino, próxima parada, retraso.'),
+    row('Trazado de las vías',(inf&&inf.state==='listo'&&src.real_links)?'REAL (solo geometría)':'ESQUEMÁTICO',(inf&&inf.state==='listo'&&src.real_links)?'mid':'no',(inf&&inf.state==='listo'&&src.real_links)?('IGN-CNIG, INSPIRE Redes de transporte (CC BY 4.0): '+src.real_links+' tramos reales. Sin número de vías.'):'Línea recta entre estaciones.'),
+    row('Número de vías, vía única/doble','NO DISPONIBLE','no','El servicio WFS de Adif que lo publica devolvió error de servidor el 30/10/2026 (probado desde el navegador y desde el servidor). Pendiente de Adif.'),
+    row('Señales, desvíos, cantones, balizas, bucles LZB','NO DISPONIBLE','no','No son datos abiertos. Hay que pedirlos a Adif; el sistema ya acepta un fichero data/infra_extra.json.'),
+    row('Velocidades máximas de línea y limitaciones temporales','NO DISPONIBLE','no','Se usa 310 km/h como máximo de red: B2 vigila poco. Pendiente de Adif.'),
+    row('Telemetría ATP de a bordo (LZB/ETCS/ASFA)','NO DISPONIBLE','no','Ningún tren la envía. Las alertas de «LZB caído» solo se han probado en simulación.'),
+    row('Tablets de cabina (alerta de 3 km)','PROBADO SOLO EN SIMULACIÓN','mid','Funciona en navegador de pruebas; falta probarlo con tablets reales (GPS, sirena, HTTPS).')]));
+  A.append(h('h2',null,'Qué hace cada capa y con qué se alimenta'));
+  A.append(T(['Capa','Se alimenta de','Limitación'],[
+    row3('B1 Integridad de datos','Posición y marca de tiempo del feed','Umbrales en vivo más tolerantes (3 ciclos) para no actuar por ruido de GPS'),
+    row3('B2 Velocidad y frenado','Velocidad derivada del GPS','Límite único de red en vivo; descarta >340 km/h como dato erróneo'),
+    row3('B3 Separación · B4 Predicción','Posiciones, rumbo y tramo (GTFS)','Sin geometría de bloques ni señales: la separación es estimada'),
+    row3('PROX · alerta de 3 km a cabinas','GPS de la tablet del maquinista','Canal independiente del feed; pendiente de prueba con tablets reales'),
+    row3('B5 Enclavamiento · B6 Centros · B7 Guardia','Órdenes de las capas anteriores y de las personas','Doble autorización y límites de rearme diseñados por RailGuard; a validar con operación de Adif'),
+    row3('Previsión (informativa)','Extrapolación a velocidad constante','No ordena nada; no conoce señales ni estaciones de adelantamiento')]));
+  A.append(h('h2',null,'Parámetros'));
+  A.append(h('p',null,'Todos los umbrales (distancias de frenado, tiempos de alcance, 3 km de proximidad, ciclos de persistencia, doble autorización) son valores de RailGuard, NO parámetros oficiales de Adif. Se muestran en «Sistemas de seguridad» y están pensados para calibrarse con los de Adif.'));
+  A.append(h('h2',null,'Qué haría falta para pasar de demostración a piloto'));
+  A.append(h('p',null,'1) Infraestructura de Adif (vías, señales, cantones, velocidades). 2) Telemetría ATP y un feed de posiciones de mayor calidad. 3) Validación de umbrales y procedimientos con Seguridad en la Circulación. 4) Pruebas con tablets reales. 5) Plan de disponibilidad (hoy un único servidor) y análisis de seguridad conforme a CENELEC.'));
+  A.append(h('p',null,'Fuentes: Renfe (data.renfe.com, GTFS y GTFS-RT) · IGN-CNIG (INSPIRE Redes de transporte, CC BY 4.0, © Instituto Geográfico Nacional de España) · mapa base esquemático propio.'));
+  ov.replaceChildren(A)}
+function closeAbout(){$('aboutov').hidden=true;document.body.style.overflow=''}
+$('abb').onclick=openAbout;addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('aboutov').hidden)closeAbout()});
+function openSys(){$('sysov').hidden=false;document.body.style.overflow='hidden';loadSys();clearInterval(sysTimer);sysTimer=setInterval(loadSys,2000)}
+function closeSys(){$('sysov').hidden=true;document.body.style.overflow='';clearInterval(sysTimer)}
+$('sysb').onclick=openSys;addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('sysov').hidden)closeSys()});
+
+// ---- Vista de tren: panel visual y claro de un tren (solo datos reales del supervisor) ----
+let tvN=null,tvD=null,tvT=0;
+const TVCOL={NONE:'#1fa35a',CAUTION:'#e0a800',RESTRICT:'#e8710a',STOP:'#d32f2f'},TVTXT={NONE:'Operación normal',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP · freno aplicado'};
+function tvGauge(v,max){
+  // Escala por tramos de supervisión (equivale a la idea ETCS de velocidad permitida / aviso / intervención, con umbrales de RailGuard):
+  // hasta el límite = permitida · +3 % aviso (CAUTION) · +8 % restricción · +15 % freno de emergencia (STOP)
+  const S0=max*1.25,R=70,cx=90,cy=90,pt=(x,r)=>{const a=Math.PI*(1-Math.min(x,S0)/S0);return[cx+r*Math.cos(a),cy-r*Math.sin(a)]};
+  const seg=(x0,x1,c)=>{const[p0,q0]=pt(x0,R),[p1,q1]=pt(x1,R);return '<path d="M'+p0+' '+q0+'A'+R+' '+R+' 0 0 1 '+p1+' '+q1+'" fill="none" stroke="'+c+'" stroke-width="12"/>'};
+  const [nx,ny]=pt(v,R-22),[bx,by]=pt(v,R+9);
+  return '<svg viewBox="0 0 180 112" width="100%" style="max-width:230px">'+seg(0,max,'#8fd3a8')+seg(max,max*1.03,'#e9d27a')+seg(max*1.03,max*1.08,'#f2b27a')+seg(max*1.08,max*1.15,'#ee8f8f')+seg(max*1.15,S0,'#d32f2f')
+   +'<line x1="'+nx+'" y1="'+ny+'" x2="'+bx+'" y2="'+by+'" stroke="#0f2233" stroke-width="3.5" stroke-linecap="round"/><text x="90" y="86" text-anchor="middle" font-size="30" font-weight="800" fill="#0f2233">'+v+'</text><text x="90" y="101" text-anchor="middle" font-size="10" fill="#5b6f82">km/h · límite '+max+'</text></svg>'}
+function tvMini(t,near){
+  // Mapa de ruta local: solo lo cercano, etiquetas sin solaparse. Escala uniforme (km reales en línea recta).
+  const W=640,H=330,P=26,R=70,k=S.unit_km,sc=(H/2-P)/R,ox=t.x*k,oy=t.y*k;
+  const X=x=>W/2+(x*k-ox)*sc,Y=y=>H/2+(y*k-oy)*sc,D=o=>Math.hypot(o.x*k-ox,o.y*k-oy);
+  const placed=[],esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const free=(x,y,w,hh)=>{const r=[x,y-hh,x+w,y+2];if(r[0]<2||r[2]>W-2||r[1]<2||r[3]>H-2)return false;if(placed.some(q=>r[0]<q[2]&&r[2]>q[0]&&r[1]<q[3]&&r[3]>q[1]))return false;placed.push(r);return true};
+  const lab=(x,y,txt,fs,col,wt,dx,dy)=>{const w=txt.length*fs*.56;for(const [ax,ay] of [[dx,dy],[dx,dy+20],[-w-dx,dy],[-w-dx,dy+20],[-w/2,dy-8],[-w/2,dy+26]]){if(free(x+ax,y+ay,w,fs))return '<text x="'+(x+ax)+'" y="'+(y+ay)+'" font-size="'+fs+'" font-weight="'+(wt||500)+'" fill="'+col+'" stroke="#f2f6fa" stroke-width="3" paint-order="stroke">'+esc(txt)+'</text>'}return ''};
+  let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="background:#f2f6fa;border-radius:10px">';
+  s+='<circle cx="'+W/2+'" cy="'+H/2+'" r="'+R*sc+'" fill="#fff" stroke="#dbe5ee" stroke-dasharray="4 5"/><text x="'+(W/2+R*sc*.72)+'" y="'+(H/2-R*sc*.72)+'" font-size="9" fill="#8a9bab">'+R+' km</text>';
+  const st={};(S.stations||[]).forEach(x=>st[x.c]=x);
+  s+='<clipPath id="tvclip"><circle cx="'+W/2+'" cy="'+H/2+'" r="'+R*sc+'"/></clipPath><g clip-path="url(#tvclip)">';
+  // vía de la línea del tren (corredor), recortada a la zona
+  (S.corridors||[]).filter(c=>t.line&&c.name===t.line).forEach(c=>{const pts=c.stations.filter(q=>st[q]).map(q=>[X(st[q].x),Y(st[q].y)]);
+    if(pts.length>1)s+='<polyline points="'+pts.map(q=>q.join(',')).join(' ')+'" fill="none" stroke="#9fb4c8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'});
+  // tramo actual
+  const a=(S.stations||[]).find(q=>q.n===t.from),b=(S.stations||[]).find(q=>q.n===t.to);
+  if(a&&b)s+='<line x1="'+X(a.x)+'" y1="'+Y(a.y)+'" x2="'+X(b.x)+'" y2="'+Y(b.y)+'" stroke="#1d6fd6" stroke-width="4" stroke-linecap="round" opacity=".55"/>';
+  s+='</g>';
+  // estaciones: puntos para las cercanas, etiqueta solo para las más próximas y las del tramo
+  const sts=(S.stations||[]).map(q=>({...q,d:D(q)})).filter(q=>q.d<=R).sort((p,q)=>p.d-q.d);
+  sts.forEach(q=>{s+='<circle cx="'+X(q.x)+'" cy="'+Y(q.y)+'" r="'+((q.n===t.from||q.n===t.to)?4.5:3)+'" fill="'+((q.n===t.from||q.n===t.to)?'#1d6fd6':'#8a9bab')+'"/>'});
+  // trenes cercanos (sin etiqueta salvo los más próximos)
+  const tr=near.map(n=>({...n,d:D(n)})).filter(n=>n.d<=R).sort((p,q)=>p.d-q.d);
+  tr.forEach(n=>{s+='<circle cx="'+X(n.x)+'" cy="'+Y(n.y)+'" r="5.5" fill="'+(n.cmd==='NONE'?'#455a6e':TVCOL[n.cmd])+'" stroke="#fff" stroke-width="2"/>'});
+  s+='<circle cx="'+X(t.x)+'" cy="'+Y(t.y)+'" r="9" fill="#1d6fd6" stroke="#fff" stroke-width="3"/>';
+  placed.push([X(t.x)-10,Y(t.y)-12,X(t.x)+10,Y(t.y)+10]);
+  s+=lab(X(t.x),Y(t.y),t.n+' (este tren)',12,'#1d6fd6',800,13,-12)||lab(X(t.x),Y(t.y),t.n,12,'#1d6fd6',800,-60,-14);
+  // etiquetas por prioridad: estaciones del tramo, trenes más cercanos, estaciones más cercanas
+  sts.filter(q=>q.n===t.from||q.n===t.to).forEach(q=>{s+=lab(X(q.x),Y(q.y),q.n,11,'#0f2233',700,7,-6)||lab(X(q.x),Y(q.y),q.n,11,'#0f2233',700,7,14)});
+  tr.slice(0,6).forEach(n=>{s+=lab(X(n.x),Y(n.y),n.n,10.5,'#0f2233',700,8,-8)||lab(X(n.x),Y(n.y),n.n,10.5,'#0f2233',700,8,14)});
+  sts.slice(0,9).forEach(q=>{if(q.n!==t.from&&q.n!==t.to)s+=lab(X(q.x),Y(q.y),q.n,10,'#5b6f82',500,6,4)});
+  return s+'</svg>'}
+function renderTV(){
+  const ov=$('tvov');if(ov.hidden||!S)return;const t=S.trains.find(x=>x.n===tvN);
+  if(!t){ov.replaceChildren(h('div','w',null,[h('div','hd',null,[h('h1',null,'Tren '+tvN+' sin datos'),h('div','sp'),(()=>{const b=h('button',null,'Cerrar');b.onclick=closeTV;return b})()])]));return}
+  const k=S.unit_km,d=tvD&&tvD.n===tvN?tvD:{};
+  const dist=o=>Math.hypot(o.x-t.x,o.y-t.y)*k;
+  let hx=t.hx,hy=t.hy;if(hx==null){const st=(S.stations||[]).find(s=>s.n===t.to);if(st){const m=Math.hypot(st.x-t.x,st.y-t.y)||1;hx=(st.x-t.x)/m;hy=(st.y-t.y)/m}}
+  const same=S.trains.filter(o=>o.n!==t.n&&(t.line?o.line===t.line:dist(o)<150)).map(o=>({...o,d:dist(o),ahead:hx==null?null:((o.x-t.x)*hx+(o.y-t.y)*hy)>=0})).filter(o=>o.d<250);
+  const beh=same.filter(o=>o.ahead===false).sort((a,b)=>a.d-b.d).slice(0,2).reverse(),ahe=same.filter(o=>o.ahead===true).sort((a,b)=>a.d-b.d).slice(0,2),und=same.filter(o=>o.ahead==null);
+  const ret=d.delay_s!=null?Math.round(d.delay_s/60):t.ret,act=(S.hazards||[]).filter(x=>x.trains.includes(t.n));
+  const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;e.innerHTML=html;return e};
+  const tile=(ti,body)=>el('div','tl','<h4>'+ti+'</h4>'+body);
+  const card=(o,me)=>o?el('div','tc'+(me?' me':''),'<b>'+o.n+'</b><div>'+o.kmh+' km/h'+(o.ret>=5?' · <span class="bad">+'+o.ret+' min</span>':'')+'</div><div style="color:'+(o.cmd==='NONE'?'#14703a':TVCOL[o.cmd])+'">● '+({NONE:'libre',CAUTION:'precaución',RESTRICT:'restringido',STOP:'STOP'}[o.cmd])+'</div>'+(me?'<div class="dk">Nuestro tren</div>':'<div class="dk">'+(o.d<10?o.d.toFixed(1):Math.round(o.d)).toString().replace('.',',')+' km '+(o.ahead?'delante':'detrás')+'</div>')):el('div','tc e','—');
+  const slot=(a,i,n)=>a[a.length-n+i]||null;
+  const hd=el('div','hd','<div style="font-size:30px">🚆</div><div><h1>'+(d.product?d.product+' ':'')+t.n+'</h1><small>'+(d.ori&&d.des?d.ori+' → '+d.des:(t.from||'?')+' → '+(t.to||'?')+(t.dest?' (destino '+t.dest+')':''))+(t.line?' · '+t.line:'')+'</small></div><div class="st '+t.cmd+'">'+TVTXT[t.cmd]+'<small>'+(act.length?act.length+' aviso(s) de barreras':'Sin avisos de las barreras')+'</small></div><div class="sp"></div><div style="text-align:right;font-size:13px;color:#44586b">'+fmt(S.now)+'<br>ciclo '+S.cycle+' · '+(S.mode==='sim'?'SIMULACIÓN':'EN VIVO')+'</div>');
+  const cb=h('button',null,'✕ Cerrar');cb.onclick=closeTV;hd.appendChild(cb);
+  const tiles=el('div','tiles','');
+  tiles.append(tile('Velocidad actual',tvGauge(t.kmh,t.vmax)+'<div class="sub">Verde: permitida · amarillo +3 % aviso · naranja +8 % restricción · rojo +15 % freno de emergencia. Límite de referencia de RailGuard, no el oficial de la línea.</div>'),
+    tile('Dirección','<div class="big" style="font-size:20px">'+(t.to?'→ '+t.to:'—')+'</div><div class="sub">'+(t.dest?'Destino: '+t.dest:'')+'</div>'),
+    tile('Posición actual','<div class="big" style="font-size:19px">'+(t.from&&t.to&&t.from!==t.to?'Entre '+t.from+' y '+t.to:(d.where||(t.to?'Hacia '+t.to:'—')))+'</div><div class="sub">'+(t.src==='tablet'?'GPS de la tablet de cabina':'Posición del feed de Renfe')+' · sin P.K. (pendiente de datos de Adif)</div>'),
+    tile('Estado de seguridad','<div class="big" style="color:'+(t.cmd==='NONE'?'#14703a':TVCOL[t.cmd])+'">'+({NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[t.cmd])+'</div><div class="sub">'+(act.length?act.slice(0,2).map(x=>x.barrier+' · '+x.msg).join('<br>'):'Ninguna barrera detecta riesgo')+'</div>'),
+    tile('Puntualidad','<div class="big '+(ret>=5?'bad':'ok')+'">'+(ret>=5?'+'+ret+' min':ret>0?'+'+ret+' min':'A tiempo')+'</div><div class="sub">'+(d.dest_est?'Llegada estimada '+d.dest_est+(d.dest_sched?' (prevista '+d.dest_sched+')':''):'según feed de Renfe')+'</div>'));
+  const strip=el('div','strip','<h4>Trenes en la misma vía'+(t.line?' · '+t.line:' (sin línea identificada: trenes a menos de 150 km)')+'</h4>');
+  const row=el('div','tr5','');[slot(beh,0,2),slot(beh,1,2)].forEach(o=>row.appendChild(card(o)));row.appendChild(card(t,true));[ahe[0]||null,ahe[1]||null].forEach(o=>row.appendChild(card(o)));
+  strip.appendChild(row);if(und.length)strip.appendChild(el('div','nt','Sin rumbo conocido para '+und.length+' tren(es) más; no se clasifican como delante/detrás.'));
+  const near=S.trains.filter(o=>o.n!==t.n&&dist(o)<75);
+  const bt=el('div','bt','');bt.appendChild(el('div','mp',tvMini(t,near)+'<div class="nt">Mapa de ruta local (radio 70 km): solo se rotulan los trenes y estaciones más cercanos. Distancias en línea recta, no por vía.</div>'));
+  const ib=el('div','ib','');
+  ib.appendChild(el('div','tl','<h4>Información del tren</h4>'+[['Línea',t.line||'—'],['Señalización',t.signalling||'—'],['ATP a bordo',t.atp||'sin telemetría'],['Operador',(S.operators.find(o=>o.id===t.op)||{}).name||t.op],['Barreras actuando',(t.by&&t.by.length)?t.by.join(' · '):'ninguna']].map(([a,b])=>'<div class="r"><span>'+a+'</span><span>'+b+'</span></div>').join('')));
+  ib.appendChild(el('div','tl','<h4>Próxima referencia</h4>'+(d.next?'<div class="r"><span>'+d.next.name+'</span><span>'+(d.next.est||d.next.sched||'—')+(d.next.est&&d.next.sched&&d.next.est!==d.next.sched?' (prev. '+d.next.sched+')':'')+'</span></div>':'<div class="sub">Sin horario disponible para este tren.</div>')+(d.dest_est?'<div class="r"><span>Destino '+(d.des||t.dest||'')+'</span><span>'+d.dest_est+'</span></div>':'')));
+  ib.appendChild(el('div','nt','No se muestra cobertura móvil, estado de catenaria ni obras: RailGuard no dispone de esos datos. Esta vista no ordena nada; la seguridad la aplican las barreras automáticas.'));
+  bt.appendChild(ib);
+  ov.replaceChildren(h('div','w',null,[hd,tiles,strip,bt]));
+}
+async function loadTV(){if(!tvN)return;try{const r=await fetch('/api/train?n='+encodeURIComponent(tvN));if(r.ok)tvD=await r.json()}catch(e){}renderTV()}
+function openTV(n){tvN=n;tvD=null;$('tvov').hidden=false;document.body.style.overflow='hidden';renderTV();loadTV();clearInterval(tvT);tvT=setInterval(loadTV,10000)}
+function closeTV(){$('tvov').hidden=true;document.body.style.overflow='';clearInterval(tvT);tvN=null}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('tvov').hidden)closeTV()});
+// ---- ficha de tren ----
+const card=$('card');let cardN=null,cardTimer=null;
+const fmtDelay=m=>m>0?(m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'):m<0?'adelantado '+(-m)+' min':'a tiempo';
+function renderCard(d,t){
+  const row=(k,v,bad)=>v==null||v===''?null:h('div','r',null,[h('span',null,k),h('span',bad?'bad':null,String(v))]);
+  const ret=d.delay_s!=null?Math.round(d.delay_s/60):(d.ret_min!=null?d.ret_min:t&&t.ret);
+  const kids=[h('button','x','×'),h('h3',null,(d.product?d.product+' ':'')+d.n),
+    h('div','sub',d.ori&&d.des?d.ori+' → '+d.des:(d.from||'?')+' → '+(d.to||'?')+(d.dest?' (destino '+d.dest+')':''))];
+  kids[0].onclick=closeCard;
+  {const vb=h('button',null,'▣ Vista de tren');vb.style.cssText='margin:4px 0 8px;width:100%;padding:8px;border-radius:8px;border:1px solid #2b6cb0;background:#12304f;color:#cfe6ff;font-weight:700;cursor:pointer';vb.onclick=()=>openTV(d.n);kids.push(vb)}
+  [row('Retraso',ret==null?null:fmtDelay(ret),ret>0),row('Llegada prevista',d.dest_sched),row('Llegada estimada',d.dest_est,ret>0),
+   row('Velocidad','≈ '+d.kmh+' km/h'),row('Dónde',d.where||(d.from&&d.to?'Entre '+d.from+' y '+d.to:null)),
+   d.next?row('Llega a '+d.next.name,(d.next.est||d.next.sched)):null,
+   row('Estado de seguridad',{NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[d.cmd]||d.cmd,d.cmd==='STOP'),
+   row('Línea',d.line?d.line+(d.signalling?' · '+d.signalling:''):null),row('ATP a bordo',d.atp||'sin telemetría'),
+   row('Operador',d.operator),row('Posición',d.src==='tablet'?'GPS tablet':'feed')].forEach(r=>r&&kids.push(r));
+  (d.alerts||[]).forEach(a=>kids.push(h('div','al',a.barrier+' · '+a.msg)));
+  card.replaceChildren(...kids);card.style.borderLeftColor=COL[d.cmd]||'var(--acc)';card.hidden=false;
+}
+async function loadCard(){
+  if(!cardN)return;const t=S&&S.trains.find(x=>x.n===cardN);
+  let d=null;try{const r=await fetch('/api/train?n='+encodeURIComponent(cardN));if(r.ok)d=await r.json()}catch(e){}
+  if(!d||d.n!==cardN){if(!t){closeCard();return}d={n:t.n,kmh:t.kmh,cmd:t.cmd,ret_min:t.ret,from:t.from,to:t.to,dest:t.dest,line:t.line,signalling:t.signalling,atp:t.atp,src:t.src,operator:((S.operators||[]).find(o=>o.id===t.op)||{}).name}}
+  if(cardN===d.n)renderCard(d,t);
+}
+function openCard(n){cardN=n;loadCard();clearInterval(cardTimer);cardTimer=setInterval(loadCard,10000)}
+function closeCard(){cardN=null;card.hidden=true;clearInterval(cardTimer)}
 cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
 cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect();zoomAt(2,e.clientX-r.left,e.clientY-r.top)});
 $('zi').onclick=()=>base&&zoomAt(1.5,base.W/2,base.H/2);$('zo').onclick=()=>base&&zoomAt(1/1.5,base.W/2,base.H/2);
 $('zr').onclick=()=>{V={z:1,px:0,py:0};draw()};
-['lv','ls','lr'].forEach(i=>$(i).onchange=draw);
+['lv','ls','lr','li','lp','lf'].forEach(i=>$(i).onchange=draw);
 $('opf').onchange=()=>{opf=$('opf').value;draw()};
 addEventListener('resize',()=>{base=null;draw()});
 $('mb').onclick=()=>{const t=$('mt').value.trim();if(t)post('/api/manual',{train:t})};
 $('mr').onclick=()=>{const t=$('mt').value.trim();if(t)post('/api/manual',{train:t,release:true})};
 $('reset').onclick=()=>post('/api/reset',{});
-$('adm').onclick=()=>{try{const v=prompt(CENTRE?'Token de su centro de control':'Token de administración (RAILGUARD_TOKEN)',tok());if(v!==null)localStorage.setItem(KEY,v)}catch(e){}load()};
+$('adm').onclick=async()=>{try{const v=prompt(CENTRE?'Token de su centro de control':'Token de administración (RAILGUARD_TOKEN)',tok());if(v!==null){localStorage.setItem(KEY,v);
+    try{const r=await fetch(CENTRE?'/api/centre/ping':'/api/ping',{method:'POST',headers:{'Content-Type':'application/json',...hdr()},body:'{}'});
+      if(r.status===401||r.status===403)flash('Clave incorrecta: las acciones seguirán bloqueadas',true);else flash(v?'Clave aceptada: acciones desbloqueadas ✓':'Clave borrada')}catch(e){flash('No se pudo comprobar la clave',true)}}}catch(e){}load()};
 $('msend').onclick=()=>{const t=$('mtx').value.trim();if(t){post('/api/message',{to:$('mto').value,text:t});$('mtx').value=''}};
 $('pm').onchange=()=>post('/api/proximity_mode',{mode:$('pm').value});
 $('dg').onclick=async()=>{
@@ -314,6 +973,11 @@ function aux(){
   const pr=(S.proximity||[]).filter(x=>x.level==='RED');const pb=$('pbanner');
   pb.style.display=pr.length?'block':'none';if(pr.length)pb.textContent='⚠ PROXIMIDAD <'+S.proximity_km+' km: '+pr.map(x=>x.a+'↔'+x.b+' '+x.dist_km.toFixed(1)+' km').join(' · ');
 }
+(function(){const b=$('lgb'),g=$('lg'),x=$('lgx');let on=false;try{on=localStorage.getItem('rg_leg')==='1'}catch(e){}
+  const set=v=>{g.hidden=!v;try{localStorage.setItem('rg_leg',v?'1':'0')}catch(e){}};
+  // la primera vez se muestra abierta para que se entienda; luego se recuerda la elección
+  set(false);b.onclick=e=>{e.stopPropagation();set(g.hidden)};x.onclick=()=>set(false);g.onclick=e=>e.stopPropagation();
+  document.addEventListener('click',()=>set(false));addEventListener('keydown',e=>{if(e.key==='Escape')set(false)})})();
 load();setInterval(load,1000);setInterval(()=>{if(S&&(S.trains.some(t=>t.cmd==='STOP')||(S.proximity||[]).some(x=>x.level==='RED')))draw()},120);
 </script>
 </body>

@@ -26,11 +26,11 @@ def main():
         shutil.copy(os.path.join(D, _f), OUT)
 
     idx = open(os.path.join(D, "index.html"), encoding="utf-8").read()
+    idx = idx.replace('href="/favicon.png"', 'href="favicon.png"')   # aparece dos veces (icon y apple-touch-icon)
     idx = patch(idx, [
-        ('href="/logo.png"', 'href="logo.png"'), ('href="/favicon.png"', 'href="favicon.png"'),
         ("fetch('/basemap.json')", "fetch('basemap.json')"), ('src="/logo.png"', 'src="logo.png"'), ('<a href="/" class="brand"', '<a href="./" class="brand"'),
         ("<title>RailGuard</title>", "<title>RailGuard Demo</title>\n<script src=\"shim.js\"></script>\n"
-         "<style>#adm,#pmrow,#issue{display:none!important}#dv{background:#0a1017;color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font:inherit}"
+         "<style>#adm,#pmrow,#issue,label:has(#llt){display:none!important}#dv{background:#0a1017;color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font:inherit}"
          "#dtab{color:var(--acc);border-color:var(--acc);cursor:pointer}</style>"),
         ("let who='operador';try{who=localStorage.getItem('rg_who')||prompt('Nombre del operador')||'operador';localStorage.setItem('rg_who',who)}catch(e){}",
          "let who='Demo';"),
