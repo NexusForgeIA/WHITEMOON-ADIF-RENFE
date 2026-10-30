@@ -1,0 +1,14 @@
+# Render Blueprint: Dashboard > New > Blueprint > elegir este repositorio.
+services:
+  - type: web
+    name: railguard
+    runtime: docker
+    dockerfilePath: ./deploy/Dockerfile
+    dockerCommand: python3 server.py --host 0.0.0.0 --port 10000 --source renfe --gtfs https://ssl.renfe.com/gtransit/Fichero_AV_LD/google_transit.zip
+    plan: starter        # siempre encendido; el plan free se duerme y corta el feed
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: RAILGUARD_TOKEN
+        generateValue: true   # secreto del operador nacional; cópielo desde Render > Environment
