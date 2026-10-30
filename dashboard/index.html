@@ -221,7 +221,9 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   body{height:auto;min-height:100vh;grid-template-rows:auto auto minmax(620px,auto) auto}
   .panel,#chain,#log,#cabins{overflow:visible;max-height:none}
   #right{overflow:visible;min-height:0}#right .panel{flex:none;max-height:none}
-  #mapwrap{height:760px;min-height:620px;align-self:start}
+  #mapwrap{height:auto;min-height:600px;align-self:stretch}#mapwrap canvas{position:absolute;inset:0}
+  #chain{display:flex;flex-direction:column}#chain .chain{flex:1}#chain .bar{flex:1;display:flex;flex-direction:column;justify-content:center}
+  #log,#cabins{display:flex;flex-direction:column}#log .more{margin-top:auto}
   #right .panel:last-child{flex:1 1 auto}
 }
 .xsum{cursor:pointer;list-style:none;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#0d151e;color:var(--tx);font-weight:600;font-size:12px;display:flex;justify-content:space-between}.xsum::-webkit-details-marker{display:none}#xtra[open] .xsum span{transform:rotate(180deg)}
