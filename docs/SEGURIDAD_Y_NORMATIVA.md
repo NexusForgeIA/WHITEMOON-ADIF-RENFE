@@ -89,3 +89,14 @@ Fuente: fcmaf.es (Federación Castellano Manchega de Amigos del Ferrocarril), co
 - Línea 020 (La Sagra–Toledo, 20,995 km): bloqueo BCA, GSM-R; 220 km/h hasta PK 15,3, luego 165, 140 y 80 en Toledo.
 - No consta ASFA, ETCS ni distancias de frenado. No se pudieron leer las líneas 040, 042, 050 ni 400 (acceso de la herramienta limitado).
 - Uso posible: un perfil de velocidad máxima por PK para B2 en Madrid–Sevilla; requiere convertir PK a posición con las estaciones. Pendiente, no aplicado: B2 sigue usando sus límites actuales.
+
+### B2 con perfil de velocidad por PK (Madrid–Sevilla, solo zonas lentas)
+- `speed_profile.py`: convierte la posición del tren a PK interpolando entre estaciones ancla (Atocha 0, Ciudad Real 170,7, Puertollano 209,8, Córdoba 343, Sevilla 471,8) y aplica las zonas ≤ 200 km/h de FCMAF (PK 170,2–173,1 a 190; 206,8–208,8 a 200; Puertollano hasta 200).
+- Salvaguardas: fuente no oficial; zonas estrechadas 1 km por extremo; tren a más de 3 km del eje se ignora; **B2 nunca pasa de CAUTION con este límite**; se desactiva con `speed_profile: false`.
+- No se usan las zonas de 270–300 km/h: pueden estar desactualizadas y dar falsos avisos a trenes que circulan a 300.
+
+### Texto sin fuente sobre PAET y transiciones LZB (aportado por el usuario) — NO incorporado como dato
+- Coincide con FCMAF en la mayoría de PK (La Sagra, Mora, Los Yébenes, Urda, El Emperador, Malagón, Ciudad Real, Puertollano, Venta de la Inés), con diferencias en Yeles (34,3 vs 35,307), Calatrava (198,9 vs 196,481) y Brazatortas (224,9 vs 225,425).
+- Contradice FCMAF y el Anejo 10: sitúa el desvío a Toledo en «Bifurcación Parla PK 13» (FCMAF: la línea 020 sale de La Sagra, PK 53,7); habla de transición a ERTMS N2 en Córdoba–Málaga (el Anejo 10 indica que el material circula en N1); atribuye a la C-5 de Cercanías «bucles LZB y cantones virtuales» en toda su longitud (sin respaldo en ningún documento de Adif que tengamos).
+- Los PK que no aparecen en otra fuente (Conquista, Villanueva de Córdoba, Adamuz, Marachón, Guadajoz, Hornachuelos, Peñaflor, PK 343,9 y 470,2) quedan sin verificar. Solo se usan los PK de Córdoba (343) y Sevilla (471,8) como anclas del eje, con ese aviso.
+- Acción pendiente: confirmar con Adif (Declaración sobre la Red / cuadro de velocidades máximas) antes de ampliar el perfil.

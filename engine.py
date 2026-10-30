@@ -34,6 +34,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 
 import fleet_profile
+import speed_profile
 import proximity
 
 NONE, CAUTION, RESTRICT, STOP = 0, 1, 2, 3
@@ -231,8 +232,16 @@ def b2_speed(c: Ctx):
                               f"Velocidad imposible en el feed ({t.kmh:.0f} km/h): se descarta como dato erróneo",
                               {"kmh": round(t.kmh)}))
             continue
+        prof = None
+        if c.cfg.get("speed_profile", True):
+            zl = speed_profile.slow_limit(c.st, t.x, t.y)
+            if zl and zl[0] < limit:
+                prof = zl
+                limit, why = zl[0], f"zona lenta PK {zl[1]:.0f} (FCMAF, no oficial)"
         r = t.kmh / limit if limit else 0
         sev = STOP if r > 1.15 else RESTRICT if r > 1.08 else CAUTION if r > 1.03 else NONE
+        if prof and sev > CAUTION:
+            sev = CAUTION   # límite no oficial: nunca restringe ni frena por sí solo
         n_o = c.persist(("OVERSPEED", t.n), sev != NONE)
         if sev and n_o < c.cfg["overspeed_persist"]:
             sev = NONE if sev == CAUTION else CAUTION   # exceso aún no confirmado: solo aviso
