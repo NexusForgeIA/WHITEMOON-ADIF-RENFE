@@ -7,3 +7,5 @@ data/centres_auth.json
 deploy/.env
 *.zip
 web/rec/
+data/punct_history.json
+data/ltv_cache.json

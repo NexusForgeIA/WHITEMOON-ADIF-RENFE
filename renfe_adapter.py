@@ -25,6 +25,7 @@ import re
 import time
 import urllib.request
 import zipfile
+import punctuality
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -270,6 +271,7 @@ class RenfeFeed:
                 self.detail[label] = self._detail(label, info, sig, ant, status, delays.get(trip_id))
             except Exception:
                 self.detail[label] = {"n": label}
+            cat = punctuality.category(info.get("rname")) if info else "OTRO"
             dly = delays.get(trip_id, 0)
             eta = eta_epoch(info, dly, self.now()) if info else None
             if info and finished(info, sig, status, dly, self.now()):
@@ -277,7 +279,7 @@ class RenfeFeed:
             k = kmh / 3600
             trains.append({"n": label, "p": prod, "x": x, "y": y, "kmh": round(kmh, 1),
                            "vx": st["ux"] * k if kmh > 1 else 0.0, "vy": st["uy"] * k if kmh > 1 else 0.0,
-                           "ts": out_ts, "ret": round(dly / 60), "eta": round(eta) if eta else 0, "ant": ant, "sig": sig,
+                           "ts": out_ts, "ret": round(dly / 60), "eta": round(eta) if eta else 0, "cat": cat, "ant": ant, "sig": sig,
                            "ori": ori, "des": des, "mat": f"v{vid}", "op": "renfe-viajeros"})
         for gone in set(self.state) - seen:
             del self.state[gone]

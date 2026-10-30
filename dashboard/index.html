@@ -218,15 +218,16 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 
 /* Pantallas bajas: una sola barra de scroll de la página (sin paneles con scroll propio) */
 @media(min-width:1101px){
-  body{height:auto;min-height:100vh;grid-template-rows:auto auto auto auto auto}
+  body{height:auto;min-height:100vh;grid-template-rows:auto auto auto auto auto auto}
   .panel,#chain,#log,#cabins{overflow:visible;max-height:none}
   #right{display:contents}
   /* Tres columnas sin huecos: izquierda (defensas) | centro (mapa, peligros, registro) | derecha (retrasos, cola, cabinas) */
-  #rtop{grid-column:3;grid-row:3;display:flex;flex-direction:column;gap:10px;min-width:0}#rtop .panel{flex:none}#rtop #cabins{flex:1 1 auto}
-  #chain{grid-row:3/6;display:flex;flex-direction:column}
+  #pun{grid-column:2/4;grid-row:3}#mapwrap{grid-column:2;grid-row:4}
+  #rtop{grid-column:3;grid-row:4;display:flex;flex-direction:column;gap:10px;min-width:0}#rtop .panel{flex:none}#rtop #cabins{flex:1 1 auto}
+  #chain{grid-row:3/7;display:flex;flex-direction:column}
   #chain #bars{flex:1 1 auto;display:flex;flex-direction:column;gap:8px}#chain #bars>*{flex:1 1 auto;margin:0}
-  #hzp{grid-column:2/4;grid-row:4;min-width:0}#log{grid-column:2/4;grid-row:5;display:flex;flex-direction:column}#log .more{margin-top:auto}
-  body.full #rtop{display:contents}body.full #hzp{grid-column:auto;grid-row:auto}body.full #hz{display:block}body.full #cabins{display:none}
+  #hzp{grid-column:2/4;grid-row:5;min-width:0}#log{grid-column:2/4;grid-row:6;display:flex;flex-direction:column}#log .more{margin-top:auto}
+  body.full #pun{display:none}body.full #rtop{display:contents}body.full #hzp{grid-column:auto;grid-row:auto}body.full #hz{display:block}body.full #cabins{display:none}
   #hz{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:start}#hz .hzc{margin:0}#hz>.empty,#hz>.ll,#hz>div:not(.hzc){grid-column:1/-1}
   /* el mapa ocupa todo el alto de su fila (la fila la fija la columna derecha si es más alta): nunca queda hueco bajo él */
   #mapwrap{height:auto;min-height:clamp(520px,calc(100vh - 300px),720px);align-self:stretch}#mapwrap canvas{position:absolute;inset:0}
@@ -252,6 +253,19 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   #dly{order:1}#rtop>.panel:not(#dly):not(#cabins){order:2}#hzp{order:3}#cabins{order:4}
   body.full #right{display:grid}body.full #cabins{display:none}
 }
+
+#pun h2{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.pmut{font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--mut)}
+#punk{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.pk{background:#0b121a;border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-width:0}
+.pk .l{font-size:11px;color:var(--mut)}.pk .v{font-size:25px;font-weight:700;line-height:1.15;margin:2px 0}.pk .v small{font-size:12px;font-weight:500;color:var(--mut);margin-left:3px}
+.pk .s{font-size:10.5px;color:var(--mut)}.pk svg{display:block;width:100%;height:34px;margin-top:6px}
+.pk.ok .v{color:#3ddc97}.pk.mid .v{color:#ff9f43}.pk.bad .v{color:#ff6b6b}
+#pund{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+@media(min-width:1101px){#pun{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto 1fr;column-gap:14px}#pun h2{grid-column:1/-1}
+  #punk{grid-template-columns:repeat(4,minmax(150px,1fr));align-self:stretch}#pund{grid-template-columns:1fr;margin-top:0;align-content:start;width:300px}
+  .pb{grid-template-columns:96px 1fr 40px}}#pund h3{margin:0 0 5px;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.pb{display:grid;grid-template-columns:104px 1fr 44px;align-items:center;gap:6px;font-size:11px;margin:3px 0}.pb i{display:block;height:7px;border-radius:4px;background:#ff9f43;min-width:1px}.pb span:last-child{text-align:right;color:var(--mut)}
+@media(max-width:700px){#pund{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -298,6 +312,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   <div id="ovl"><div id="acting"></div><div id="outs"></div></div><div id="infnote" hidden></div><div class="scale" id="scale"></div>
 </section>
 
+<section class="panel" id="pun" hidden><h2>Puntualidad de la red <span class="pmut" id="punsub"></span></h2><div id="punk"></div><div id="pund"></div></section>
 <button id="fullx">✕ Cerrar vista completa</button>
 <div id="tvov" hidden></div>
 <div id="dm" hidden></div>
@@ -538,6 +553,25 @@ const endP=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;
 (function(){const tb=document.querySelector('#mapwrap .tb'),ov=document.getElementById('ovl');if(!tb||!ov)return;
   const f=()=>{ov.style.top=(tb.offsetTop+tb.offsetHeight+8)+'px'};f();
   if(window.ResizeObserver)new ResizeObserver(f).observe(tb);addEventListener('resize',f)})();
+
+// ── Puntualidad (KPIs propios con el feed de Renfe; umbrales del compromiso de puntualidad de Renfe) ──
+function spark(pts,col){if(!pts||pts.length<2)return'';const W=200,H=34,mn=Math.min(...pts),mx=Math.max(...pts),r=(mx-mn)||1;
+  const xy=pts.map((v,i)=>[(i/(pts.length-1))*(W-6)+3,H-4-((v-mn)/r)*(H-9)]),d=xy.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' '),e=xy[xy.length-1];
+  return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"><path d="'+d+' L'+e[0]+' '+H+' L'+xy[0][0]+' '+H+'Z" fill="'+col+'" opacity=".12"/><path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="1.6" vector-effect="non-scaling-stroke"/><circle cx="'+e[0].toFixed(1)+'" cy="'+e[1].toFixed(1)+'" r="2.6" fill="'+col+'"/></svg>'}
+async function loadPunct(){try{const r=await fetch('/api/punct',{cache:'no-store'});if(!r.ok)throw 0;const k=await r.json();if(!k||!k.n){$('pun').hidden=true;return}
+  $('pun').hidden=false;const H=(k.history&&k.history.pts)||[],col=i=>H.map(p=>p[i]),nf=x=>x.toLocaleString('es-ES');
+  const card=(l,v,u,sub,cls,i,c)=>'<div class="pk '+cls+'"><div class="l">'+l+'</div><div class="v">'+v+'<small>'+u+'</small></div><div class="s">'+sub+'</div>'+spark(col(i),c)+'</div>';
+  const lv=(x,a,b)=>x>=b?'bad':x>=a?'mid':'ok';
+  $('punk').innerHTML=card('Con retraso (≥ 5 min)',String(k.pct_delayed).replace('.',','),'%',k.delayed+' de '+k.n+' trenes','' + lv(k.pct_delayed,20,40),5,'#ff9f43')
+   +card('Retraso medio por tren',String(k.mean_min).replace('.',','),'min','máximo '+k.max_min+' min',lv(k.mean_min,8,20),2,'#ff9f43')
+   +card('Minutos de retraso acumulados',nf(k.sum_min),'min','suma de los '+k.n+' trenes en circulación',lv(k.sum_min/Math.max(1,k.n),8,20),3,'#ff9f43')
+   +card('Con derecho a indemnización',String(k.pct_indem).replace('.',','),'%',k.indem+' de '+k.n+' superan el umbral de Renfe',lv(k.pct_indem,10,25),4,'#ff6b6b');
+  const mxb=Math.max(1,...k.buckets.map(b=>b.n)),mxp=Math.max(1,...k.by_product.map(p=>p.n));
+  $('pund').innerHTML='<div><h3>Distribución del retraso</h3>'+k.buckets.map(b=>'<div class="pb"><span>'+b.label+'</span><i style="width:'+Math.round(100*b.n/mxb)+'%"></i><span>'+b.n+'</span></div>').join('')+'</div>'
+   +'<div><h3>Por producto (con retraso / total)</h3>'+k.by_product.map(p=>'<div class="pb"><span>'+p.label+'</span><i style="width:'+Math.round(100*p.n/mxp)+'%"></i><span>'+p.delayed+'/'+p.n+'</span></div>').join('')+'</div>';
+  $('punsub').textContent=H.length>1?'evolución de hoy · '+H.length+' min':'acumulando evolución…';
+  $('pun').title='Umbrales de indemnización de Renfe (retraso actual como aproximación): '+Object.entries(k.thresholds).map(([a,b])=>a+' ≥ '+b+' min').join(' · ')+'. Informativo; no interviene en la seguridad.'}catch(e){$('pun').hidden=true}}
+loadPunct();setInterval(loadPunct,30000);
 let LTVD=null,LTVI={};
 function loadLtv(){fetch('/api/ltv',{cache:'no-store'}).then(r=>r.json()).then(j=>{LTVD=j.items&&j.items.length?j.items:null;LTVI=j;const e=$('ltn');if(e)e.textContent=LTVD?'('+LTVD.length+')':'';if(typeof draw==='function')draw()}).catch(()=>{})}
 loadLtv();setInterval(loadLtv,600000);

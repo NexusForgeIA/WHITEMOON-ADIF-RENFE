@@ -21,6 +21,7 @@ from drivers import Drivers
 from engine import Engine
 from infra import Infra
 from ltv import Ltv
+import punctuality
 import systems
 import forecast
 
@@ -678,6 +679,7 @@ STATIC = {"/": ("index.html", "text/html"), "/index.html": ("index.html", "text/
 
 INFRA = None
 LTV = None
+PUNCT = punctuality.History(os.path.join(ROOT, "data", "punct_history.json"))
 
 
 class H(BaseHTTPRequestHandler):
@@ -726,6 +728,9 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, APP.systems())
         if path == "/api/safety_systems":
             return self._send(200, _load("safety_systems.json"))
+        if path == "/api/punct":
+            k = punctuality.compute((t.n, t.ret, t.cat) for t in APP.engine.trains)
+            return self._send(200, {**k, "history": PUNCT.series(), "source": "Feed GTFS-RT de Renfe (Larga Distancia, Avant, AVE); umbrales del compromiso de puntualidad de Renfe"})
         if path == "/api/ltv":
             return self._send(200, LTV.api() if LTV else {"ready": False, "items": []})
         if path == "/api/infra":
@@ -823,6 +828,8 @@ def main():
         if LTV:
             APP.engine.cfg["ltv_items"] = LTV.items
         APP.tick()
+        if a.source == "renfe":
+            PUNCT.add(punctuality.compute((t.n, t.ret, t.cat) for t in APP.engine.trains))
     threading.Thread(target=loop, args=(tick, a.period), daemon=True).start()
     threading.Thread(target=loop, args=(APP.prox_tick, 1.0), daemon=True).start()
     print(f"RailGuard ({APP.mode}) en http://{a.host}:{a.port}   ·   cabina: /tablet"
