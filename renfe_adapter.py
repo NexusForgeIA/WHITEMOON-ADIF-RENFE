@@ -102,6 +102,8 @@ class RenfeFeed:
         self.now = now
         self.state = {}
         self.stats = {}
+        self.skew_ms = None
+        self.skew_note = None
         self.est = {}
         if gtfs:
             for sid, (n, lat, lon) in gtfs["stops"].items():
@@ -141,6 +143,13 @@ class RenfeFeed:
             delays = {}
         hdr = int(_g(_g(vp, "header", default={}), "timestamp", default=0) or 0)
         ts_ms = hdr * 1000 if hdr else int(self.now() * 1000)
+        if hdr and self.skew_ms is None:
+            # Calibración única del desfase del reloj del feed (Renfe publica a veces marcas con ±1 h de error).
+            # Se redondea a múltiplos de 30 min y se fija: un feed realmente parado sigue detectándose como caducado.
+            off = (self.now() * 1000 - ts_ms) / 1000
+            self.skew_ms = int(round(off / 1800.0) * 1800 * 1000) if abs(off) > 300 else 0
+            self.skew_note = f"desfase de reloj del feed corregido: {self.skew_ms // 1000} s" if self.skew_ms else None
+        ts_ms += self.skew_ms or 0
         trains, seen, matched = [], set(), 0
         for e in vp.get("entity", []):
             v = _g(e, "vehicle")
@@ -154,24 +163,26 @@ class RenfeFeed:
             status = _g(v, "currentStatus", "current_status", default="IN_TRANSIT_TO")
             x, y = project(float(_g(pos, "latitude")), float(_g(pos, "longitude")))
             seen.add(vid)
-            st = self.state.setdefault(vid, {"x": x, "y": y, "ts": ts_ms, "kmh": None, "ux": 0.0, "uy": 0.0,
+            vts = _g(v, "timestamp")
+            v_ms = (int(vts) * 1000 + (self.skew_ms or 0)) if vts else ts_ms   # marca propia del vehículo si existe
+            st = self.state.setdefault(vid, {"x": x, "y": y, "ts": v_ms, "kmh": None, "ux": 0.0, "uy": 0.0,
                                               "last_move": ts_ms, "sig": sig, "ant": None})
-            dt = (ts_ms - st["ts"]) / 1000
+            dt = (v_ms - st["ts"]) / 1000
             d = math.hypot(x - st["x"], y - st["y"])
-            out_ts = ts_ms
+            out_ts = ts_ms   # la caducidad se mide con la cabecera (corregida), no con la marca del vehículo
             if dt > 0:
                 prev = st["kmh"]
                 if d < 0.005 and prev is not None and prev > 60:   # congelado a velocidad
                     kmh, out_ts = prev, st["last_move"]
                 else:
                     inst = d / dt * 3600
-                    kmh = prev if inst > 450 and prev is not None else (inst if prev is None else 0.6 * inst + 0.4 * prev)
+                    kmh = (prev if prev is not None else 0.0) if inst > 450 else (inst if prev is None else 0.6 * inst + 0.4 * prev)
                     if d >= 0.005:
-                        st["last_move"] = ts_ms
+                        st["last_move"] = v_ms
                         st["ux"], st["uy"] = (x - st["x"]) / d, (y - st["y"]) / d
                 if st["sig"] != sig:
                     st["ant"] = st["sig"]
-                st.update(x=x, y=y, ts=ts_ms, kmh=kmh, sig=sig)
+                st.update(x=x, y=y, ts=v_ms, kmh=kmh, sig=sig)
             else:
                 kmh = st["kmh"] or 0.0  # cabecera sin avanzar: la caducidad la detecta B1 con la hora de la cabecera
             if status == "STOPPED_AT":
@@ -195,7 +206,7 @@ class RenfeFeed:
         for gone in set(self.state) - seen:
             del self.state[gone]
         self.stats = {"entities": len(trains), "header_age_s": round(self.now() - ts_ms / 1000),
-                      "gtfs_matched": matched, "gtfs_loaded": bool(self.gtfs)}
+                      "gtfs_matched": matched, "gtfs_loaded": bool(self.gtfs), "skew_s": (self.skew_ms or 0) // 1000}
         return self.est, trains
 
 
