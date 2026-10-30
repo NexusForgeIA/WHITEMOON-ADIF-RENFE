@@ -243,7 +243,7 @@ def b2_speed(c: Ctx):
                 prof = zl
                 limit, why = zl[0], f"zona lenta PK {zl[1]:.0f} (FCMAF, no oficial)"
         if not prof and c.cfg.get("ltv_items"):
-            hit = [i for i in ltv.near(c.cfg["ltv_items"], t.x, t.y, c.cfg["ltv_radius_km"]) if i["kmh"] * c.cfg["ltv_margin"] < limit]
+            hit = [i for i in ltv.near(c.cfg["ltv_items"], t.x, t.y, c.cfg["ltv_radius_km"]) if i["kmh"] * c.cfg["ltv_margin"] < limit and ltv.on_segment(i, c.st, t.x, t.y) is not False]
             if hit:
                 i = hit[0]
                 prof = (i["kmh"], i.get("pk0") or 0)

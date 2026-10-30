@@ -7,7 +7,7 @@ Si el servidor no llega a ArcGIS se usa la última caché en disco; si no hay, l
 import json, math, os, threading, time, urllib.parse, urllib.request
 
 URL = "https://services7.arcgis.com/XTupIrLX53AjaJqO/arcgis/rest/services/LTV_2/FeatureServer/0/query"
-FIELDS = "CODLINEA,PKINI,PKFIN,RESTRICCIONVELOCIDAD,VIAS,DESCPSINI,DESCPSFIN,LTVID"
+FIELDS = "CODLINEA,PKINI,PKFIN,RESTRICCIONVELOCIDAD,VIAS,DESCPSINI,DESCPSFIN,CODPSINI,CODPSFIN,OBSERVACIONES,LTVID"
 LAT_N, LON_W = 44.0, -10.0
 KM_LAT, KM_LON = 111.19, 111.32 * math.cos(math.radians(40.0))
 
@@ -31,7 +31,8 @@ def parse(feats):
         x, y = project(lat, lon)
         out.append({"id": a.get("LTVID"), "line": str(a.get("CODLINEA") or ""), "pk0": a.get("PKINI"), "pk1": a.get("PKFIN"),
                     "kmh": int(v), "vias": a.get("VIAS") or "", "from": a.get("DESCPSINI") or "",
-                    "to": a.get("DESCPSFIN") or "", "x": round(x, 2), "y": round(y, 2)})
+                    "to": a.get("DESCPSFIN") or "", "c0": a.get("CODPSINI") or "", "c1": a.get("CODPSFIN") or "",
+                    "obs": (a.get("OBSERVACIONES") or "").strip()[:200], "x": round(x, 2), "y": round(y, 2)})
     return out
 
 
@@ -40,6 +41,17 @@ def near(items, x, y, r_km=3.0):
     r2 = r_km * r_km
     hit = [(((i["x"] - x) ** 2 + (i["y"] - y) ** 2), i) for i in items]
     return [i for d, i in sorted(hit, key=lambda t: t[0]) if d <= r2]
+
+
+def on_segment(i, st, x, y, max_off_km=1.5):
+    """True/False si el tren (x,y en km) está sobre el tramo entre las estaciones de la LTV; None si no se conocen ambas."""
+    a, b = st.get(i.get("c0")), st.get(i.get("c1"))
+    if not a or not b or i.get("c0") == i.get("c1"):
+        return None
+    ax, ay, bx, by = a[0], a[1], b[0], b[1]
+    L2 = (bx - ax) ** 2 + (by - ay) ** 2
+    f = 0.0 if L2 <= 0 else max(0.0, min(1.0, ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / L2))
+    return math.hypot(x - (ax + f * (bx - ax)), y - (ay + f * (by - ay))) <= max_off_km
 
 
 class Ltv:

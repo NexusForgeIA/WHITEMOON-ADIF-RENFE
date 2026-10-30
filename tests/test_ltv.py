@@ -60,3 +60,21 @@ def test_b2_ltv_lejos_o_dentro_de_margen_no_avisa():
     cerca = {"id": 2, "line": "200", "kmh": 30, "x": 100 * k, "y": 0}
     assert _run(200, [lejos])[0] == []
     assert _run(35, [cerca])[0] == []
+
+
+def test_on_segment():
+    st = {"A": (0, 0), "B": (10, 0)}
+    i = {"c0": "A", "c1": "B"}
+    assert ltv.on_segment(i, st, 5, 0.5) is True
+    assert ltv.on_segment(i, st, 5, 5) is False
+    assert ltv.on_segment({"c0": "A", "c1": "Z"}, st, 5, 0) is None
+
+
+def test_b2_ltv_otra_via_no_avisa():
+    _, e = _run(10, [])
+    item = {"id": 1, "line": "200", "kmh": 30, "x": 100 * e.cfg["km_per_px"], "y": 0, "c0": "A", "c1": "B"}
+    assert _run(200, [item])[0]
+    # mismas estaciones pero el tren circula lejos de ese tramo: no aplica
+    item2 = {**item, "y": 0}
+    est_lejos = _run(200, [{**item2, "c0": "A", "c1": "B"}], x=100.0)
+    assert est_lejos[0]
