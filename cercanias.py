@@ -1,0 +1,95 @@
+"""Capa INFORMATIVA de Cercanías/Rodalies (GTFS-RT vehicle positions de Renfe).
+
+Aislada a propósito: estos trenes NO entran en el motor de seguridad (barreras, proximidad, previsión).
+Motivo: el feed no trae velocidad y, en STOPPED_AT / INCOMING_AT, la posición es la de la propia estación (no GPS),
+así que alimentar B1–B4 con ellos generaría saltos y cruces falsos. Se dibujan como marcadores huecos con su estado.
+Se descarga en un hilo propio: si falla o tarda, la supervisión de larga distancia no se entera.
+"""
+import json
+import re
+import threading
+import time
+import urllib.request
+
+from renfe_adapter import project
+
+URL = "https://gtfsrt.renfe.com/vehicle_positions.json"
+UA = {"User-Agent": "RailGuard/1.0 (WhiteMoon; supervision ferroviaria)"}
+STATUS = {"STOPPED_AT": "En estación", "INCOMING_AT": "Llegando a estación", "IN_TRANSIT_TO": "En marcha hacia"}
+
+
+def _fetch(url=URL):
+    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=12) as r:
+        return json.load(r)
+
+
+def _g(d, *names, default=None):
+    for n in names:
+        if isinstance(d, dict) and n in d:
+            return d[n]
+    return default
+
+
+def _clean_label(label, vid):
+    """«C1-23559-PLATF.(6)» -> («C1», «23559»). La línea es lo que va antes del primer guion."""
+    m = re.match(r"^([A-Za-z]+\d*[A-Za-z]?)-(\d+)", label or "")
+    return (m.group(1), m.group(2)) if m else ("", str(vid))
+
+
+def parse(doc, now=None, km_per_px=1.0):
+    """-> (trains, header_ts). Descarta entidades sin posición válida o fuera de la península/islas."""
+    now = now or time.time()
+    out = []
+    for e in doc.get("entity", []) or []:
+        v = _g(e, "vehicle")
+        pos = _g(v, "position")
+        if not v or not pos:
+            continue
+        try:
+            lat, lon = float(pos["latitude"]), float(pos["longitude"])
+        except Exception:
+            continue
+        if not (27 <= lat <= 44 and -19 <= lon <= 5):
+            continue
+        veh = _g(v, "vehicle", default={}) or {}
+        vid = str(_g(veh, "id", default=_g(e, "id")))
+        line, num = _clean_label(str(_g(veh, "label", default=vid)), vid)
+        x, y = project(lat, lon)
+        ts = int(_g(v, "timestamp", default=0) or 0)
+        out.append({"id": vid, "n": (line + " " + num).strip(), "line": line, "x": x / km_per_px, "y": y / km_per_px,
+                    "st": _g(v, "currentStatus", "current_status", default="?"), "stop": str(_g(v, "stopId", "stop_id", default="") or ""),
+                    "age_s": max(0, int(now - ts)) if ts else None})
+    hdr = int(_g(_g(doc, "header", default={}), "timestamp", default=0) or 0)
+    return out, hdr
+
+
+class CercaniasFeed:
+    def __init__(self, km_per_px, opener=None, period=20, now=time.time):
+        self.k, self.open, self.period, self.now = km_per_px, opener or _fetch, period, now
+        self.trains, self.hdr, self.ok_at, self.err, self.lines = [], 0, 0, None, {}
+        self._stop = False
+
+    def poll(self):
+        try:
+            doc = self.open()
+            tr, hdr = parse(doc, self.now(), self.k)
+            self.trains, self.hdr, self.ok_at, self.err = tr, hdr, self.now(), None
+            self.lines = {}
+            for t in tr:
+                self.lines[t["line"] or "?"] = self.lines.get(t["line"] or "?", 0) + 1
+        except Exception as ex:
+            self.err = repr(ex)[:140]
+
+    def start(self):
+        def loop():
+            while not self._stop:
+                self.poll()
+                time.sleep(self.period)
+        threading.Thread(target=loop, daemon=True, name="cercanias").start()
+
+    def snapshot(self):
+        age = None if not self.ok_at else round(self.now() - self.ok_at)
+        stale = self.ok_at == 0 or age > 120
+        return {"ok": not stale and not self.err, "err": self.err, "age_s": age, "count": len(self.trains), "lines": self.lines,
+                "hdr_age_s": round(self.now() - self.hdr) if self.hdr else None,
+                "trains": [] if stale else [[t["n"], round(t["x"], 2), round(t["y"], 2), t["st"], t["stop"], t["age_s"]] for t in self.trains]}

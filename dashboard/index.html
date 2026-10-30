@@ -142,7 +142,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 
 <section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
   <div class="tb"><button id="zi" title="Acercar">+</button><button id="zo" title="Alejar">−</button><button id="zr" title="Ajustar a toda la red">⌂</button>
-    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
+    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lcl" hidden title="Cercanías: posición de parada, sin velocidad; solo informativo"><input type="checkbox" id="lc" checked>Cercanías <span id="lcn"></span></label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
     <button id="lgb" title="Qué significan los colores y las etiquetas del mapa">? Leyenda</button><select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
   <div class="legend"><span><s style="background:var(--ok)"></s>libre</span><span><s style="background:var(--cau)"></s>precaución</span><span><s style="background:var(--res)"></s>restringido</span><span><s style="background:var(--stop)"></s>STOP</span>
     <span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
@@ -193,7 +193,7 @@ async function load(){try{
   if(CENTRE&&!tok()&&!askedTok){askedTok=true;try{const v=prompt('Token de su centro de control');if(v)localStorage.setItem(KEY,v)}catch(e){}}
   const r=await fetch(CENTRE?'/api/centre/snapshot':'/api/snapshot',{cache:'no-store',headers:CENTRE?hdr():{}});
   if(r.status===401){const b=$('banner');b.style.display='block';b.textContent='Token de centro no válido: pulse 🔑 para introducirlo';return}
-  S=await r.json();render()}catch(e){const b=$('banner');b.style.display='block';b.textContent='Sin conexión con el servidor de supervisión';renderOuts([{sev:'CRIT',title:'Sin conexión con el supervisor de RailGuard',system:'Servidor de supervisión',detail:'Este panel no recibe datos nuevos',trains:[],applying:'Los trenes siguen protegidos por su ATP de a bordo (B0) y por el enclavamiento ya aplicado; los centros pierden visión hasta reconectar.',covering:[{id:'B0',healthy:true},{id:'B5',healthy:true}]}])}}
+  S=await r.json();{const c=S.cercanias;if($('lcl')){$('lcl').hidden=!c;if(c)$('lcn').textContent='('+(c.ok?c.count:'sin datos')+')'}}render()}catch(e){const b=$('banner');b.style.display='block';b.textContent='Sin conexión con el servidor de supervisión';renderOuts([{sev:'CRIT',title:'Sin conexión con el supervisor de RailGuard',system:'Servidor de supervisión',detail:'Este panel no recibe datos nuevos',trains:[],applying:'Los trenes siguen protegidos por su ATP de a bordo (B0) y por el enclavamiento ya aplicado; los centros pierden visión hasta reconectar.',covering:[{id:'B0',healthy:true},{id:'B5',healthy:true}]}])}}
 const fmt=ms=>new Date(ms).toLocaleTimeString('es-ES',{timeZone:'Europe/Madrid'});
 
 
@@ -318,6 +318,10 @@ function draw(){
   if($('lf').checked&&S.forecast)S.forecast.items.slice(0,8).forEach(f=>{const A=by[f.trains[0]],B=by[f.trains[1]];if(!A||!B)return;
     cx.strokeStyle=f.level==='PRÓXIMO'?'#ffb86b':'#9b86ff';cx.lineWidth=2;cx.setLineDash([3,5]);cx.beginPath();cx.moveTo(A._p,A._q);cx.lineTo(B._p,B._q);cx.stroke();cx.setLineDash([]);
     cx.fillStyle=cx.strokeStyle;cx.font='bold 11px system-ui';cx.fillText('🔮 ≈'+Math.round(f.in_s/60)+' min',(A._p+B._p)/2+6,(A._q+B._q)/2-6)});
+  // Cercanías (informativo, sin velocidad; posición = parada, no GPS)
+  if($('lc')&&$('lc').checked&&S.cercanias&&S.cercanias.trains){cx.strokeStyle='#7aa7c7';cx.lineWidth=1.2;cx.fillStyle='#d6e1ec';cx.font='9px system-ui';
+    S.cercanias.trains.forEach(c=>{const[p,q]=T(c[1],c[2]);if(p<-10||q<-10||p>W+10||q>H+10)return;
+      cx.beginPath();cx.arc(p,q,3.2,0,7);cx.stroke();if(V.z>=3.5)cx.fillText(c[0],p+6,q+3)})}
   // trenes
   S.trains.forEach(t=>{const p=t._p,q=t._q;if(p<-30||q<-30||p>W+30||q>H+30)return;
     const vis=visible(t);if(!vis&&opf){drawTrain(t,p,q,.12);return}

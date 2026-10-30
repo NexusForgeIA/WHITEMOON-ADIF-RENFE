@@ -71,6 +71,14 @@ class App:
         self.engine.set_lines([dict(c) for c in _load("infrastructure.json")["corridors"]])
         if self.feed:
             self.engine.est.update(self.feed.est)
+        self.cercanias = None   # capa informativa de Cercanías: aislada del motor de seguridad
+        if self.feed and not os.environ.get("RG_NO_CERCANIAS"):
+            try:
+                from cercanias import CercaniasFeed
+                self.cercanias = CercaniasFeed(self.engine.cfg["km_per_px"])
+                self.cercanias.start()
+            except Exception as ex:
+                print("Cercanías no disponible:", repr(ex))
         self.operators = _load("operators.json")
         self.drivers = Drivers(os.path.join(ROOT, "data", "drivers.json"))
         self.tablets = {}        # tren -> {x,y (km),ts,acc,driver}
@@ -403,10 +411,20 @@ class App:
             except Exception as ex:
                 s["forecast"] = {"items": [], "total": 0, "horizon_s": 0, "note": "Previsión no disponible: " + repr(ex)[:100]}
             try:
+                s["cercanias"] = self.cercanias.snapshot() if self.cercanias else None
+            except Exception as ex:
+                s["cercanias"] = {"ok": False, "err": repr(ex)[:100], "trains": [], "count": 0}
+            try:
                 s["outages"] = self.systems()["outages"]
             except Exception as ex:
                 s["outages"] = [{"id": "OUTAGES-ERR", "sev": "WARN", "system": "Panel", "title": "No se pudo calcular el estado de sistemas",
                                  "detail": repr(ex)[:120], "trains": [], "applying": "", "covering": []}]
+            c = s.get("cercanias")
+            if c is not None and not c.get("ok"):   # solo informativo: no afecta a la supervisión de larga distancia
+                s["outages"] = list(s.get("outages") or []) + [{
+                    "id": "CERCANIAS-FEED", "sev": "INFO", "system": "Capa Cercanías (informativa)",
+                    "title": "Sin datos de Cercanías", "detail": (c.get("err") or "Feed sin actualizar")[:120], "trains": [],
+                    "applying": "Los trenes de Cercanías no entran en las barreras de seguridad; solo se dibujan como referencia.", "covering": []}]
             return s
 
     # ---------- ámbito por centro ----------
@@ -727,7 +745,8 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/health":
             age = time.time() - APP.last
             return self._send(200 if age < 15 else 503, {"ok": age < 15, "cycle": APP.engine.cycle, "age_s": round(age, 1), "feed": getattr(APP.feed, "stats", None),
-                                                                          "infra": INFRA.status if INFRA else None})
+                                                                          "infra": INFRA.status if INFRA else None,
+                                                                          "cercanias": (lambda c: {k: c[k] for k in ("ok", "err", "age_s", "count", "lines", "hdr_age_s")})(APP.cercanias.snapshot()) if APP.cercanias else None})
         if path == "/api/centre/snapshot":
             cid, err = APP.auth_centre(self.headers.get("X-Centre-Token", ""), self.client_address[0])
             return self._send(200, APP.centre_snapshot(cid)) if cid else self._send(401, {"ok": False, "msg": err})
