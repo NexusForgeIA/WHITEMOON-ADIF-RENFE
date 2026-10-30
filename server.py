@@ -20,6 +20,7 @@ from centres import Centres, NATIONAL
 from drivers import Drivers
 from engine import Engine
 from infra import Infra
+import systems
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 CFG = {"single_track": [["54404", "54405"]]}  # DEMO: la lista real debe salir de la infraestructura de Adif
@@ -468,6 +469,14 @@ class App:
                 d.update({k: v for k, v in extra.items() if v is not None and k != "n"})
             return d
 
+    def systems(self):
+        with self.lock:
+            now = int(time.time() * 1000)
+            tabs = sum(1 for tn, seen in self.tablet_seen.items() if now - seen < ONLINE_S * 1000)
+            on = sum(1 for cid in self.centres.c if self.centres.online(cid, now))
+            return systems.build(self.engine, {"tablets_online": tabs, "centres_online": on,
+                                               "centres_total": len(self.centres.c), "mode": self.mode})
+
     def centre_snapshot(self, cid):
         with self.lock:
             now = int(time.time() * 1000)
@@ -545,7 +554,7 @@ class App:
                     return 403, {"ok": False, "msg": f"Rechazado: el tren {tn} pertenece a la zona de "
                                  f"{self.centres.name(z) if z else 'ningún centro'}. Solo puede añadir restricciones."}
                 if path == "/api/centre/rearm":
-                    ok, msg = self.engine.rearm(tn, who)
+                    ok, msg = self.engine.rearm(tn, who, principal=cid)
                 elif body.get("release"):
                     ok, msg = self.engine.release_manual(tn, who)
                 else:   # añadir una restricción es siempre posible, también sobre trenes de otra zona
@@ -566,7 +575,7 @@ class App:
         with self.lock:
             who = str(body.get("who") or "operador")[:40]
             if path == "/api/rearm":
-                ok, msg = self.engine.rearm(str(body.get("train")), who)
+                ok, msg = self.engine.rearm(str(body.get("train")), who, principal=NATIONAL)
             elif path == "/api/ack":
                 ok, msg = self.engine.ack(str(body.get("key")), who)
             elif path == "/api/manual":
@@ -653,6 +662,8 @@ class H(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         if path == "/api/snapshot":
             return self._send(200, APP.snapshot())
+        if path == "/api/systems":
+            return self._send(200, APP.systems())
         if path == "/api/infra":
             inf = INFRA
             if not inf or not inf.data:

@@ -55,6 +55,9 @@ DEFAULT_CFG = {
     "ttc_restrict_s": 300,
     "converge_eta_s": 45,
     "rearm_clear_cycles": 3,
+    "rearm_dual": True,          # B7: el rearme de un STOP exige DOS autorizaciones de principales distintos
+    "rearm_pending_s": 300,      # la primera autorización caduca
+    "rearm_max_5min": 3,         # B7: máximo de rearmes completados por principal en 5 min
     "escalate_after_s": 180,
     "station_radius_km": 3.0,
     "single_track": [],         # lista de [codigoA, codigoB]
@@ -350,6 +353,11 @@ class Engine:
         self.pos_src: dict[str, str] = {}
         self.events = deque(maxlen=300)
         self._active_keys = set()
+        self.last_fire: dict[str, int] = {}
+        self.fault_since: dict[str, int] = {}
+        self.pending_rearm: dict[str, dict] = {}
+        self.rearm_hist: dict[str, list] = defaultdict(list)
+        self.guard = {"refused": 0, "dual_pending": 0, "completed": 0, "rate_blocked": 0, "last": None}
 
     # ---- registro ----
     def log(self, kind, msg, **data):
@@ -395,8 +403,11 @@ class Engine:
                     raise RuntimeError("fallo inyectado")
                 found = BARRIERS[bid][2](ctx)
                 self.faults.pop(bid, None)
+                self.fault_since.pop(bid, None)
                 hz += found
             except Exception as ex:  # fail-closed
+                if bid not in self.faults:
+                    self.fault_since[bid] = now_ms
                 self.faults[bid] = repr(ex)
                 self.log("FAULT", f"Barrera {bid} en fallo: {ex!r}")
         if self.degraded or self.faults:
@@ -409,6 +420,7 @@ class Engine:
         for h in hz:
             if h.key not in self._active_keys:
                 self.counts[h.barrier] += 1
+                self.last_fire[h.barrier] = now_ms
                 self.log("HAZARD", f"[{h.barrier}] {SEV_NAME[h.sev]} {','.join(h.trains)}: {h.msg}",
                          barrier=h.barrier, sev=SEV_NAME[h.sev], trains=list(h.trains))
         for gone in self._active_keys - keys:
@@ -527,16 +539,52 @@ class Engine:
         st = self.state.get(tn)
         return bool(st) and st["clear"] >= self.cfg["rearm_clear_cycles"]
 
-    def rearm(self, tn, who):
+    def _refuse(self, msg, who, tn, kind="refused"):
+        self.guard[kind] += 1
+        self.guard["last"] = {"t": self.now_ms, "who": who, "train": tn, "msg": msg}
+        self.log("GUARD", f"B7 rechaza orden de {who} sobre {tn}: {msg}", train=tn, who=who)
+        return False, "Rechazado por B7: " + msg
+
+    def rearm(self, tn, who, principal=None):
+        """B7 · guardia de órdenes humanas. Una persona puede AÑADIR restricciones siempre; para LIBERAR
+        un STOP el sistema exige: prueba de vía libre de las barreras, supervisor sano, sin conflicto real
+        de proximidad, límite de frecuencia y (por defecto) dos autorizaciones de principales distintos."""
+        principal = principal or who
         st = self.state.get(tn)
         if not st:
             return False, "El tren no tiene restricción activa"
         if st["sev"] < STOP:
             return False, "Solo los STOP enclavados requieren rearme humano; el resto se libera solo"
+        if self.degraded or self.faults:
+            return self._refuse("el supervisor está degradado: no se puede demostrar vía libre", who, tn)
         if not self.proof_clear(tn):
-            return False, (f"Rechazado: las barreras aún no demuestran vía libre "
-                           f"({st['clear']}/{self.cfg['rearm_clear_cycles']} ciclos limpios)")
-        self.log("REARM", f"{who} autoriza reanudar {tn} tras prueba de vía libre", train=tn, who=who)
+            return self._refuse(f"las barreras aún no demuestran vía libre "
+                                f"({st['clear']}/{self.cfg['rearm_clear_cycles']} ciclos limpios)", who, tn)
+        if any(p.get("level") == "RED" and tn in (p.get("a"), p.get("b")) for p in self.prox):
+            return self._refuse("hay un conflicto de proximidad real en curso con otro tren", who, tn)
+        recent = [t for t in self.rearm_hist[principal] if self.now_ms - t < 300_000]
+        self.rearm_hist[principal] = recent
+        if len(recent) >= self.cfg["rearm_max_5min"]:
+            return self._refuse(f"{principal} ya completó {len(recent)} rearmes en 5 min (límite anti-error)", who, tn, "rate_blocked")
+        if self.cfg["rearm_dual"]:
+            p = self.pending_rearm.get(tn)
+            if p and self.now_ms - p["t"] > self.cfg["rearm_pending_s"] * 1000:
+                p = None
+            if not p or p["principal"] == principal:
+                self.pending_rearm[tn] = {"principal": principal, "who": who, "t": self.now_ms}
+                self.guard["dual_pending"] += 1
+                self.log("GUARD", f"B7: primera autorización de {who} para reanudar {tn}; falta la de otro "
+                                  f"centro/operador distinto", train=tn, who=who)
+                return False, ("Primera autorización registrada. Falta la segunda autorización de OTRO centro u "
+                               f"operador (caduca en {self.cfg['rearm_pending_s']} s)")
+            first = p
+            del self.pending_rearm[tn]
+            self.log("REARM", f"{first['who']} y {who} autorizan reanudar {tn} tras prueba de vía libre (doble autorización)",
+                     train=tn, who=who)
+        else:
+            self.log("REARM", f"{who} autoriza reanudar {tn} tras prueba de vía libre", train=tn, who=who)
+        self.rearm_hist[principal].append(self.now_ms)
+        self.guard["completed"] += 1
         del self.state[tn]
         return True, "Rearme aceptado"
 
@@ -564,6 +612,13 @@ class Engine:
         self.log("ACK", f"{who} reconoce {key}", key=key, who=who)
         return True, "Reconocido"
 
+    def _pending_view(self, tn):
+        p = self.pending_rearm.get(tn)
+        if not p:
+            return None
+        left = self.cfg["rearm_pending_s"] - (self.now_ms - p["t"]) / 1000
+        return {"by": p["who"], "principal": p["principal"], "left_s": max(0, round(left))} if left > 0 else None
+
     def operator_queue(self):
         q = []
         n = self.cfg["rearm_clear_cycles"]
@@ -575,7 +630,8 @@ class Engine:
                           "auto": ["Freno de emergencia ordenado", "Bloque enclavado", "Trenes cercanos restringidos"],
                           "barriers": sorted(st["barriers"]),
                           "action": "Rearmar" if self.proof_clear(tn) else f"Esperando prueba de vía libre ({st['clear']}/{n})",
-                          "can_rearm": self.proof_clear(tn), "ack": key in self.acks})
+                          "can_rearm": self.proof_clear(tn), "ack": key in self.acks,
+                          "rearm_pending": self._pending_view(tn)})
             elif self.now_ms - st["since"] > self.cfg["escalate_after_s"] * 1000:
                 key = f"persist:{tn}"
                 q.append({"key": key, "level": "AVISO", "train": tn,
@@ -626,6 +682,7 @@ class Engine:
                            "from": names.get(t.ant, t.ant), "to": names.get(t.sig, t.sig), "dest": names.get(t.des, t.des),
                            "hx": round(hd[0], 3) if hd else None, "hy": round(hd[1], 3) if hd else None,
                            "op": t.op, "src": self.pos_src.get(t.n, "feed"),
+                           "by": sorted((self.state.get(t.n) or {}).get("barriers", ())) + (["MANUAL"] if t.n in self.manual else []),
                            "line": (self.line_of(t.undirected()) or {}).get("name"),
                            "signalling": (self.line_of(t.undirected()) or {}).get("signalling"),
                            "atp": (f"{self.atp[t.n].get('system', '?')} {self.atp[t.n].get('mode', '?')}"
@@ -646,6 +703,7 @@ class Engine:
             "locked_pairs": [list(s) for s in getattr(self, "locked", ())],
             "operator": self.operator_queue(),
             "events": list(self.events)[:60],
+            "guard": {**self.guard, "pending": len(self.pending_rearm)},
             "kpi": {"trains": len(trains), "clear": cnt["NONE"], "caution": cnt["CAUTION"],
                     "restrict": cnt["RESTRICT"], "stop": cnt["STOP"]},
         }

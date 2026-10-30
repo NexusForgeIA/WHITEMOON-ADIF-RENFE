@@ -141,3 +141,10 @@ contra el feed en vivo** (red del entorno de desarrollo bloqueada). Ejecuta la s
 Versión estática con grabaciones del motor real (no datos en vivo): ver [`web/README.md`](web/README.md).
 
 Demo publicada con GitHub Pages: la raíz redirige a `web/site/` (grabación del motor real, no datos en vivo).
+
+## B7 · Guardia de órdenes humanas y pantalla «Sistemas de seguridad»
+
+- **Pantalla 🛡 Sistemas de seguridad** (botón en la cabecera, `GET /api/systems`): para cada capa (B0 ATP, B1 datos, B2 velocidad, B3 bloques, B4 TTC, alerta de 3 km a cabinas, B5 enclavamiento, vigilante del feed, B6 centros, B7 guardia) muestra qué hace, cómo funciona, parámetros en vigor, estado en vivo, y **qué sistemas responden detrás si falla** (y si ellos están sanos ahora).
+- **Alertas visuales**: cada peligro indica qué barrera detecta, cuál ejecuta (B5), cuáles respaldan y qué se ha aplicado al tren.
+- **B7**: una persona siempre puede *añadir* restricciones; para *liberar* un STOP el sistema exige prueba de vía libre de las barreras, supervisor sano, ausencia de conflicto real de proximidad, límite de rearmes por centro y **doble autorización de dos centros/operadores distintos** (la primera caduca). Los rechazos quedan auditados (`GUARD`). No existe ninguna orden para desactivar barreras.
+- Los parámetros mostrados son los configurados en RailGuard, no valores oficiales de Adif.

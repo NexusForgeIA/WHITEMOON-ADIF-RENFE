@@ -93,8 +93,62 @@ def test_stop_latches_and_release_needs_proof_and_human():
         e.step(safe, NOW + i * 2000)
     assert "R" in e.state and e.state["R"]["sev"] == STOP
     assert e.operator_queue()[0]["can_rearm"] is True
-    ok, msg = e.rearm("R", "op")
+    ok, msg = e.rearm("R", "op", principal="madrid")
+    assert not ok and "Primera autorización" in msg and "R" in e.state     # B7: una sola persona no basta
+    ok, msg = e.rearm("R", "op2", principal="madrid")
+    assert not ok and "R" in e.state                                        # mismo principal: tampoco
+    ok, msg = e.rearm("R", "otro", principal="nacional")
     assert ok and "R" not in e.state, msg
+
+
+def _stop_clear(e):
+    e.step(following(), NOW)
+    for i in range(1, 6):
+        e.step([mk("F", 170, 120), mk("R", 120, 0)], NOW + i * 2000)
+    return NOW + 10_000
+
+
+def test_b7_refuses_rearm_while_supervisor_is_degraded():
+    e = eng()
+    t = _stop_clear(e)
+    e.degraded = "Feed de posiciones perdido: supervisor ciego"
+    ok, msg = e.rearm("R", "op", principal="a")
+    assert not ok and "degradado" in msg and e.guard["refused"] == 1
+    assert any(x["kind"] == "GUARD" for x in e.events)
+
+
+def test_b7_refuses_rearm_during_real_proximity_conflict():
+    e = eng()
+    _stop_clear(e)
+    e.prox = [{"a": "R", "b": "F", "level": "RED"}]
+    ok, msg = e.rearm("R", "op", principal="a")
+    assert not ok and "proximidad" in msg
+
+
+def test_b7_dual_authorization_expires():
+    e = eng()
+    t = _stop_clear(e)
+    e.rearm("R", "op", principal="madrid")
+    e.now_ms = t + 400_000
+    ok, msg = e.rearm("R", "otro", principal="nacional")     # la primera ya caducó: cuenta como primera
+    assert not ok and "Primera autorización" in msg and "R" in e.state
+
+
+def test_b7_rate_limit_per_principal():
+    e = eng()
+    e.cfg["rearm_dual"] = False
+    for i in range(3):
+        e.state["X%d" % i] = {"sev": STOP, "since": 0, "clear": 9, "seg": None, "why": set(), "barriers": set()}
+        assert e.rearm("X%d" % i, "op", principal="p")[0]
+    e.state["X9"] = {"sev": STOP, "since": 0, "clear": 9, "seg": None, "why": set(), "barriers": set()}
+    ok, msg = e.rearm("X9", "op", principal="p")
+    assert not ok and "límite" in msg and e.guard["rate_blocked"] == 1
+
+
+def test_b7_adding_restrictions_is_never_refused():
+    e = eng()
+    ok, _ = e.manual_restrict("R", "cualquiera")
+    assert ok
 
 
 def test_rearm_rejected_before_proof():

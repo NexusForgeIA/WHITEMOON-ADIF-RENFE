@@ -64,6 +64,33 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 .ops div{display:flex;justify-content:space-between;gap:6px;padding:2px 0;font-size:12px;border-bottom:1px solid #182533;cursor:pointer}.ops div:hover{color:var(--acc)}.ops small{color:var(--mut)}
 .frm{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.frm input,.frm select{background:#0a1017;border:1px solid var(--line);color:var(--tx);border-radius:5px;padding:3px 6px;font:inherit;min-width:0}.frm input{width:92px}
 .tokbox{background:#12384f;border:1px solid var(--acc);border-radius:6px;padding:6px;margin:4px 0;word-break:break-all;font-family:ui-monospace,monospace;display:none}
+
+.hzc{--c:var(--cau);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:#0d151e}
+.hzc.RESTRICT{--c:var(--res)}.hzc.STOP{--c:var(--stop);animation:glow 1.5s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 2px #ff4d5e55,0 0 14px #ff4d5e55}}
+.hzc .t{display:flex;gap:7px;align-items:baseline;font-weight:700}.hzc .t em{font-style:normal;color:var(--c);font-size:11px;letter-spacing:.06em}
+.hzc .m{color:var(--tx);font-size:12px;margin:3px 0}.hzc .a{font-size:11.5px;color:var(--mut)}.hzc .a b{color:var(--c)}
+.chips{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin:6px 0}.chips small{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.07em}
+.chip{font-size:10.5px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--mut);background:#0a1017;white-space:nowrap}
+.chip.det{border-color:var(--cau);color:var(--cau);background:#2a2312}.chip.exe{border-color:var(--stop);color:#fff;background:#5a000a}.chip.hum{border-color:var(--acc);color:var(--acc)}.chip.ok{border-color:#1f5a40;color:var(--ok)}
+#acting{position:absolute;top:50px;left:10px;right:10px;z-index:3;display:none;flex-direction:column;gap:4px;pointer-events:none}
+#acting div{background:#5a000aee;border:1px solid #ff4d5e;color:#fff;border-radius:8px;padding:5px 10px;font-size:12px;line-height:1.35}
+#acting div.am{background:#3a2a10ee;border-color:var(--res)}#acting b{letter-spacing:.03em}
+.sysb{font-weight:700;color:var(--acc);border-color:var(--acc)}
+#sysov{position:fixed;inset:0;z-index:50;background:#070b10;overflow:auto;padding:18px max(18px,env(safe-area-inset-left,0px))}
+#sysov[hidden]{display:none}.sh{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.sh h1{margin:0;font-size:22px}.sh .sub{color:var(--mut);font-size:12px;flex:1;min-width:200px}
+.flow{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin:10px 0 16px}.flow .n{font-size:11px;padding:4px 9px;border-radius:6px;border:1px solid var(--line);background:#0d151e;font-weight:700}.flow .n.OK{border-color:#1f5a40;color:var(--ok)}.flow .n.ALERT{border-color:var(--res);color:var(--res);background:#2a1d0c}.flow .n.FAULT{border-color:var(--stop);color:#fff;background:#5a000a;animation:bl 1s infinite}.flow .n.NODATA,.flow .n.OFF{color:var(--mut)}.flow i{color:var(--mut);font-style:normal}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:12px}
+.sc{border:1px solid var(--line);border-top:4px solid var(--c);border-radius:10px;background:#0d151e;padding:12px 14px;--c:var(--ok);min-width:0}
+.sc.ALERT{--c:var(--res)}.sc.FAULT{--c:var(--stop)}.sc.NODATA,.sc.OFF{--c:#51657a}
+.sc h3{margin:0;font-size:15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sc h3 .id{background:var(--c);color:#06090d;border-radius:5px;padding:0 7px;font-size:12px}.sc h3 .st{margin-left:auto;font-size:11px;color:var(--c);border:1px solid var(--c);border-radius:999px;padding:1px 8px}
+.sc .grp{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin:2px 0 6px}
+.sc h4{margin:10px 0 3px;font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}.sc p,.sc li{font-size:12.5px;line-height:1.4;margin:0}.sc ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.sc .live{margin-top:10px;padding:7px 9px;border-radius:7px;background:#0a1017;font-size:12px}.sc .live b{color:var(--c)}
+.sc table td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.sc .fail{margin-top:10px;border-left:3px solid var(--stop);padding:4px 9px;background:#190b0f;border-radius:0 6px 6px 0;font-size:12px}
+.chip.bad{border-color:var(--stop);color:#ff9aa4;text-decoration:line-through}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#12384f;border:1px solid var(--acc);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;z-index:99;max-width:min(560px,90vw);display:none}
 @media(max-width:1100px){body{height:auto;grid-template-columns:1fr;grid-template-rows:auto}#chain{grid-row:auto}#mapwrap{height:420px}#log{grid-column:1}#cabins{grid-column:1}}
 </style>
 </head>
@@ -71,6 +98,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 <header>
   <h1>RAIL<span>GUARD</span></h1><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
   <div id="banner" class="banner"></div><div id="pbanner"></div>
+  <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas de seguridad</button>
   <button id="adm" title="Token de administración (RAILGUARD_TOKEN)">🔑</button>
   <div class="kpis" id="kpis"></div>
 </header>
@@ -90,7 +118,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
     <select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
   <div class="legend"><span><s style="background:var(--ok)"></s>libre</span><span><s style="background:var(--cau)"></s>precaución</span><span><s style="background:var(--res)"></s>restringido</span><span><s style="background:var(--stop)"></s>STOP</span>
     <span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
-  <div id="infnote" hidden></div><div class="scale" id="scale"></div>
+  <div id="acting"></div><div id="infnote" hidden></div><div class="scale" id="scale"></div>
 </section>
 
 <aside id="right">
@@ -107,6 +135,8 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
   <div class="frm"><input id="di" placeholder="Id (seudónimo)"><input id="dt" placeholder="Nº tren"><select id="do"></select><button id="dg">Emitir</button></div>
   <div class="tokbox" id="tk"></div><div id="drv"></div></div></section>
 
+<div id="toast"></div>
+<div id="sysov" hidden></div>
 <script>
 const $=id=>document.getElementById(id);
 function h(tag,cls,text,kids){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;(kids||[]).forEach(k=>e.appendChild(k));return e}
@@ -117,12 +147,13 @@ const CENTRE=location.pathname.startsWith('/centro');
 const KEY=CENTRE?'rg_ctok':'rg_tok';
 const tok=()=>{try{return localStorage.getItem(KEY)||''}catch(e){return ''}};
 const hdr=()=>CENTRE?{'X-Centre-Token':tok()}:{'X-Token':tok()};
+let toastT=null;function toast(m,bad){const t=$('toast');t.textContent=m;t.style.borderColor=bad?'var(--res)':'var(--acc)';t.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>t.style.display='none',7000)}
 const CN={nacional:'Centro Nacional',sistema:'Sistema','*':'Todos'};
 const cname=id=>CN[id]||((S&&S.centres||[]).find(c=>c.id===id)||{}).name||id;
 async function post(p,b){
   if(CENTRE&&p!=='/api/message')p=p.replace('/api/','/api/centre/');
   if(CENTRE&&p==='/api/message')p='/api/centre/message';
-  const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json',...hdr()},body:JSON.stringify({who,...b})});const j=await r.json();if(!j.ok&&j.msg)alert(j.msg);load()}
+  const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json',...hdr()},body:JSON.stringify({who,...b})});const j=await r.json();if(j.msg)toast(j.msg,!j.ok);load()}
 let askedTok=false;
 async function load(){try{
   if(CENTRE&&!tok()&&!askedTok){askedTok=true;try{const v=prompt('Token de su centro de control');if(v)localStorage.setItem(KEY,v)}catch(e){}}
@@ -139,7 +170,7 @@ function render(){
   // cadena
   const bars=$('bars');bars.replaceChildren();
   S.barriers.forEach((x,i)=>{
-    bars.appendChild(h('div','bar '+x.status+(x.id==='B0'?' ext':''),null,[h('div','t',null,[h('span',null,x.id+' · '+x.name),h('i',null,x.id==='B0'&&x.status==='NODATA'?'sin telemetría':x.status)]),h('p',null,x.desc),h('div','n',x.active?x.active+' activo(s) · '+x.total+' disparos':x.total+' disparos')]));
+    bars.appendChild(h('div','bar '+x.status+(x.id==='B0'?' ext':''),null,[h('div','t',null,[h('span',null,x.id+' · '+x.name),h('i',null,x.id==='B0'&&x.status==='NODATA'?'sin telemetría':x.status)]),h('p',null,x.desc),h('div','n',x.active?x.active+' activo(s) · '+x.total+' disparos':x.total+' disparos'),(x.active&&x.id!=='B5'?h('div','n',(()=>{const ts=[...new Set(S.hazards.filter(z=>z.barrier===x.id).flatMap(z=>z.trains))];return 'Actúa sobre: '+ts.slice(0,4).join(', ')+(ts.length>4?' +'+(ts.length-4):'')})()):h('span'))]));
     bars.appendChild(h('div','arrow',i<S.barriers.length-1?'▼ si falla, la siguiente actúa':'▼ solo ahora llega a una persona'));
   });
   const q=S.operator.length;if(CENTRE&&S.centre){const cn=$('cname');cn.style.display='inline-block';cn.textContent=S.centre.name+' · '+S.centre.role;document.title='RailGuard · '+S.centre.name}
@@ -155,14 +186,12 @@ function render(){
     const row=h('div',null,null,[]);row.style.display='flex';row.style.gap='6px';row.style.alignItems='center';
     const ak=h('button',null,it.ack?'Reconocido':'Reconocer');ak.disabled=it.ack;ak.onclick=()=>post('/api/ack',{key:it.key});
     row.appendChild(ak);
-    if(it.train){const own=!CENTRE||S.centre.role==='nacional'||!it.zone||!it.zone.length||it.zone.includes(S.centre.id);const rb=h('button',it.can_rearm&&own?'go':'',!own?'Zona de otro centro':it.can_rearm?'Autorizar rearme':'Rearme bloqueado');rb.disabled=!(it.can_rearm&&own);rb.onclick=()=>post('/api/rearm',{train:it.train});row.appendChild(rb)}
+    if(it.train){const own=!CENTRE||S.centre.role==='nacional'||!it.zone||!it.zone.length||it.zone.includes(S.centre.id);const me=CENTRE&&S.centre?S.centre.id:'nacional',pd=it.rearm_pending,mine=pd&&pd.principal===me;const lbl=!own?'Zona de otro centro':!it.can_rearm?'Rearme bloqueado':pd?(mine?'1ª dada · falta otro centro ('+pd.left_s+' s)':'Dar 2ª autorización y rearmar'):'Autorizar rearme (1ª de 2)';const rb=h('button',it.can_rearm&&own&&!mine?'go':'',lbl);rb.disabled=!(it.can_rearm&&own)||mine;rb.onclick=()=>post('/api/rearm',{train:it.train});row.appendChild(rb)}
     row.appendChild(h('span',null,it.action));row.lastChild.style.color='var(--mut)';row.lastChild.style.fontSize='11px';
     qe.appendChild(h('div','item '+it.level,null,[h('div','h',null,[it.escalated?h('span','tag ESC','ESCALADO'):h('span','tag '+it.level,it.level),h('span',null,it.title)]),h('div','auto',(it.zone&&it.zone.length?'Zona: '+it.zone.map(cname).join(', ')+(it.escalated?' · escalada a todos los centros':''):'Afecta a todos los centros')),a,row]));
   });
   // peligros
-  const hz=$('hz');hz.replaceChildren();
-  if(!S.hazards.length)hz.appendChild(h('div','empty','Sin peligros detectados.'));
-  else{const t=h('table');S.hazards.forEach(x=>t.appendChild(h('tr',null,null,[h('td','sev '+x.sev,x.sev),h('td',null,x.barrier),h('td',null,x.trains.join(', ')),h('td',null,x.msg)])));hz.appendChild(t)}
+  renderHazards();renderActing();
   // log
   const lg=$('log');lg.replaceChildren(h('h2',null,'Registro de eventos (auditoría: data/events.jsonl)'),...S.events.map(e=>h('div',e.kind,null,[h('span','k',fmt(e.t)),h('span','k',e.kind),document.createTextNode(e.msg)])));
   aux();draw();
@@ -238,7 +267,7 @@ function draw(){
     if(t.cmd==='STOP'){cx.strokeStyle=COL.STOP;cx.globalAlpha=1-pulse;cx.lineWidth=2;cx.beginPath();cx.arc(p,q,8+pulse*18,0,7);cx.stroke();cx.globalAlpha=1}
     drawTrain(t,p,q,t.incoming?.55:1);
     if(sel===t.n){cx.strokeStyle='#fff';cx.lineWidth=2;cx.beginPath();cx.arc(p,q,13,0,7);cx.stroke()}
-    if(t.cmd!=='NONE'||hover===t||sel===t.n||V.z>=2.8){cx.fillStyle='#d6e1ec';cx.font='10px system-ui';cx.fillText(t.n,p+11,q+3)}});
+    if(t.cmd!=='NONE'||hover===t||sel===t.n||V.z>=2.8){cx.fillStyle='#d6e1ec';cx.font='10px system-ui';cx.fillText(t.n+(t.by&&t.by.length?'  '+t.by.filter(x=>x!=='B5').join('·'):''),p+11,q+3)}});
   // escala
   const target=90*kmpx,nice=[.1,.2,.5,1,2,5,10,20,50,100,200,500].reduce((b,v)=>Math.abs(v-target)<Math.abs(b-target)?v:b);
   const el=$('scale');el.replaceChildren(h('i'),document.createTextNode(nice+' km'));el.firstChild.style.width=(nice/kmpx)+'px';
@@ -320,6 +349,66 @@ function pointAt(mx,my){
   return best;
 }
 setInterval(infraPoll,4000);
+
+// ---- alertas visuales: qué sistema detecta, cuál ejecuta y qué respalda ----
+const BN=id=>((S.barriers||[]).find(b=>b.id===id)||{}).name||id;
+const ACTION={STOP:'Freno de emergencia ordenado · bloque enclavado · trenes cercanos restringidos',RESTRICT:'Restricción de velocidad ordenada por B5',CAUTION:'Precaución ordenada por B5: reducir velocidad y vigilar',NONE:'Solo aviso: ninguna orden activa todavía'};
+const SEVN={STOP:3,RESTRICT:2,CAUTION:1};
+const ORDER=['B0','B1','B2','B3','B4','SYS'];
+function groupHazards(){const g={};S.hazards.forEach(x=>x.trains.forEach(n=>{(g[n]=g[n]||{n,sev:0,hz:[]});g[n].sev=Math.max(g[n].sev,SEVN[x.sev]||0);g[n].hz.push(x)}));return Object.values(g).sort((a,b)=>b.sev-a.sev||a.n.localeCompare(b.n))}
+function chainChips(g,t){
+  const det=[...new Set(g.hz.map(x=>x.barrier))].sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b));
+  const cmd=t?t.cmd:'NONE',kids=[h('small',null,'detecta')];
+  det.forEach(b=>kids.push(h('span','chip det',b+' · '+BN(b))));
+  kids.push(h('small',null,'ejecuta'));kids.push(h('span',cmd!=='NONE'?'chip exe':'chip',cmd!=='NONE'?'B5 · Enclavamiento':'B5 · en espera'));
+  const back=ORDER.filter(b=>!det.includes(b)&&b!=='SYS'&&(S.barriers||[]).some(x=>x.id===b&&(x.status==='OK'||x.status==='ALERT')));
+  if(back.length){kids.push(h('small',null,'respaldo vigilando'));back.forEach(b=>kids.push(h('span','chip ok',b)))}
+  kids.push(h('small',null,'persona'));kids.push(h('span','chip hum',cmd==='STOP'?'B6 informado · B7 exige 2 autorizaciones':'B6 · sin intervención'));
+  return h('div','chips',null,kids)}
+function renderHazards(){
+  const hz=$('hz');hz.replaceChildren();const gs=groupHazards();
+  if(!gs.length){hz.appendChild(h('div','empty','Sin peligros detectados.'));return}
+  const by={};S.trains.forEach(t=>by[t.n]=t);
+  gs.slice(0,30).forEach(g=>{const t=by[g.n],sev=['','CAUTION','RESTRICT','STOP'][g.sev];
+    const main=g.hz.slice().sort((a,b)=>(SEVN[b.sev]||0)-(SEVN[a.sev]||0))[0];
+    hz.appendChild(h('div','hzc '+sev,null,[h('div','t',null,[h('em',null,sev),h('span',null,'Tren '+g.n)]),h('div','m',main.msg+(g.hz.length>1?'  (+'+(g.hz.length-1)+' más)':'')),chainChips(g,t),
+      h('div','a',null,[h('b',null,'Aplicado: '),document.createTextNode(ACTION[t?t.cmd:'NONE'])])]))});
+  if(gs.length>30)hz.appendChild(h('div','empty','… y '+(gs.length-30)+' trenes más con avisos.'))}
+function renderActing(){
+  const a=$('acting');a.replaceChildren();const stops=S.trains.filter(t=>t.cmd==='STOP'),rs=S.trains.filter(t=>t.cmd==='RESTRICT').length;
+  stops.slice(0,3).forEach(t=>{const dets=[...new Set(S.hazards.filter(x=>x.trains.includes(t.n)).map(x=>x.barrier))].join('+')||'B5';
+    a.appendChild(h('div',null,null,[h('b',null,'⛔ TREN '+t.n+' · STOP'),document.createTextNode(' — '+dets+' detecta → B5 frena y enclava el bloque → B7 exigirá prueba de vía libre y 2 autorizaciones para reanudar')]))});
+  if(stops.length>3)a.appendChild(h('div',null,'… y '+(stops.length-3)+' trenes más en STOP'));
+  if(rs&&!stops.length)a.appendChild(h('div','am',null,[h('b',null,'🟠 '+rs+' tren(es) con restricción de velocidad'),document.createTextNode(' — ordenada automáticamente por B5; se libera sola tras varios ciclos limpios')]));
+  a.style.display=a.children.length?'flex':'none'}
+
+// ---- pantalla de sistemas de seguridad ----
+const STL={OK:'Operativo',ALERT:'Actuando',FAULT:'EN FALLO',NODATA:'Sin datos',OFF:'Desactivado'};
+let sysTimer=null;
+const ago=ms=>{if(!ms)return 'nunca';const s=Math.max(0,Math.round(((S?S.now:Date.now())-ms)/1000));return s<90?'hace '+s+' s':s<5400?'hace '+Math.round(s/60)+' min':'hace '+Math.round(s/3600)+' h'};
+function sysCard(x){
+  const kids=[h('h3',null,null,[h('span','id',x.id),h('span',null,x.name),h('span','st',STL[x.status]||x.status)]),h('div','grp',x.group+(x.external?' · sistema externo, solo se contrasta':'')),
+    h('h4',null,'Qué hace'),h('p',null,x.does),h('h4',null,'Cómo funciona'),h('ul',null,null,x.how.map(t=>h('li',null,t)))];
+  if(x.params.length){const t=h('table');x.params.forEach(p=>t.appendChild(h('tr',null,null,[h('td',null,p.label),h('td',null,p.value+(p.unit?' '+p.unit:''))])));kids.push(h('h4',null,'Parámetros en vigor (configurados en RailGuard, no oficiales de Adif)'),t)}
+  const live=[];if(x.detail)live.push(x.detail);if(x.fired!=null)live.push(x.fired+' disparos');if(x.active)live.push(x.active+' activos ahora');if(x.last_fire)live.push('último '+ago(x.last_fire));
+  kids.push(h('div','live',null,[h('b',null,'En vivo: '),document.createTextNode(live.length?live.join(' · '):'sin incidencias')]));
+  kids.push(h('div','fail',null,[h('b',null,'Si falla: '),document.createTextNode(x.on_failure)]));
+  kids.push(h('div','chips',null,[h('small',null,'responde detrás')].concat(x.covering.map(c=>h('span','chip '+(c.healthy?'ok':'bad'),c.id+' · '+c.name)))));
+  return h('section','sc '+x.status,null,kids)}
+function renderSys(j){
+  const ov=$('sysov');const x=document.createElement('div');
+  const close=h('button',null,'← Volver al panel');close.onclick=closeSys;
+  x.appendChild(h('div','sh',null,[close,h('h1',null,'Sistemas de seguridad'),h('div','sub',j.healthy+' de '+j.total+' sistemas operativos · '+(j.mode==='sim'?'simulación':'en vivo')+' · se actualiza cada 2 s. Cada capa es independiente: si una falla, las de detrás siguen protegiendo y la red se degrada hacia el lado seguro.')]));
+  const flow=h('div','flow');j.systems.forEach((s,i)=>{if(i)flow.appendChild(h('i',null,'→'));flow.appendChild(h('span','n '+s.status,s.id+(s.status==='FAULT'?' ✖':'')))});x.appendChild(flow);
+  if(j.pending&&j.pending.length){x.appendChild(h('div','sc ALERT',null,[h('h3',null,'Rearmes esperando segunda autorización'),h('ul',null,null,j.pending.map(p=>h('li',null,'Tren '+p.train+': 1ª autorización de '+p.by+' · falta otro centro u operador distinto ('+p.left_s+' s)')))]));x.lastChild.style.marginBottom='12px'}
+  const g=h('div','sg');j.systems.forEach(s=>g.appendChild(sysCard(s)));x.appendChild(g);
+  ov.replaceChildren(...x.childNodes)}
+async function loadSys(){try{const r=await fetch('/api/systems',{cache:'no-store'});const j=await r.json();
+  if(!j.systems){$('sysov').replaceChildren(h('div','sh',null,[(()=>{const b=h('button',null,'← Volver');b.onclick=closeSys;return b})(),h('div','sub','Esta pantalla necesita el servidor de RailGuard en ejecución (python3 server.py). La demo grabada no incluye el estado vivo de cada sistema.')]));return}
+  renderSys(j)}catch(e){}}
+function openSys(){$('sysov').hidden=false;document.body.style.overflow='hidden';loadSys();clearInterval(sysTimer);sysTimer=setInterval(loadSys,2000)}
+function closeSys(){$('sysov').hidden=true;document.body.style.overflow='';clearInterval(sysTimer)}
+$('sysb').onclick=openSys;addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('sysov').hidden)closeSys()});
 // ---- ficha de tren ----
 const card=$('card');let cardN=null,cardTimer=null;
 const fmtDelay=m=>m>0?(m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'):m<0?'adelantado '+(-m)+' min':'a tiempo';
