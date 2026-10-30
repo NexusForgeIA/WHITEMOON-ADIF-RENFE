@@ -16,14 +16,14 @@
 <style>
 :root{--bg:#0a1017;--panel:#111a24;--line:#203041;--tx:#d6e1ec;--mut:#7f92a6;--ok:#3ddc97;--cau:#f2c94c;--res:#ff9f43;--stop:#ff4d5e;--acc:#4aa8ff}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;height:100vh;display:grid;grid-template-rows:52px auto 1fr 190px;grid-template-columns:292px 1fr 380px;gap:10px;padding:10px}
+body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;height:100vh;display:grid;grid-template-rows:auto auto 1fr 190px;grid-template-columns:292px 1fr 380px;gap:10px;padding:10px}
 #pbanner,#banner{max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-header .sysb,header #ochip,header #adm{white-space:nowrap;padding:5px 9px;font-size:12px}
-header{grid-column:1/-1;display:flex;flex-wrap:nowrap;overflow:hidden;gap:8px!important;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 14px}
+header .pill{white-space:nowrap;flex:none}header .kpis{white-space:nowrap;flex:0 1 auto}header #ochip,header .sysb,header #adm{flex:none}header .sysb,header #ochip,header #adm{white-space:nowrap;padding:5px 9px;font-size:12px}
+header{grid-column:1/-1;display:flex;flex-wrap:wrap;row-gap:6px;min-height:52px;padding-top:6px;padding-bottom:6px;gap:6px!important;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 14px}
 header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:#ff2a3a}
 .pill{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;border:1px solid var(--line);color:var(--mut)}
 .pill.sim{color:var(--cau);border-color:#5a4a1a}.pill.live{color:var(--ok);border-color:#1d5a40}
-.kpis{margin-left:auto;display:flex;gap:16px}.kpi{text-align:right}.kpi b{display:block;font-size:17px;line-height:1}.kpi small{color:var(--mut);font-size:10px}
+.kpis{margin-left:auto;display:flex;gap:4px}.kpi{text-align:right}.kpi b{display:block;font-size:17px;line-height:1}.kpi small{color:var(--mut);font-size:10px}
 .banner{display:none;background:#4a1219;color:#ffd5d9;border:1px solid var(--stop);border-radius:6px;padding:3px 10px;font-weight:600}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;min-height:0}
 .panel h2{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);margin:0 0 10px}
@@ -218,11 +218,13 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 
 /* Pantallas bajas: una sola barra de scroll de la página (sin paneles con scroll propio) */
 @media(min-width:1101px) and (max-height:900px){
-  body{height:auto;min-height:100vh;grid-template-rows:52px auto minmax(620px,auto) auto}
+  body{height:auto;min-height:100vh;grid-template-rows:auto auto minmax(620px,auto) auto}
   .panel,#chain,#log,#cabins{overflow:visible;max-height:none}
   #right{overflow:visible;min-height:0}#right .panel{flex:none;max-height:none}
   #mapwrap{height:760px;min-height:620px;align-self:start}
+  #right .panel:last-child{flex:1 1 auto}
 }
+.xsum{cursor:pointer;list-style:none;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#0d151e;color:var(--tx);font-weight:600;font-size:12px;display:flex;justify-content:space-between}.xsum::-webkit-details-marker{display:none}#xtra[open] .xsum span{transform:rotate(180deg)}
 </style>
 </head>
 <body>
@@ -244,12 +246,14 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 <section id="cab" aria-label="Tren en foco"></section>
 
 <section class="panel" id="chain"><h2>Defensa en profundidad</h2><div class="chain" id="bars"></div>
-  <h2 style="margin-top:16px">Centros de control</h2><div id="board"></div><div id="ho"></div>
+  <details id="xtra" style="margin-top:14px"><summary class="xsum">Centros, mensajes y simulación <span>▾</span></summary>
+  <h2 style="margin-top:10px">Centros de control</h2><div id="board"></div><div id="ho"></div>
   <h2 style="margin-top:12px">Mensajes entre centros</h2><div id="msgs" style="max-height:130px;overflow:auto"></div>
   <div class="frm"><select id="mto"></select><input id="mtx" maxlength="300" placeholder="Mensaje" style="flex:1;width:auto"><button id="msend">Enviar</button></div>
   <details class="ops"><summary>Operadores en España</summary><div class="empty" style="cursor:default">Pulse uno para filtrar el mapa.</div><div id="oplist" style="display:block;border:0;cursor:default"></div></details>
   <div id="simctl" style="display:none"><h2 style="margin-top:16px">Inyectar fallo (simulación)</h2><div class="ctl" id="scn"></div>
   <div class="ctl"><button id="reset">Reiniciar simulación</button></div></div>
+  </details>
 </section>
 
 <section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
@@ -318,7 +322,7 @@ function renderOuts(list){
   const box=$('outs'),chip=$('ochip');if(!box)return;
   const hard=list.filter(o=>o.sev==='CRIT'||o.sev==='WARN'),info=list.filter(o=>o.sev==='INFO');
   const worst=hard.some(o=>o.sev==='CRIT')?'CRIT':hard.length?'WARN':'';
-  chip.className=worst;chip.textContent=worst?('⚠ '+hard.length+' sistema'+(hard.length>1?'s':'')+' caído'+(hard.length>1?'s':'')+'/degradado'+(hard.length>1?'s':'')):'🛡 Sistemas operativos'+(info.length?' · '+info.length+' sin cobertura':'');
+  chip.className=worst;chip.title=worst?'Hay sistemas de seguridad caídos o degradados. Pulse para ver cuáles y qué hace RailGuard mientras tanto':'Estado global de los sistemas de seguridad. Pulse para ver el detalle';chip.textContent=worst?('⚠ '+hard.length+' sistema'+(hard.length>1?'s':'')+' de seguridad '+(worst==='CRIT'?'caído':'degradado')+(hard.length>1?'s':'')+' · ver'):'🛡 Sistemas operativos'+(info.length?' · '+info.length+' sin cobertura':'');
   chip.onclick=openSys;
   const kids=hard.slice(0,2).map(o=>{
     const top=h('div','top',null,[h('b',null,(o.sev==='CRIT'?'⛔ ':'⚠ ')+o.title)]);
