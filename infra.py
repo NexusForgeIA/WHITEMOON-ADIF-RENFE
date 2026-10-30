@@ -179,18 +179,23 @@ class Infra:
 
     def run(self):
         try:
-            if os.path.exists(self.cache) and time.time() - os.path.getmtime(self.cache) < 7 * 86400:
+            if os.path.exists(self.cache) and time.time() - os.path.getmtime(self.cache) < 30 * 86400:
                 self._set(json.load(open(self.cache, encoding="utf-8")))
                 return
-            els, failed = [], []
+            els, failed, streak = [], [], 0
             self.status["state"] = "descargando"
             for b in tiles():
+                if streak >= 3 and not els:   # Overpass inaccesible: no bloquear horas; se reintentará más tarde
+                    self.status.update(state="error", error="Overpass inaccesible desde este servidor (3 zonas seguidas fallidas)")
+                    return
                 try:
                     t0 = time.time()
                     els += self._tile(b)
                     self.status["last_tile_s"] = round(time.time() - t0, 1)
+                    streak = 0
                 except Exception as ex:
                     failed.append(str(ex)[:120])
+                    streak += 1
                 self.status["tiles_done"] += 1
                 self.status["state"] = "descargando"
                 time.sleep(1)
@@ -225,3 +230,14 @@ class Infra:
 
     def start(self):
         threading.Thread(target=self.run, daemon=True).start()
+
+
+if __name__ == "__main__":
+    # Generar la caché desde un equipo con buena salida a Internet:  python3 infra.py   -> data/infra_cache.json
+    # (se puede subir al repositorio: el servidor la usa sin descargar nada)
+    here = os.path.dirname(os.path.abspath(__file__))
+    i = Infra(os.path.join(here, "data", "infra_cache.json"), os.path.join(here, "data", "infra_extra.json"))
+    if os.path.exists(i.cache):
+        os.remove(i.cache)
+    i.run()
+    print(i.status, i.data and i.data["meta"]["counts"])
