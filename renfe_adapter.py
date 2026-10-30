@@ -219,7 +219,7 @@ class RenfeFeed:
             self.skew_ms = int(round(off / 1800.0) * 1800 * 1000) if abs(off) > 300 else 0
             self.skew_note = f"desfase de reloj del feed corregido: {self.skew_ms // 1000} s" if self.skew_ms else None
         ts_ms += self.skew_ms or 0
-        trains, seen, matched, stale = [], set(), 0, 0
+        trains, seen, matched, stale, unknown = [], set(), 0, 0, 0
         for e in vp.get("entity", []):
             v = _g(e, "vehicle")
             pos = _g(v, "position")
@@ -267,6 +267,9 @@ class RenfeFeed:
                 ant, ori, des, prod = st["ant"] or sig, None, None, 0
             if status == "STOPPED_AT":
                 ant = sig
+            if self.gtfs and not info:
+                unknown += 1    # tren sin viaje en el horario oficial: no se puede verificar, no se dibuja
+                continue
             dly = delays.get(trip_id, 0)
             e_ = eta_epoch(info, dly, self.now()) if info else None
             rolling = kmh > 5 and e_ is not None and self.now() - e_ <= 3 * 3600   # circulando de verdad: un retraso del feed anticuado no lo oculta
@@ -289,7 +292,7 @@ class RenfeFeed:
         for gone in set(self.detail) - {t["n"] for t in trains}:
             del self.detail[gone]
         self.stats = {"entities": len(trains), "header_age_s": round(self.now() - ts_ms / 1000),
-                      "gtfs_matched": matched, "retrasos_caducados": stale, "gtfs_loaded": bool(self.gtfs), "skew_s": (self.skew_ms or 0) // 1000}
+                      "gtfs_matched": matched, "retrasos_caducados": stale, "sin_horario": unknown, "gtfs_loaded": bool(self.gtfs), "skew_s": (self.skew_ms or 0) // 1000}
         return self.est, trains
 
 

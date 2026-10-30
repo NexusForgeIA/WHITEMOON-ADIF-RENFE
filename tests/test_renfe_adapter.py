@@ -168,7 +168,8 @@ def test_entity_without_stop_id_does_not_break_the_feed_or_the_detail():
     e["vehicle"].pop("stopId")
     f = feed_with([(T0, [e, ent("22222", 41.0, -3.0, "S3")])], gtfs=g)
     _, tr = f.fetch()
-    assert len(tr) == 2 and "11111" in f.detail
+    assert len(tr) == 1 and "11111" in f.detail           # el 22222 no está en el horario: no se dibuja
+    assert f.stats["sin_horario"] == 1
 
 
 def test_tren_terminado_no_se_dibuja():
