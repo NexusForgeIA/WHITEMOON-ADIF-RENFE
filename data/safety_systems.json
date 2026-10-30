@@ -52,6 +52,19 @@
   "Estado de enclavamientos, circuitos de vía y señales (ENCE, CTC)",
   "Limitaciones temporales de velocidad activas (sistema de gestión de LTV del ETCS)",
   "Datos del LZB: posición, velocidad real y velocidad máxima admisible por tren",
-  "Sistema de ayuda al mantenimiento (SAM) con reconstrucción de eventos"
- ]
+  "Sistema de ayuda al mantenimiento (SAM) con reconstrucción de eventos",
+  "Tabla oficial de velocidades máximas e información permanente por línea (documento oficial; solo el resumen en mapas de la Declaración sobre la Red)",
+  "ICL (Información de Línea): mensual y anual, con restricciones, detectores de cajas calientes, túneles y viaductos; se distribuye por RGD a empresas ferroviarias con licencia y certificado de seguridad",
+  "Manual de Capacidad: sistemas de protección de tren exigidos por línea"
+ ],
+ "declaracion_red_2026": {
+  "fuente": "Declaración sobre la Red 2026 de Adif (Network Statement 2026, ed. 13/06/2025), documento oficial",
+  "red": "11.672,7 km propios de Adif; ASFA en 10.594,2 km; bloqueos automáticos 9.536,7 km; CTC 9.055 km; electrificada 6.719,6 km; ERTMS 384,9 km (datos a 1/1/2025)",
+  "proteccion": "ASFA instalado en todas las líneas principales de la RFIG. ASFA Digital: bajas de versiones anteriores a v4 el 30/06/2029 y a v4C el 31/12/2029 en red convencional y alta velocidad (Recomendación Técnica 3/2024 AESF).",
+  "bloqueos": "BCA (regula la velocidad por señalización en cabina), BSL (señales laterales, propio de alta velocidad), BLA, BA; detección por circuitos de vía (CDV) o contadores de ejes (CE).",
+  "control": "Mando por CTC (enclavamiento y bloqueo centralizados), PRO (segundo nivel regional) y PLO (tercer nivel local). DaVinci gestiona y controla el tráfico de alta velocidad.",
+  "comunicaciones": "GSM-R en todas las líneas de alta velocidad; Tren-Tierra analógico en la mayoría de líneas principales, con migración progresiva a GSM-R.",
+  "perturbaciones": "Plan de Contingencia de Adif (aprobado por el ministerio): procedimientos alternativos y criterios de prioridad en la regulación (no discriminación, jerarquía, publicidad, objetividad, proporcionalidad). Adif puede cancelar, desviar o cambiar surcos sin previo aviso en emergencia.",
+  "velocidades": "La tabla de velocidades máximas es el documento oficial y NO está en el libro; los mapas con el resumen de velocidades y de sistemas de seguridad y bloqueo son documentos PDF aparte en la web de Adif. Convencional ancho ibérico: 160-220 km/h en general; vía métrica 50-100 km/h."
+ }
 }
