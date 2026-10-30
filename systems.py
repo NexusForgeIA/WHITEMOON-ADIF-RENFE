@@ -132,6 +132,60 @@ def build(engine, extra=None):
     for s in out:   # quién responde ahora mismo si este sistema cayera: los de detrás que están sanos
         s["covering"] = [{"id": b, "name": by[b]["name"], "healthy": by[b]["status"] in ("OK", "ALERT")} for b in s["behind"] if b in by]
     healthy = sum(1 for s in out if s["status"] in ("OK", "ALERT"))
-    return {"systems": out, "healthy": healthy, "total": len(out),
+    return {"outages": outages(engine, extra, by), "systems": out, "healthy": healthy, "total": len(out),
             "guard": {k: v for k, v in g.items()}, "pending": [{"train": t, **(engine._pending_view(t) or {})} for t in engine.pending_rearm if engine._pending_view(t)],
             "mode": extra.get("mode")}
+
+
+_ATP_TXT = {"ATP_ISOLATED": ("CRIT", "sin protección automática (aislado o en modo no protegido)"),
+            "ATP_DISCREPANCY": ("CRIT", "no interviene aunque el tren supera su velocidad supervisada"),
+            "ATP_STALE": ("WARN", "telemetría caducada: no se sabe si protege")}
+_ORD = {"CRIT": 0, "WARN": 1, "INFO": 2}
+
+
+def _cover(by, ids):
+    return [{"id": b, "name": by[b]["name"], "healthy": by[b]["status"] in ("OK", "ALERT")} for b in ids if b in by]
+
+
+def outages(engine, extra, by):
+    """Lista SIEMPRE visible de sistemas caídos o degradados y de qué sistemas los están cubriendo ahora mismo.
+    CRIT = el sistema no protege y otros han asumido su función · WARN = degradado · INFO = cobertura no disponible (no es una avería)."""
+    extra = extra or {}
+    out = []
+    if engine.degraded:
+        out.append({"id": "FEED", "sev": "CRIT", "system": "Feed de posiciones / supervisor", "title": "Supervisor ciego: sin datos fiables de posición",
+                    "detail": engine.degraded, "trains": [],
+                    "applying": "Modo degradado: restricción preventiva (precaución) a TODOS los trenes. Los trenes siguen protegidos por su ATP de a bordo.",
+                    "covering": _cover(by, ["B0", "B6"])})
+    for bid in sorted(engine.faults):
+        d = next((x for x in DEFS if x["id"] == bid), None)
+        out.append({"id": "FAULT-" + bid, "sev": "CRIT", "system": f"{bid} · {d['name'] if d else bid}", "title": f"Barrera {bid} en fallo",
+                    "detail": (engine.faults.get(bid) or "")[:160], "trains": [],
+                    "applying": "Modo degradado: restricción preventiva a todos los trenes. " + (d["fail_text"] if d else ""),
+                    "covering": _cover(by, d["behind"] if d else [])})
+    atp = {}   # (sistema, tipo) -> trenes
+    for h in engine.hazards:
+        if h.barrier == "B0" and h.code in _ATP_TXT:
+            atp.setdefault(((h.data or {}).get("system") or "ATP", h.code), []).extend(h.trains)
+    for (sysname, code), tr in sorted(atp.items()):
+        sev, txt = _ATP_TXT[code]
+        out.append({"id": f"ATP-{sysname}-{code}", "sev": sev, "system": f"{sysname} (ATP de a bordo)", "title": f"{sysname}: {txt}",
+                    "detail": f"{len(tr)} tren(es) afectado(s)", "trains": sorted(set(tr)),
+                    "applying": "Desde tierra: B2 velocidad, B3 separación y B4 predicción vigilan estos trenes; B5 impone restricción de velocidad; aviso a cabina por GSM-R.",
+                    "covering": _cover(by, ["B2", "B3", "B4", "B5"])})
+    if by.get("B0", {}).get("status") == "NODATA":
+        out.append({"id": "ATP-NODATA", "sev": "INFO", "system": "ATP de a bordo (LZB / ETCS / ASFA)", "title": "Sin telemetría ATP: no se asume protección a bordo",
+                    "detail": "Ningún tren envía su estado de ATP a RailGuard.", "trains": [],
+                    "applying": "B1–B4 vigilan desde tierra todos los trenes; B5 ejecuta restricciones.", "covering": _cover(by, ["B2", "B3", "B4", "B5"])})
+    if by.get("PROX", {}).get("status") == "NODATA":
+        out.append({"id": "PROX-NODATA", "sev": "INFO", "system": "Alerta de 3 km a cabinas", "title": "Sin tablets de cabina conectadas",
+                    "detail": "La alerta roja con sirena no puede llegar a ningún maquinista.", "trains": [],
+                    "applying": "B3 y B4 detectan y B5 frena desde tierra; el operador lo ve como «sin cabinas».", "covering": _cover(by, ["B3", "B4", "B5"])})
+    on, tot = extra.get("centres_online", 0), extra.get("centres_total", 0)
+    if tot and on < tot:
+        out.append({"id": "B6-CENTRES", "sev": "WARN" if on else "INFO", "system": "Centros de control",
+                    "title": f"{tot - on} de {tot} centros sin conexión", "detail": "Las situaciones de un centro caído se escalan al resto y al nacional.",
+                    "trains": [], "applying": "Escalado automático a los centros en línea; las barreras automáticas siguen restringiendo.",
+                    "covering": _cover(by, ["B5"])})
+    out.sort(key=lambda o: _ORD[o["sev"]])
+    return out

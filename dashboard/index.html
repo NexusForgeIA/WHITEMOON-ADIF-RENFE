@@ -36,6 +36,17 @@ header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:var(
 #lg .lr i{width:10px;height:10px;border-radius:50%;margin-top:2px}#lg .lr em{font-style:normal;font-weight:700;color:#d6e1ec}
 #lg .lh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}#lg .lh button{background:none;border:0;color:var(--mut);font-size:15px;cursor:pointer}
 #lgb{background:#0a1017cc;border:1px solid var(--line);color:#d6e1ec;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer}
+#outs{position:absolute;top:46px;left:10px;right:10px;z-index:6;display:flex;flex-direction:column;gap:5px;pointer-events:none;max-height:55%;overflow:auto}
+#outs>*{pointer-events:auto}
+.og{border-radius:7px;padding:6px 10px;font-size:12px;line-height:1.35;border:1px solid;box-shadow:0 2px 10px #000a}
+.og.CRIT{background:#5a0f18f2;border-color:var(--stop);color:#ffe3e6;animation:ogp 1.4s ease-in-out infinite}.og.WARN{background:#4a3a0cf2;border-color:var(--cau);color:#fff3c9}
+.og b{font-size:12.5px}.og .ap{margin-top:2px}.og .ap u{text-decoration:none;font-weight:700}.og .cv{margin-top:3px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.og .cv span{border-radius:10px;padding:0 7px;font-size:10.5px;font-weight:700;background:#0b3a22;color:#7dffbd;border:1px solid #1f7a4a}.og .cv span.no{background:#4a1219;color:#ff9aa5;border-color:var(--stop)}
+.og .tr{margin-top:2px;opacity:.9;font-size:11px}
+.oi{align-self:flex-start;background:#0a1017dd;border:1px solid var(--line);color:var(--mut);border-radius:14px;padding:2px 10px;font-size:11px;cursor:pointer}
+@keyframes ogp{50%{box-shadow:0 0 0 2px #ff4d5e88,0 2px 10px #000a}}
+#ochip{border-radius:14px;padding:3px 10px;font-weight:700;font-size:12px;cursor:pointer;border:1px solid;background:#0b3a22;color:#7dffbd;border-color:#1f7a4a;white-space:nowrap}
+#ochip.CRIT{background:#b00012;color:#fff;border-color:#ff4d5e;animation:bl 1s ease-in-out infinite}#ochip.WARN{background:#4a3a0c;color:#ffe08a;border-color:var(--cau)}
 .legend s{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;text-decoration:none}
 #right{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}#right .panel{flex:1}
 .item{border:1px solid var(--line);border-radius:6px;padding:8px;margin-bottom:8px;background:#0d151e}
@@ -103,6 +114,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 <header>
   <h1>RAIL<span>GUARD</span></h1><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
   <div id="banner" class="banner"></div><div id="pbanner"></div>
+  <button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
   <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas de seguridad</button>
   <button id="adm" title="Token de administración (RAILGUARD_TOKEN)">🔑</button>
   <div class="kpis" id="kpis"></div>
@@ -129,7 +141,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
     <div class="lr"><i style="background:var(--res)"></i><em>RESTRICT · restringido</em><span>Riesgo real: limita la velocidad y avisa a cabina por GSM-R (exceso &gt;8 %, poca separación, alcance previsto, salto de GPS repetido).</span></div>
     <div class="lr"><i style="background:var(--stop)"></i><em>STOP</em><span>Peligro inminente: freno de emergencia y bloque enclavado. Solo lo libera una persona con doble autorización (B7).</span></div>
     <div style="margin-top:6px;border-top:1px solid #16212d;padding-top:5px"><b>Etiqueta junto al tren</b>: <code>T-9004 B3·B4</code> = barreras que están actuando sobre él (B1 datos · B2 velocidad · B3 separación · B4 predicción · B0 ATP). El mayor nivel manda si varias opinan a la vez.<br><b>▶</b> rumbo del tren · <b>círculo rojo pulsante</b> = STOP activo · <b>aro de 3 km</b> = radio de aviso a tablets.<br>Con el feed real hay "velocidad imposible" y saltos de GPS: se descartan como error de dato (aviso, sin frenar) y un exceso solo actúa si se repite 3 ciclos seguidos.</div></div>
-  <div id="acting"></div><div id="infnote" hidden></div><div class="scale" id="scale"></div>
+  <div id="outs"></div><div id="acting"></div><div id="infnote" hidden></div><div class="scale" id="scale"></div>
 </section>
 
 <aside id="right">
@@ -170,13 +182,31 @@ async function load(){try{
   if(CENTRE&&!tok()&&!askedTok){askedTok=true;try{const v=prompt('Token de su centro de control');if(v)localStorage.setItem(KEY,v)}catch(e){}}
   const r=await fetch(CENTRE?'/api/centre/snapshot':'/api/snapshot',{cache:'no-store',headers:CENTRE?hdr():{}});
   if(r.status===401){const b=$('banner');b.style.display='block';b.textContent='Token de centro no válido: pulse 🔑 para introducirlo';return}
-  S=await r.json();render()}catch(e){const b=$('banner');b.style.display='block';b.textContent='Sin conexión con el servidor de supervisión'}}
+  S=await r.json();render()}catch(e){const b=$('banner');b.style.display='block';b.textContent='Sin conexión con el servidor de supervisión';renderOuts([{sev:'CRIT',title:'Sin conexión con el supervisor de RailGuard',system:'Servidor de supervisión',detail:'Este panel no recibe datos nuevos',trains:[],applying:'Los trenes siguen protegidos por su ATP de a bordo (B0) y por el enclavamiento ya aplicado; los centros pierden visión hasta reconectar.',covering:[{id:'B0',healthy:true},{id:'B5',healthy:true}]}])}}
 const fmt=ms=>new Date(ms).toLocaleTimeString('es-ES',{timeZone:'Europe/Madrid'});
 
+
+// Sistemas caídos o degradados: SIEMPRE en pantalla mientras duren (no se pueden cerrar) + qué sistemas los cubren
+function renderOuts(list){
+  const box=$('outs'),chip=$('ochip');if(!box)return;
+  const hard=list.filter(o=>o.sev==='CRIT'||o.sev==='WARN'),info=list.filter(o=>o.sev==='INFO');
+  const worst=hard.some(o=>o.sev==='CRIT')?'CRIT':hard.length?'WARN':'';
+  chip.className=worst;chip.textContent=worst?('⚠ '+hard.length+' sistema'+(hard.length>1?'s':'')+' caído'+(hard.length>1?'s':'')+'/degradado'+(hard.length>1?'s':'')):'🛡 Sistemas operativos'+(info.length?' · '+info.length+' sin cobertura':'');
+  chip.onclick=openSys;
+  const kids=hard.slice(0,3).map(o=>{
+    const d=h('div','og '+o.sev,null,[h('b',null,(o.sev==='CRIT'?'⛔ ':'⚠ ')+o.title),h('div',null,o.system+(o.detail?' · '+o.detail:''))]);
+    if(o.applying){const a=h('div','ap',null,[h('u',null,'Aplicando ahora: '),document.createTextNode(o.applying)]);d.append(a)}
+    if(o.covering&&o.covering.length){const c=h('div','cv',null,[h('small',null,'Cubren:')]);o.covering.forEach(x=>c.append(h('span',x.healthy?'':'no',x.id+' '+(x.healthy?'✓':'✗'))));d.append(c)}
+    if(o.trains&&o.trains.length)d.append(h('div','tr','Trenes: '+o.trains.slice(0,8).join(', ')+(o.trains.length>8?' +'+(o.trains.length-8):'')));
+    return d});
+  if(hard.length>3){const m=h('div','oi','+'+(hard.length-3)+' más · ver todos');m.onclick=openSys;kids.push(m)}
+  if(info.length){const m=h('div','oi','ℹ '+info.map(o=>o.title).join(' · '));m.title='Cobertura no disponible (no es una avería). Pulse para ver cómo se compensa.';m.onclick=openSys;kids.push(m)}
+  box.replaceChildren(...kids)}
 function render(){
   $('mode').textContent=S.mode==='sim'?'SIMULACIÓN sobre captura real':'EN VIVO';$('mode').className='pill '+S.mode;
   $('clock').textContent=fmt(S.now)+' · ciclo '+S.cycle;
   const b=$('banner');b.style.display=S.degraded?'block':'none';if(S.degraded)b.textContent='⚠ '+S.degraded;
+  renderOuts(S.outages||[]);
   const k=S.kpi,ks=$('kpis');ks.replaceChildren(...[['trains','trenes'],['clear','libres'],['caution','precaución'],['restrict','restringidos'],['stop','STOP']].map(([a,l])=>h('div','kpi',null,[h('b',null,k[a]),h('small',null,l)])));
   // cadena
   const bars=$('bars');bars.replaceChildren();

@@ -39,3 +39,35 @@ def test_b7_counters_visible_in_catalogue():
     a.engine.rearm("Z", "op", principal="a")
     b7 = next(s for s in a.systems()["systems"] if s["id"] == "B7")
     assert b7["fired"] == 1 and "1 rechazados" in b7["detail"]
+
+
+def test_outages_always_listed_with_who_covers_barrier_fault():
+    a = app()
+    assert not any(o["sev"] in ("CRIT", "WARN") for o in a.snapshot()["outages"] if o["id"].startswith("FAULT"))
+    a.set_scenario("fallo_barrera", True)
+    a.tick()
+    o = next(o for o in a.snapshot()["outages"] if o["id"] == "FAULT-B3")
+    assert o["sev"] == "CRIT" and "restricción preventiva" in o["applying"].lower()
+    assert {c["id"] for c in o["covering"]} == {"B4", "PROX", "SYS", "B5"}
+
+
+def test_outages_lzb_isolated_shows_system_trains_and_compensation():
+    a = app()
+    a.set_scenario("atp_aislado", True)
+    a.tick()
+    a.tick()
+    o = next(o for o in a.snapshot()["outages"] if o["id"].startswith("ATP-LZB-ATP_ISOLATED"))
+    assert o["sev"] == "CRIT" and "T-9007" in o["trains"] and "LZB" in o["title"]
+    assert {c["id"] for c in o["covering"]} == {"B2", "B3", "B4", "B5"}
+    a.set_scenario("atp_aislado", False)
+    a.tick()
+    a.tick()
+    assert not any(o["id"].startswith("ATP-LZB") for o in a.snapshot()["outages"])
+
+
+def test_outages_info_when_no_atp_telemetry_is_not_an_alarm():
+    a = server.App()
+    for _ in range(3):
+        a.tick()
+    info = [o for o in a.snapshot()["outages"] if o["id"] == "ATP-NODATA"]
+    assert info and info[0]["sev"] == "INFO"

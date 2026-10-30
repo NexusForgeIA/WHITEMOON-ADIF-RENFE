@@ -326,19 +326,19 @@ def b0_atp(c: Ctx):
         line = c.line_of(seg)
         age = (c.now_ms - a["ts"]) / 1000
         if age > c.cfg["atp_stale_s"]:
-            out.append(Hazard("B0", CAUTION, (t.n,), seg, "ATP_STALE", f"Telemetría ATP caducada ({age:.0f} s)"))
+            out.append(Hazard("B0", CAUTION, (t.n,), seg, "ATP_STALE", f"Telemetría ATP caducada ({age:.0f} s)", {"system": a.get("system", "?")}))
             continue
         sys_, mode = a.get("system", "?"), a.get("mode", "?")
         if not a.get("protected", True):
             why = " en línea que exige ATP" if (line and line.get("atp_required")) else ""
             out.append(Hazard("B0", RESTRICT, (t.n,), seg, "ATP_ISOLATED",
-                              f"ATP {sys_} en modo {mode}: marcha SIN protección automática{why}"))
+                              f"ATP {sys_} en modo {mode}: marcha SIN protección automática{why}", {"system": sys_}))
         elif a.get("intervention"):
             out.append(Hazard("B0", CAUTION, (t.n,), seg, "ATP_BRAKING", f"ATP {sys_} ha intervenido (freno automático)"))
         sv = a.get("supervised_kmh")
         if a.get("protected", True) and sv and not a.get("intervention") and t.kmh > sv * 1.05 + 10:
             out.append(Hazard("B0", RESTRICT, (t.n,), seg, "ATP_DISCREPANCY",
-                              f"{t.kmh:.0f} km/h con velocidad supervisada {sv:.0f} y el ATP no interviene (¿ATP degradado o dato erróneo?)"))
+                              f"{t.kmh:.0f} km/h con velocidad supervisada {sv:.0f} y el ATP no interviene (¿ATP degradado o dato erróneo?)", {"system": sys_}))
     return out
 
 

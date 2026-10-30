@@ -397,6 +397,11 @@ class App:
             s["proximity_km"] = self.engine.cfg["proximity_km"]
             s["proximity_mode"] = self.engine.cfg["proximity_mode"]
             self._annotate(s, now)
+            try:   # informativo: nunca puede romper la lectura de datos de seguridad
+                s["outages"] = self.systems()["outages"]
+            except Exception as ex:
+                s["outages"] = [{"id": "OUTAGES-ERR", "sev": "WARN", "system": "Panel", "title": "No se pudo calcular el estado de sistemas",
+                                 "detail": repr(ex)[:120], "trains": [], "applying": "", "covering": []}]
             return s
 
     # ---------- ámbito por centro ----------
