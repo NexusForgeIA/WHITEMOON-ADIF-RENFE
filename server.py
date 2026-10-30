@@ -632,7 +632,7 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, APP.snapshot())
         if path == "/api/health":
             age = time.time() - APP.last
-            return self._send(200 if age < 15 else 503, {"ok": age < 15, "cycle": APP.engine.cycle, "age_s": round(age, 1)})
+            return self._send(200 if age < 15 else 503, {"ok": age < 15, "cycle": APP.engine.cycle, "age_s": round(age, 1), "feed": getattr(APP.feed, "stats", None)})
         if path == "/api/centre/snapshot":
             cid, err = APP.auth_centre(self.headers.get("X-Centre-Token", ""), self.client_address[0])
             return self._send(200, APP.centre_snapshot(cid)) if cid else self._send(401, {"ok": False, "msg": err})
