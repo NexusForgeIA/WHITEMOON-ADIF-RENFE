@@ -13,11 +13,13 @@ Variables: RAILGUARD_TOKEN -> los POST del panel exigen X-Token; emitir/revocar 
 import argparse, hmac, json, math, os, random, threading, time, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import gzip
 import proximity
 import scenarios
 from centres import Centres, NATIONAL
 from drivers import Drivers
 from engine import Engine
+from infra import Infra
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 CFG = {"single_track": [["54404", "54405"]]}  # DEMO: la lista real debe salir de la infraestructura de Adif
@@ -629,6 +631,9 @@ STATIC = {"/": ("index.html", "text/html"), "/index.html": ("index.html", "text/
           "/sw.js": ("sw.js", "text/javascript"), "/icon.svg": ("icon.svg", "image/svg+xml")}
 
 
+INFRA = None
+
+
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
@@ -648,6 +653,22 @@ class H(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         if path == "/api/snapshot":
             return self._send(200, APP.snapshot())
+        if path == "/api/infra":
+            inf = INFRA
+            if not inf or not inf.data:
+                return self._send(200, {"ready": False, "status": inf.status if inf else {"state": "desactivada"}})
+            raw = json.dumps({"ready": True, **inf.data}, separators=(",", ":")).encode()
+            if "gzip" in self.headers.get("Accept-Encoding", ""):
+                raw = gzip.compress(raw, 6)
+                self.send_response(200)
+                self.send_header("Content-Encoding", "gzip")
+            else:
+                self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(raw)))
+            self.send_header("Cache-Control", "public, max-age=300")
+            self.end_headers()
+            return self.wfile.write(raw)
         if path == "/api/train":
             from urllib.parse import parse_qs, urlparse
             n = (parse_qs(urlparse(self.path).query).get("n") or [""])[0]
@@ -655,7 +676,8 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, d) if d else self._send(404, {"ok": False, "msg": "tren desconocido"})
         if path == "/api/health":
             age = time.time() - APP.last
-            return self._send(200 if age < 15 else 503, {"ok": age < 15, "cycle": APP.engine.cycle, "age_s": round(age, 1), "feed": getattr(APP.feed, "stats", None)})
+            return self._send(200 if age < 15 else 503, {"ok": age < 15, "cycle": APP.engine.cycle, "age_s": round(age, 1), "feed": getattr(APP.feed, "stats", None),
+                                                                          "infra": INFRA.status if INFRA else None})
         if path == "/api/centre/snapshot":
             cid, err = APP.auth_centre(self.headers.get("X-Centre-Token", ""), self.client_address[0])
             return self._send(200, APP.centre_snapshot(cid)) if cid else self._send(401, {"ok": False, "msg": err})
@@ -694,7 +716,7 @@ class H(BaseHTTPRequestHandler):
 
 
 def main():
-    global APP
+    global APP, INFRA
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", help="'renfe' (feed oficial) o URL con el esquema de /api/estado")
     ap.add_argument("--gtfs", help="google_transit.zip de Renfe (ruta o URL); necesario para parada anterior, destino y producto")
@@ -704,6 +726,9 @@ def main():
     a = ap.parse_args()
     a.period = a.period or (15.0 if a.source == "renfe" else 2.0)
     APP = App(a.source, a.gtfs)
+    if a.source == "renfe" and os.environ.get("RG_INFRA", "1") != "0":
+        INFRA = Infra(os.path.join(ROOT, "data", "infra_cache.json"), os.path.join(ROOT, "data", "infra_extra.json"))
+        INFRA.start()
 
     def loop(fn, period):
         while True:

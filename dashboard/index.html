@@ -28,6 +28,7 @@ header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:var(
 #card h3{margin:0;font-size:19px;letter-spacing:.3px}#card .sub{color:var(--mut);margin:2px 0 8px}#card .x{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--mut);font-size:20px;cursor:pointer}
 #card .r{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-top:1px solid #16212d}#card .r span:first-child{color:var(--mut)}#card .r span:last-child{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
 #card .bad{color:var(--stop)}#card .al{margin-top:8px;font-size:12px;color:var(--res)}
+#infnote{position:absolute;right:10px;bottom:52px;max-width:min(420px,60%);font-size:10.5px;line-height:1.35;color:var(--mut);background:#0a1017dd;padding:4px 8px;border-radius:6px;text-align:right}
 #tip{position:absolute;pointer-events:none;background:#06090dee;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px;display:none;white-space:nowrap}
 .legend{position:absolute;left:10px;bottom:8px;display:flex;gap:10px;font-size:11px;color:var(--mut);background:#0a1017cc;padding:3px 8px;border-radius:6px}
 .legend s{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;text-decoration:none}
@@ -85,11 +86,11 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 
 <section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
   <div class="tb"><button id="zi" title="Acercar">+</button><button id="zo" title="Alejar">−</button><button id="zr" title="Ajustar a toda la red">⌂</button>
-    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label>
+    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
     <select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
   <div class="legend"><span><s style="background:var(--ok)"></s>libre</span><span><s style="background:var(--cau)"></s>precaución</span><span><s style="background:var(--res)"></s>restringido</span><span><s style="background:var(--stop)"></s>STOP</span>
     <span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
-  <div class="scale" id="scale"></div>
+  <div id="infnote" hidden></div><div class="scale" id="scale"></div>
 </section>
 
 <aside id="right">
@@ -198,8 +199,9 @@ function draw(){
   const sc=base.sc*V.z;                 // px de pantalla por unidad de datos
   const kmpx=S.unit_km/sc;              // km por px de pantalla
   const lw=Math.min(4,1.2+V.z*.35);
+  const INFON=$('lv').checked&&drawInfra(W,H);
   // vías
-  if($('lv').checked){
+  if($('lv').checked&&!INFON){
     cx.lineCap='round';cx.lineJoin='round';
     cx.strokeStyle='#22364b';cx.lineWidth=lw;
     (S.segments||[]).forEach(([a,b])=>{if(!st[a]||!st[b])return;cx.beginPath();cx.moveTo(...T(st[a].x,st[a].y));cx.lineTo(...T(st[b].x,st[b].y));cx.stroke()});
@@ -259,13 +261,65 @@ cv.addEventListener('pointermove',e=>{
       h('div',null,(hover.from||'?')+' → '+(hover.to||'?')+(hover.dest?'  (destino '+hover.dest+')':'')),
       h('div',null,hover.line?hover.line+' · '+hover.signalling:'línea sin catalogar'),
       h('div',null,'ATP a bordo: '+(hover.atp||'sin telemetría')+' · posición: '+(hover.src==='tablet'?'GPS tablet':'feed')))}
-  else tip.style.display='none';
+  else{const hp=pointAt(mx,my);if(hp){tip.style.display='block';tip.style.left=(mx+14>r.width-260?Math.max(4,mx-260):mx+14)+'px';tip.style.top=(my+14)+'px';
+      tip.replaceChildren(h('b',null,KIND[hp.k]||hp.k),h('div',null,(hp.d?hp.d+' · ':'')+(hp.off?'dato oficial':'OpenStreetMap (no oficial)')))}else tip.style.display='none'}
   draw()});
 const endP=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;
   if(drag&&!drag.moved&&e.type==='pointerup'&&S){const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
     const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);sel=t?t.n:null;if(t){$('mt').value=t.n;openCard(t.n)}else closeCard();draw()}
   if(!ptrs.size)drag=null};
 
+
+// ---- infraestructura real (OpenStreetMap vía /api/infra) ----
+let INF=null,infCache=null,infKey='',hoverP=null;
+const IC={ETCS:'#4aa8ff',LZB:'#ff9f43',ASFA:'#8ea0b6'},KIND={signal:'Señal',switch:'Desvío (aparato de vía)',buffer:'Tope de vía',crossing:'Paso a nivel',derail:'Descarrilador',change:'Cambio de sección',balise:'Baliza',lzb_loop:'Bucle LZB',other:'Elemento'};
+function prepInfra(j){
+  const u=S.unit_km||1;INF={meta:j.meta,ways:j.ways.map(w=>{const p=w.p.map(q=>[q[0]/u,q[1]/u]);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;p.forEach(q=>{x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0]);y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1])});return{t:w.t,s:w.s,v:w.v,p,b:[x0,y0,x1,y1]}}),
+    pts:j.points.map(p=>({k:p.k,x:p.x/u,y:p.y/u,d:p.d,off:!!p.official})),cant:(j.cantones||[]).map(c=>({id:c.id,line:c.line,p:c.p.map(q=>[q[0]/u,q[1]/u])}))};
+  $('lil').hidden=$('lpl').hidden=false;
+  const c=j.meta.counts,n=$('infnote');n.hidden=false;
+  n.textContent='Fuente: '+j.meta.source+' · no oficial de Adif · nº de vías con dato en '+c.with_tracks+' de '+c.ways+' tramos · señales mapeadas: '+c.signals+' · desvíos: '+c.switches+(c.cantones?' · cantones oficiales: '+c.cantones:' · cantones, balizas y bucles LZB: pendientes de dato oficial de Adif');
+  infKey='';draw();
+}
+async function infraPoll(){
+  if(INF||!S||S.mode!=='live')return;
+  try{const r=await fetch('/api/infra');if(!r.ok)return;const j=await r.json();
+    if(j.ready)prepInfra(j);else{const st=j.status||{},n=$('infnote');n.hidden=false;n.textContent='Infraestructura: '+(st.state||'pendiente')+(st.tiles_total?' ('+st.tiles_done+'/'+st.tiles_total+' zonas)':'')+(st.error?' · '+st.error:'')}}catch(e){}
+}
+function infraRender(W,H,d){
+  const c=infCache.getContext('2d');c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,W,H);const z=V.z,u=1;
+  const unitT=(x,y)=>T(x,y),base1=Math.min(3,.8+z*.12),BG='#111a24';
+  c.lineCap='round';c.lineJoin='round';
+  const vis=w=>{const a=unitT(w.b[0],w.b[1]),b=unitT(w.b[2],w.b[3]);return !(Math.max(a[0],b[0])<-5||Math.min(a[0],b[0])>W+5||Math.max(a[1],b[1])<-5||Math.min(a[1],b[1])>H+5)};
+  const path=w=>{c.beginPath();w.p.forEach((q,i)=>{const[p,r]=unitT(q[0],q[1]);i?c.lineTo(p,r):c.moveTo(p,r)})};
+  const list=INF.ways.filter(vis);
+  list.forEach(w=>{path(w);const col=IC[w.s]||'#51657a',n=w.t||0;
+    if(n>=3){c.strokeStyle=col;c.lineWidth=base1*3.8;c.stroke();c.strokeStyle=BG;c.lineWidth=base1*2.2;c.stroke();c.strokeStyle=col;c.lineWidth=Math.max(.8,base1*.7);c.setLineDash([2,3]);c.stroke();c.setLineDash([])}
+    else if(n===2){c.strokeStyle=col;c.lineWidth=base1*2.6;c.stroke();c.strokeStyle=BG;c.lineWidth=base1*1.1;c.stroke()}
+    else{c.strokeStyle=col;c.globalAlpha=n===1?1:.55;c.lineWidth=base1;c.stroke();c.globalAlpha=1}});
+  INF.cant.forEach(k=>{c.strokeStyle='#e8f1fa';c.lineWidth=1.5;c.setLineDash([8,5]);c.beginPath();k.p.forEach((q,i)=>{const[p,r]=unitT(q[0],q[1]);i?c.lineTo(p,r):c.moveTo(p,r)});c.stroke();c.setLineDash([])});
+  if($('lp').checked)INF.pts.forEach(p=>{
+    const need={change:3.5,switch:5,signal:7,balise:6,lzb_loop:6,buffer:9,crossing:9,derail:9,other:7}[p.k]||8;if(z<need)return;
+    const[x,y]=unitT(p.x,p.y);if(x<-8||y<-8||x>W+8||y>H+8)return;const s=Math.min(6,2.5+z*.18);
+    c.beginPath();
+    if(p.k==='switch'){c.fillStyle='#c792ea';c.moveTo(x,y-s);c.lineTo(x+s,y);c.lineTo(x,y+s);c.lineTo(x-s,y)}
+    else if(p.k==='signal'){c.fillStyle='#f2c94c';c.moveTo(x,y-s);c.lineTo(x+s*.9,y+s*.8);c.lineTo(x-s*.9,y+s*.8)}
+    else if(p.k==='change'){c.strokeStyle='#fff';c.lineWidth=1.6;c.arc(x,y,s+1.5,0,7);c.stroke();if(z>=5.5){c.fillStyle='#d6e1ec';c.font='10px system-ui';c.fillText(p.d,x+s+4,y+3)}c.beginPath();c.fillStyle='#ffffff55';c.arc(x,y,s*.5,0,7)}
+    else{c.fillStyle=p.off?'#3ddc97':'#8ea0b6';c.rect(x-s*.7,y-s*.7,s*1.4,s*1.4)}
+    c.fill()});
+}
+function drawInfra(W,H){
+  if(!INF||!$('li').checked)return false;
+  const d=devicePixelRatio||1,key=[V.z.toFixed(4),V.px.toFixed(1),V.py.toFixed(1),W,H,d,$('lp').checked].join('|');
+  if(key!==infKey||!infCache){infCache=infCache||document.createElement('canvas');infCache.width=W*d;infCache.height=H*d;infraRender(W,H,d);infKey=key}
+  cx.save();cx.setTransform(1,0,0,1,0,0);cx.drawImage(infCache,0,0);cx.restore();return true;
+}
+function pointAt(mx,my){
+  if(!INF||!$('li').checked||!$('lp').checked)return null;const z=V.z;let best=null,bd=9;
+  for(const p of INF.pts){const need={change:3.5,switch:5,signal:7}[p.k]||6;if(z<need)continue;const[x,y]=T(p.x,p.y),dd=Math.hypot(x-mx,y-my);if(dd<bd){bd=dd;best=p}}
+  return best;
+}
+setInterval(infraPoll,4000);
 // ---- ficha de tren ----
 const card=$('card');let cardN=null,cardTimer=null;
 const fmtDelay=m=>m>0?(m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'):m<0?'adelantado '+(-m)+' min':'a tiempo';
@@ -296,7 +350,7 @@ cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
 cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect();zoomAt(2,e.clientX-r.left,e.clientY-r.top)});
 $('zi').onclick=()=>base&&zoomAt(1.5,base.W/2,base.H/2);$('zo').onclick=()=>base&&zoomAt(1/1.5,base.W/2,base.H/2);
 $('zr').onclick=()=>{V={z:1,px:0,py:0};draw()};
-['lv','ls','lr'].forEach(i=>$(i).onchange=draw);
+['lv','ls','lr','li','lp'].forEach(i=>$(i).onchange=draw);
 $('opf').onchange=()=>{opf=$('opf').value;draw()};
 addEventListener('resize',()=>{base=null;draw()});
 $('mb').onclick=()=>{const t=$('mt').value.trim();if(t)post('/api/manual',{train:t})};
