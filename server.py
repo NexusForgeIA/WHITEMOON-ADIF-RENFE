@@ -56,7 +56,7 @@ class App:
             # Umbrales de modo LIVE: el feed de Renfe es ruidoso (GPS que salta, velocidades derivadas de posiciones).
             # Un exceso/salto hay que verlo en varios ciclos antes de frenar; los datos imposibles se descartan (B1).
             # Valores de RailGuard, a validar con Adif; NO son parámetros oficiales.
-            cfg = {"km_per_px": 1.0, "single_track": [], "overspeed_persist": 3, "jump_persist": 2,
+            cfg = {"km_per_px": 1.0, "single_track": [], "overspeed_persist": 3, "jump_persist": 4,
                    "stale_s": 120, "stale_restrict_s": 300, "default_max_speed": 310, "speed_implausible_kmh": 340,
                    # el mapa producto→velocidad es un supuesto sin validar: en vivo se usa el máximo de red hasta cargar velocidades de línea de Adif
                    "max_speed_by_product": {k: 310 for k in (2, 3, 28, 10, 11, 13, 16, 18, 19)}}

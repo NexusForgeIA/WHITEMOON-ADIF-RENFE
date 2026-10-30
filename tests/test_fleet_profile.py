@@ -61,3 +61,16 @@ def test_patron_sistematico_de_exceso_se_avisa():
     for c in range(3):
         e.step([mk("Z", 150, 330, ts=t + c * 1000)], t + c * 1000)
     assert any(h.code == "FLEET_OVER_REF" for h in e.hazards)
+
+
+def test_convergencia_en_estacion_solo_restringe_si_llegan_casi_a_la_vez():
+    from engine import Engine
+    est = {"A": {"n": "A", "x": 100, "y": 100}, "B": {"n": "B", "x": 200, "y": 100}, "C": {"n": "C", "x": 150, "y": 160}}
+    def run(dx):
+        e = Engine(est, enabled={"B4"})
+        a = mk("A1", 195, 120, a="A", s="B", des="B", mat="MA")
+        b = mk("B1", 195 - dx, 120, a="C", s="B", des="B", mat="MB", y=100)
+        e.step([a, b], NOW)
+        return [h.sev for h in e.hazards if h.code == "CONVERGE"]
+    assert run(0.2) == [2]   # ~7 s de diferencia: RESTRICT
+    assert run(0.6) == [1]   # ~22 s: solo CAUTION

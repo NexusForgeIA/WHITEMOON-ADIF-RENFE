@@ -311,7 +311,9 @@ def b4_predict(c: Ctx):
                 eb = math.hypot(b.x - s[0], b.y - s[1]) / max(b.kmh / 3600, 1e-6)
                 if a.moving and b.moving and abs(ea - eb) < c.cfg["converge_eta_s"] and max(ea, eb) < 600:
                     late = a if ea > eb else b
-                    out.append(Hazard("B4", RESTRICT, (late.n,), late.undirected(), "CONVERGE",
+                    # Estaciones con varias vías: llegar casi a la vez es normal. Solo se restringe si la diferencia es muy pequeña.
+                    close = abs(ea - eb) < c.cfg["converge_eta_s"] * 0.25
+                    out.append(Hazard("B4", RESTRICT if close else CAUTION, (late.n,), late.undirected(), "CONVERGE",
                                       f"{a.n} y {b.n} llegan a {c.name(a.sig)} con {abs(ea - eb):.0f} s de diferencia",
                                       {"eta_a": round(ea), "eta_b": round(eb)}))
     return out
