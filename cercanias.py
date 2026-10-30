@@ -14,6 +14,10 @@ import urllib.request
 from renfe_adapter import project
 
 URL = "https://gtfsrt.renfe.com/vehicle_positions.json"
+URL_ALERTS = "https://gtfsrt.renfe.com/alerts.json"
+REGION = {"10": "Madrid", "30": "Sevilla", "31": "Cádiz/Jerez", "32": "Málaga", "40": "Valencia", "41": "Murcia/Alicante", "51": "Rodalies Catalunya"}
+_SERVICE = re.compile(r"sin servicio|no presta|suspendid|retraso|v[ií]a [uú]nica|transbordo|alternativ|no se puede garantizar|afectaci|no prestan|inicia su recorrido|fuera de su horario|incidencia", re.I)
+_ACCESS = re.compile(r"ascensor|PMR|movilidad reducida|aseos|accesib", re.I)
 UA = {"User-Agent": "RailGuard/1.0 (WhiteMoon; supervision ferroviaria)"}
 STATUS = {"STOPPED_AT": "En estación", "INCOMING_AT": "Llegando a estación", "IN_TRANSIT_TO": "En marcha hacia"}
 
@@ -63,10 +67,42 @@ def parse(doc, now=None, km_per_px=1.0):
     return out, hdr
 
 
+def parse_alerts(doc, now=None, limit=12):
+    """Avisos de servicio activos (no accesibilidad/ascensores), más recientes primero. Solo informativo."""
+    now = now or time.time()
+    hdr = int(_g(_g(doc, "header", default={}), "timestamp", default=0) or 0) or now
+    out, seen = [], set()
+    for e in doc.get("entity", []) or []:
+        a = _g(e, "alert")
+        if not a:
+            continue
+        per = (_g(a, "activePeriod", "active_period", default=[]) or [{}])[0]
+        start, end = int(per.get("start") or 0), int(per.get("end") or 0)
+        if (start and start > hdr) or (end and end < hdr):
+            continue
+        tr = (_g(_g(a, "descriptionText", "description_text", default={}), "translation", default=[]) or [{}])[0]
+        text = re.sub(r"\s+", " ", str(tr.get("text") or "")).strip()
+        if not text or _ACCESS.search(text) or not _SERVICE.search(text):
+            continue
+        routes = [str(i.get("routeId") or "") for i in (_g(a, "informedEntity", "informed_entity", default=[]) or [])]
+        routes = [r for r in routes if r]
+        lines = sorted({m.group(1) for r in routes for m in [re.search(r"([CRT]\d+)[a-z]?$", r)] if m})
+        region = REGION.get(routes[0][:2], "Cercanías") if routes else "Cercanías"
+        key = (region, text[:80])
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"id": str(_g(e, "id", default="")), "region": region, "lines": lines[:8], "text": text[:420],
+                    "age_h": max(0, int((hdr - start) // 3600)) if start else 0, "start": start})
+    out.sort(key=lambda x: -x["start"])
+    return out[:limit]
+
+
 class CercaniasFeed:
-    def __init__(self, km_per_px, opener=None, period=20, now=time.time):
+    def __init__(self, km_per_px, opener=None, period=20, now=time.time, alerts_opener=None):
         self.k, self.open, self.period, self.now = km_per_px, opener or _fetch, period, now
         self.trains, self.hdr, self.ok_at, self.err, self.lines = [], 0, 0, None, {}
+        self.alerts, self.alerts_ok, self.open_alerts = [], None, alerts_opener or (lambda: _fetch(URL_ALERTS))
         self._stop = False
 
     def poll(self):
@@ -79,6 +115,10 @@ class CercaniasFeed:
                 self.lines[t["line"] or "?"] = self.lines.get(t["line"] or "?", 0) + 1
         except Exception as ex:
             self.err = repr(ex)[:140]
+        try:   # avisos: fallo independiente de las posiciones
+            self.alerts, self.alerts_ok = parse_alerts(self.open_alerts(), self.now()), True
+        except Exception:
+            self.alerts_ok = False
 
     def start(self):
         def loop():
@@ -92,4 +132,5 @@ class CercaniasFeed:
         stale = self.ok_at == 0 or age > 120
         return {"ok": not stale and not self.err, "err": self.err, "age_s": age, "count": len(self.trains), "lines": self.lines,
                 "hdr_age_s": round(self.now() - self.hdr) if self.hdr else None,
+                "alerts": self.alerts, "alerts_ok": self.alerts_ok,
                 "trains": [] if stale else [[t["n"], round(t["x"], 2), round(t["y"], 2), t["st"], t["stop"], t["age_s"]] for t in self.trains]}

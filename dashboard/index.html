@@ -158,7 +158,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td{padding:3px 4px;bord
 <aside id="right">
   <section class="panel"><h2>Cola del operador · B6 <span style="text-transform:none;letter-spacing:0">(solo situaciones ya contenidas)</span></h2><div id="queue"></div>
     <div class="man"><input id="mt" placeholder="Nº de tren (restricción manual)"><button id="mb">Restringir</button><button id="mr">Retirar</button></div></section>
-  <section class="panel"><h2 class="tabs"><button id="tabhz" class="on">Peligros activos</button><button id="tabfc" title="Previsión de posibles conflictos en los próximos 20 min (informativa)">🔮 Previsión <span id="fcn"></span></button></h2><div id="hz"></div><div id="fc" hidden></div></section>
+  <section class="panel"><h2 class="tabs"><button id="tabhz" class="on">Peligros activos</button><button id="tabfc" title="Previsión de posibles conflictos en los próximos 20 min (informativa)">🔮 Previsión <span id="fcn"></span></button><button id="tabav" title="Avisos oficiales de Renfe Cercanías/Rodalies (informativo)" hidden>🚆 Avisos <span id="avn"></span></button></h2><div id="hz"></div><div id="fc" hidden></div><div id="av" hidden></div></section>
 </aside>
 
 <section class="panel" id="log"></section>
@@ -435,10 +435,17 @@ function renderHazards(){
     hz.appendChild(h('div','hzc '+sev,null,[h('div','t',null,[h('em',null,sev),h('span',null,'Tren '+g.n)]),h('div','m',main.msg+(g.hz.length>1?'  (+'+(g.hz.length-1)+' más)':'')),chainChips(g,t),
       h('div','a',null,[h('b',null,'Aplicado: '),document.createTextNode(ACTION[t?t.cmd:'NONE'])])]))});
   if(gs.length>30)hz.appendChild(h('div','empty','… y '+(gs.length-30)+' trenes más con avisos.'))}
-let fcTab=false;
+let fcTab=false,avTab=false;
 function renderForecast(){
   const F=S.forecast||{items:[],total:0},n=F.items.length,b=$('fcn');b.textContent=F.total||n;b.className=(F.total||n)?'on':'';
-  $('tabhz').className=fcTab?'':'on';$('tabfc').className=fcTab?'on':'';$('hz').hidden=fcTab;$('fc').hidden=!fcTab;
+  const C=S.cercanias,AL=(C&&C.alerts)||[];$('tabav').hidden=!C;$('avn').textContent=AL.length||'';
+  if(!C)avTab=false;
+  $('tabhz').className=(fcTab||avTab)?'':'on';$('tabfc').className=fcTab?'on':'';$('tabav').className=avTab?'on':'';
+  $('hz').hidden=fcTab||avTab;$('fc').hidden=!fcTab;$('av').hidden=!avTab;
+  if(avTab){const bx=$('av');bx.replaceChildren(h('div',null,'Avisos oficiales de Renfe para Cercanías/Rodalies. Informativo: no interviene en la seguridad.'));bx.firstChild.id='fcnote';
+    if(!AL.length)bx.appendChild(h('div','empty',C.alerts_ok===false?'Sin datos de avisos (feed no disponible).':'Sin avisos de servicio activos.'));
+    AL.forEach(a=>bx.appendChild(h('div','fci',null,[h('div','t',null,[h('em',null,a.region+(a.lines.length?' · '+a.lines.join(' '):'')),h('small',null,a.age_h<1?'hace <1 h':'hace '+a.age_h+' h')]),h('div','m',a.text)])));
+    return}
   if(!fcTab)return;
   const box=$('fc');box.replaceChildren(h('div',null,'Posibles conflictos en los próximos '+Math.round((F.horizon_s||1200)/60)+' min «si nada cambia». Informativo: no ordena nada.'));box.firstChild.id='fcnote';
   if(!n){box.appendChild(h('div','empty','Sin conflictos previstos en la ventana.'));box.appendChild(h('div','sg2',F.note||''));return}
@@ -447,7 +454,7 @@ function renderForecast(){
     h('div','m',f.msg),h('div','th',f.then),h('div','sg2','Tramo: '+f.seg+' · trenes: '+f.trains.join(' · '))])));
   if(F.total>n)box.appendChild(h('div','empty','… y '+(F.total-n)+' previsiones más.'));
   box.appendChild(h('div','sg2',F.note||''))}
-$('tabhz').onclick=()=>{fcTab=false;renderForecast()};$('tabfc').onclick=()=>{fcTab=true;renderForecast()};
+$('tabhz').onclick=()=>{fcTab=avTab=false;renderForecast()};$('tabfc').onclick=()=>{fcTab=true;avTab=false;renderForecast()};$('tabav').onclick=()=>{avTab=true;fcTab=false;renderForecast()};
 function renderActing(){
   const a=$('acting');a.replaceChildren();const stops=S.trains.filter(t=>t.cmd==='STOP'),rs=S.trains.filter(t=>t.cmd==='RESTRICT').length;
   if(stops.length===1){const t=stops[0],dets=[...new Set(S.hazards.filter(x=>x.trains.includes(t.n)).map(x=>x.barrier))].join('+')||'B5';

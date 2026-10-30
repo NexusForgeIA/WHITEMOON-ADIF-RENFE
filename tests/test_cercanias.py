@@ -39,3 +39,19 @@ def test_fixture_real_si_existe():
         return
     tr, _ = cercanias.parse(json.load(open(p)))
     assert len(tr) > 100 and all(t["line"] for t in tr[:50])
+
+
+def test_avisos_filtra_ascensores_y_antiguos_y_mapea_lineas():
+    doc = {"header": {"timestamp": "100000"}, "entity": [
+        {"id": "A", "alert": {"activePeriod": [{"start": "96400"}], "informedEntity": [{"routeId": "51T0244R3"}, {"routeId": "51T0015R3"}],
+         "descriptionText": {"translation": [{"text": "Sin servicio ferroviario. "}]}}},
+        {"id": "B", "alert": {"activePeriod": [{"start": "96400"}], "informedEntity": [{"stopId": "70100"}],
+         "descriptionText": {"translation": [{"text": "Ascensor de Vicálvaro fuera de servicio"}]}}},
+        {"id": "C", "alert": {"activePeriod": [{"start": "999999"}], "informedEntity": [{"routeId": "10T0011C4"}],
+         "descriptionText": {"translation": [{"text": "Sin servicio futuro"}]}}},
+        {"id": "D", "alert": {"activePeriod": [{"start": "1"}], "informedEntity": [{"routeId": "10T0014C4a"}],
+         "descriptionText": {"translation": [{"text": "Por reajuste de servicio, tren con salida a las 09:05h inicia su recorrido en Tres Cantos"}]}}}]}
+    al = cercanias.parse_alerts(doc)
+    assert [a["id"] for a in al] == ["A", "D"]
+    assert al[0]["lines"] == ["R3"] and al[0]["region"] == "Rodalies Catalunya" and al[0]["age_h"] == 1
+    assert al[1]["lines"] == ["C4"] and al[1]["region"] == "Madrid"
