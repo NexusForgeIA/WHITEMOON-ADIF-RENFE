@@ -8,6 +8,8 @@ electrificación ni velocidades. Esos datos siguen pendientes de Adif. Aquí no 
 """
 import io
 import re
+import time
+from concurrent.futures import ThreadPoolExecutor
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -17,6 +19,7 @@ from renfe_adapter import project
 BASE = "https://servicios.idee.es/wfs-inspire/transportes"
 UA = {"User-Agent": "RailGuard/1.0 (WhiteMoon; supervision ferroviaria; contacto whitemoon.es)"}
 PAGE = 4000
+WORKERS = 4
 
 
 def _url(**kw):
@@ -55,22 +58,30 @@ def load(diag, simplify, max_pages=40):
     total = int(m.group(1)) if m else None
     diag["total"] = total
     ways, got, real = [], 0, 0
-    for page in range(max_pages):
-        raw = _get(_url(service="WFS", version="2.0.0", request="GetFeature", typeNames="tn-ra:RailwayLink",
-                        srsName="urn:ogc:def:crs:EPSG::4326", count=PAGE, startIndex=page * PAGE))
-        links = parse_links(raw)
-        got += len(links)
-        diag["downloaded"] = got
-        for fict, ll in links:
-            if fict:
-                continue   # conectores ficticios (enlaces de estación): no son vía
-            pts = simplify([project(la, lo) for la, lo in ll])
-            if len(pts) >= 2:
-                real += 1
-                ways.append({"t": None, "s": None, "v": None, "el": None, "src": "ign",
-                             "p": [[round(x, 2), round(y, 2)] for x, y in pts]})
-        if len(links) < PAGE or (total and got >= total):
-            break
+    pages = min(max_pages, (total // PAGE + 1) if total else max_pages)
+
+    def fetch(page):
+        for attempt in range(3):
+            try:
+                return parse_links(_get(_url(service="WFS", version="2.0.0", request="GetFeature", typeNames="tn-ra:RailwayLink",
+                                             srsName="urn:ogc:def:crs:EPSG::4326", count=PAGE, startIndex=page * PAGE), 180))
+            except Exception as ex:
+                diag["last_error"] = repr(ex)[:120]
+                time.sleep(2 * (attempt + 1))
+        raise RuntimeError(f"página {page} del IGN no disponible: {diag.get('last_error')}")
+
+    with ThreadPoolExecutor(max_workers=WORKERS) as ex:   # páginas en paralelo: el servidor tarda más cuanto más profundo es el offset
+        for links in ex.map(fetch, range(pages)):
+            got += len(links)
+            diag["downloaded"] = got
+            for fict, ll in links:
+                if fict:
+                    continue   # conectores ficticios (enlaces de estación): no son vía
+                pts = simplify([project(la, lo) for la, lo in ll])
+                if len(pts) >= 2:
+                    real += 1
+                    ways.append({"t": None, "s": None, "v": None, "el": None, "src": "ign",
+                                 "p": [[round(x, 2), round(y, 2)] for x, y in pts]})
     diag["real_links"] = real
     if not ways:
         raise RuntimeError("IGN WFS sin tramos utilizables")
