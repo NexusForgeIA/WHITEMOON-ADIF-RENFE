@@ -19,8 +19,9 @@ from renfe_adapter import project
 import adif_wfs
 import ign_wfs
 
-ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
-             "https://overpass.private.coffee/api/interpreter"]
+# overpass.openstreetmap.fr responde en segundos (5 s por tesela de 1°); overpass-api.de suele estar saturado
+ENDPOINTS = ["https://overpass.openstreetmap.fr/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+             "https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
 # Península + Baleares (aprox.), en teselas de 1°×1° para no agotar el tiempo de Overpass
 LAT0, LAT1, LON0, LON1, STEP = 36.0, 44.0, -9.5, 3.5, 1.0
 TOL_KM = 0.05          # simplificación de geometría (50 m)
