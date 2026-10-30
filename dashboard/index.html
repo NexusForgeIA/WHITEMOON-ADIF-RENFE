@@ -244,7 +244,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 
 .tb{gap:4px 4px;padding:5px 6px}
 .tb label{padding:5px 8px;border-radius:7px;min-height:28px;user-select:none;-webkit-tap-highlight-color:transparent}
-.tb label:hover{background:#ffffff14}.tb label:has(input:checked){color:var(--tx)}
+.tb label[hidden]{display:none}.tb label:hover{background:#ffffff14}.tb label:has(input:checked){color:var(--tx)}
 .tb input[type=checkbox]{width:15px;height:15px;margin:0;cursor:pointer}
 .tb button,.tb select{min-height:28px}
 @media(pointer:coarse){.tb label{min-height:34px;padding:7px 10px}.tb button,.tb select{min-height:34px}.tb input[type=checkbox]{width:18px;height:18px}}
@@ -1018,7 +1018,7 @@ cv.addEventListener('pointerup',endP);cv.addEventListener('pointercancel',endP);
 cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect();zoomAt(2,e.clientX-r.left,e.clientY-r.top)});
 $('zi').onclick=()=>base&&zoomAt(1.5,base.W/2,base.H/2);$('zo').onclick=()=>base&&zoomAt(1/1.5,base.W/2,base.H/2);
 $('zr').onclick=()=>{V={z:1,px:0,py:0};draw()};
-['lv','ls','lr','li','lp','lf'].forEach(i=>$(i).onchange=draw);
+['lv','ls','lr','li','lp','lf','lc','lbm','lave','llt','lem'].forEach(i=>{const e=$(i);if(e)e.onchange=()=>{infKey='';draw()}});
 $('opf').onchange=()=>{opf=$('opf').value;draw()};
 addEventListener('resize',()=>{base=null;draw()});
 $('mb').onclick=()=>{const t=$('mt').value.trim();if(t)post('/api/manual',{train:t})};
