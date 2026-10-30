@@ -20,6 +20,7 @@ from centres import Centres, NATIONAL
 from drivers import Drivers
 from engine import Engine
 from infra import Infra
+from ltv import Ltv
 import systems
 import forecast
 
@@ -676,6 +677,7 @@ STATIC = {"/": ("index.html", "text/html"), "/index.html": ("index.html", "text/
 
 
 INFRA = None
+LTV = None
 
 
 class H(BaseHTTPRequestHandler):
@@ -724,6 +726,8 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, APP.systems())
         if path == "/api/safety_systems":
             return self._send(200, _load("safety_systems.json"))
+        if path == "/api/ltv":
+            return self._send(200, LTV.api() if LTV else {"ready": False, "items": []})
         if path == "/api/infra":
             inf = INFRA
             if not inf or not inf.data:
@@ -790,7 +794,7 @@ class H(BaseHTTPRequestHandler):
 
 
 def main():
-    global APP, INFRA
+    global APP, INFRA, LTV
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", help="'renfe' (feed oficial) o URL con el esquema de /api/estado")
     ap.add_argument("--gtfs", help="google_transit.zip de Renfe (ruta o URL); necesario para parada anterior, destino y producto")
@@ -803,6 +807,9 @@ def main():
     if a.source == "renfe" and os.environ.get("RG_INFRA", "1") != "0":
         INFRA = Infra(os.path.join(ROOT, "data", "infra_cache.json"), os.path.join(ROOT, "data", "infra_extra.json"))
         INFRA.start()
+    if a.source == "renfe" and os.environ.get("RG_LTV", "1") != "0":
+        LTV = Ltv(os.path.join(ROOT, "data", "ltv_cache.json"))
+        LTV.start()
 
     def loop(fn, period):
         while True:

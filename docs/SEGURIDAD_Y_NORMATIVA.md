@@ -108,3 +108,10 @@ Datos en `data/safety_systems.json` (clave `declaracion_red_2026`). Libro de 464
 - **Perturbaciones:** Plan de Contingencia con criterios de prioridad (no discriminación, jerarquía, publicidad, objetividad, regulación, proporcionalidad). Adif puede cancelar, desviar o cambiar surcos sin aviso en emergencia.
 - **Lo que NO trae:** velocidades por línea ni por PK (la tabla oficial es otro documento; en el libro solo hay mapas resumen que están aparte en la web de Adif), ni distancias de frenado, ni LTV, ni datos de señales. Esa información está en la ICL (mensual y anual) y el Manual de Capacidad, que se distribuyen por RGD a empresas ferroviarias con licencia y certificado de seguridad.
 - **Consecuencia:** el perfil de velocidad por PK de B2 sigue basado en FCMAF (no oficial) y limitado a zonas lentas. Para sustituirlo por datos oficiales hay que obtener la tabla de velocidades máximas o la ICL a través de Adif.
+
+
+## LTV (limitaciones temporales de velocidad) de Adif
+- Fuente: FeatureServer público del visor «Límites temporales de velocidad» de Adif (ArcGIS). Informativo; no es un feed de seguridad ni está certificado.
+- `ltv.py` lo descarga cada 30 min, cachea en `data/ltv_cache.json` y lo sirve en `/api/ltv`. Si Adif/ArcGIS no responde se mantiene la última caché; sin caché la capa queda vacía (no se inventan datos).
+- Mapa: capa «LTV» (punto naranja con km/h). Aún NO interviene en B2: no se generan avisos por LTV hasta validar el cruce con la posición de los trenes.
+- Instantánea del visor al 30/10/2026: 1024 restricciones activas (actualización del visor: 26/10/2026).
