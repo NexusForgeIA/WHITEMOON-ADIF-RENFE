@@ -211,6 +211,7 @@ class Extras:
             s["ok"], s["n"], s["err"] = err is None, n, (repr(err)[:120] if err else None)
             if err is None:
                 s["last_ok"] = self.now()
+        self.log(f"[extras] {key}: " + ("ok (%d)" % n if err is None else "ERROR " + repr(err)[:100]))
 
     def refresh_ree(self):
         try:
