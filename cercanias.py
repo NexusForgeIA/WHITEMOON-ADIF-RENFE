@@ -15,6 +15,7 @@ from renfe_adapter import project
 
 URL = "https://gtfsrt.renfe.com/vehicle_positions.json"
 URL_ALERTS = "https://gtfsrt.renfe.com/alerts.json"
+URL_TU = "https://gtfsrt.renfe.com/trip_updates.json"
 REGION = {"10": "Madrid", "30": "Sevilla", "31": "Cádiz/Jerez", "32": "Málaga", "40": "Valencia", "41": "Murcia/Alicante", "51": "Rodalies Catalunya"}
 _SERVICE = re.compile(r"sin servicio|no presta|suspendid|retraso|v[ií]a [uú]nica|transbordo|alternativ|no se puede garantizar|afectaci|no prestan|inicia su recorrido|fuera de su horario|incidencia", re.I)
 _ACCESS = re.compile(r"ascensor|PMR|movilidad reducida|aseos|accesib", re.I)
@@ -60,7 +61,7 @@ def parse(doc, now=None, km_per_px=1.0):
         line, num = _clean_label(str(_g(veh, "label", default=vid)), vid)
         x, y = project(lat, lon)
         ts = int(_g(v, "timestamp", default=0) or 0)
-        out.append({"id": vid, "n": (line + " " + num).strip(), "line": line, "x": x / km_per_px, "y": y / km_per_px,
+        out.append({"id": vid, "trip": str(_g(_g(v, "trip", default={}) or {}, "tripId", "trip_id", default="") or ""), "n": (line + " " + num).strip(), "line": line, "x": x / km_per_px, "y": y / km_per_px,
                     "st": _g(v, "currentStatus", "current_status", default="?"), "stop": str(_g(v, "stopId", "stop_id", default="") or ""),
                     "age_s": max(0, int(now - ts)) if ts else None})
     hdr = int(_g(_g(doc, "header", default={}), "timestamp", default=0) or 0)
@@ -99,10 +100,11 @@ def parse_alerts(doc, now=None, limit=12):
 
 
 class CercaniasFeed:
-    def __init__(self, km_per_px, opener=None, period=20, now=time.time, alerts_opener=None):
+    def __init__(self, km_per_px, opener=None, period=20, now=time.time, alerts_opener=None, tu_opener=None):
         self.k, self.open, self.period, self.now = km_per_px, opener or _fetch, period, now
         self.trains, self.hdr, self.ok_at, self.err, self.lines = [], 0, 0, None, {}
         self.alerts, self.alerts_ok, self.open_alerts = [], None, alerts_opener or (lambda: _fetch(URL_ALERTS))
+        self.open_tu, self.delays, self.delays_ok = tu_opener or (lambda: _fetch(URL_TU)), {}, None
         self._stop = False
 
     def poll(self):
@@ -115,6 +117,11 @@ class CercaniasFeed:
                 self.lines[t["line"] or "?"] = self.lines.get(t["line"] or "?", 0) + 1
         except Exception as ex:
             self.err = repr(ex)[:140]
+        try:   # retrasos (trip_updates): fallo independiente; sin ellos los trenes siguen dibujándose
+            from renfe_adapter import RenfeFeed
+            self.delays, self.delays_ok = RenfeFeed._delays(self.open_tu()), True
+        except Exception:
+            self.delays_ok = False
         try:   # avisos: fallo independiente de las posiciones
             self.alerts, self.alerts_ok = parse_alerts(self.open_alerts(), self.now()), True
         except Exception:
@@ -127,10 +134,20 @@ class CercaniasFeed:
                 time.sleep(self.period)
         threading.Thread(target=loop, daemon=True, name="cercanias").start()
 
+    def delay_min(self, t):
+        d = self.delays.get(t.get("trip"))
+        return None if d is None else round(d / 60)
+
+    def delay_rows(self):
+        """[(n.º tren, retraso en min, "CER")] solo de trenes con retraso informado por Renfe (los demás no se cuentan como puntuales)."""
+        if self.ok_at == 0 or self.now() - self.ok_at > 120:
+            return []
+        return [(t["n"], max(0, r), "CER") for t in self.trains for r in [self.delay_min(t)] if r is not None]
+
     def snapshot(self):
         age = None if not self.ok_at else round(self.now() - self.ok_at)
         stale = self.ok_at == 0 or age > 120
         return {"ok": not stale and not self.err, "err": self.err, "age_s": age, "count": len(self.trains), "lines": self.lines,
                 "hdr_age_s": round(self.now() - self.hdr) if self.hdr else None,
-                "alerts": self.alerts, "alerts_ok": self.alerts_ok,
-                "trains": [] if stale else [[t["n"], round(t["x"], 2), round(t["y"], 2), t["st"], t["stop"], t["age_s"]] for t in self.trains]}
+                "alerts": self.alerts, "alerts_ok": self.alerts_ok, "delays_ok": self.delays_ok, "delay_n": len(self.delay_rows()),
+                "trains": [] if stale else [[t["n"], round(t["x"], 2), round(t["y"], 2), t["st"], t["stop"], t["age_s"], self.delay_min(t)] for t in self.trains]}

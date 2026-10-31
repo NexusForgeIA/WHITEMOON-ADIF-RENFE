@@ -53,3 +53,9 @@ def test_segmentos_alta_velocidad_y_convencional():
 def test_segmento_vacio_no_divide_por_cero():
     k = pu.compute([("1", 5, "MD")], "av")
     assert k["n"] == 0 and k["pct_delayed"] == 0.0 and k["worst"] == []
+
+
+def test_segmento_cercanias_con_retraso_informado():
+    k = pu.compute([("C1 100", 0, "CER"), ("C1 101", 12, "CER"), ("AVE1", 30, "AVE")], "cer")
+    assert k["n"] == 2 and k["delayed"] == 1 and k["seg"] == "cer" and k["seg_label"] == "Cercanías"
+    assert pu.compute([("C1 100", 12, "CER"), ("1", 0, "AVE")], "av")["n"] == 1

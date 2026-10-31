@@ -15,9 +15,9 @@ TZ = ZoneInfo("Europe/Madrid")
 DELAY_MIN = 5   # umbral de «con retraso» (criterio habitual de puntualidad)
 # categoría -> minutos de retraso a partir de los cuales hay indemnización (Renfe: «60 min o más» en AVE/LD; «más de» en el resto)
 INDEM_MIN = {"AVE": 60, "AVLO": 60, "LD": 60, "AVANT": 16, "MD": 16, "REG": 31}
-LABEL = {"AVE": "AVE", "AVLO": "Avlo", "LD": "Larga Distancia", "AVANT": "Avant", "MD": "Media Distancia", "REG": "Regional", "OTRO": "Otros"}
+LABEL = {"AVE": "AVE", "AVLO": "Avlo", "LD": "Larga Distancia", "AVANT": "Avant", "MD": "Media Distancia", "REG": "Regional", "OTRO": "Otros", "CER": "Cercanías"}
 # Segmentos como en retrasados.es: Alta velocidad = AVE, Avlo y Avant (circulan por línea de alta velocidad); Convencional = el resto de larga/media distancia
-SEGMENTS = {"all": None, "av": {"AVE", "AVLO", "AVANT"}, "conv": {"LD", "MD", "REG", "OTRO"}}
+SEGMENTS = {"all": None, "av": {"AVE", "AVLO", "AVANT"}, "conv": {"LD", "MD", "REG", "OTRO"}, "cer": {"CER"}}
 SEG_LABEL = {"all": "Toda la red (sin Cercanías)", "av": "Alta velocidad", "conv": "Convencional", "cer": "Cercanías"}
 BUCKETS = [(0, 5, "< 5 min"), (5, 15, "5–15"), (15, 30, "15–30"), (30, 60, "30–60"), (60, 90, "60–90"), (90, 10 ** 6, "> 90")]
 

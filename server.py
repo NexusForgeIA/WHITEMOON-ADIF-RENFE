@@ -26,6 +26,7 @@ from traffic import Traffic
 from news import News
 import persist
 import punctuality
+import watch as watchmod
 from visits import Visits
 import systems
 import forecast
@@ -86,6 +87,8 @@ class App:
                 self.cercanias.start()
             except Exception as ex:
                 print("Cercanías no disponible:", repr(ex))
+        self.watch = watchmod.Watch()   # vigilancia contextual informativa (no toca las barreras)
+        self.watch_items = []
         self.operators = _load("operators.json")
         self.drivers = Drivers(os.path.join(ROOT, "data", "drivers.json"))
         self.tablets = {}        # tren -> {x,y (km),ts,acc,driver}
@@ -198,6 +201,27 @@ class App:
                 raw = self._tablet_raw(set(), now) or None
             self.engine.step(raw, now)
             self._update_zones(now)
+            if self.feed:
+                try:
+                    self.watch_items = self._watch(now, raw is not None)
+                except Exception as ex:   # informativo: un fallo aquí nunca puede afectar a la lectura de trenes
+                    self.watch_items = []
+                    print("[vigilancia] error:", repr(ex))
+
+    def _watch(self, now, feed_ok):
+        k = self.engine.cfg["km_per_px"]
+        trains = [{"n": t.n, "x": t.x / k, "y": t.y / k, "kmh": t.kmh, "ret": t.ret} for t in self.engine.trains]
+        ex = EXTRAS.snapshot() if EXTRAS else {}
+        health = [{"id": "renfe", "name": "Feed de Renfe (posiciones)", "ok": feed_ok, "err": None if feed_ok else "Sin respuesta en la última lectura", "critical": True}]
+        for key, label in (("ree", "Red Eléctrica"), ("ign", "IGN terremotos"), ("aemet", "AEMET avisos"), ("firms", "NASA FIRMS")):
+            st = (ex.get("status") or {}).get(key)
+            if st and st["ok"] is False and (not st["last_ok"] or time.time() - st["last_ok"] > st["interval"] * 3):
+                health.append({"id": key, "name": label, "ok": False, "err": st["err"]})
+        for nm, obj, label in (("noticias", NEWS, "Noticias"), ("emergencia", EMG, "Recursos de emergencia")):
+            api = obj.api() if obj else None
+            if api and (api.get("status") or {}).get("state") == "error":
+                health.append({"id": nm, "name": label, "ok": False, "err": str((api["status"] or {}).get("error") or "")[:120]})
+        return self.watch.evaluate(trains, self.engine.est, now, feed_age_s=(self.feed.stats or {}).get("header_age_s", 0), health=health, extras=ex)
 
     # ---------- zonas y traspasos entre centros ----------
     def _update_zones(self, now):
@@ -410,6 +434,9 @@ class App:
                                 "trains": cnt.get(o["id"], 0)} for o in self.operators]
                               + [{"id": i, "name": i, "type": "?", "verified": False, "trains": n} for i, n in cnt.items() if i not in known])
             s["drivers"] = self.drivers.listing()
+            s["watch"] = self.watch_items if self.feed else []
+            _x = EXTRAS.snapshot() if (EXTRAS and self.feed) else {}
+            s["ree"], s["extras_status"] = _x.get("ree"), _x.get("status")
             s["proximity_km"] = self.engine.cfg["proximity_km"]
             s["proximity_mode"] = self.engine.cfg["proximity_mode"]
             self._annotate(s, now)
@@ -687,17 +714,19 @@ LTV = None
 EMG = None
 TRAF = None
 NEWS = None
+EXTRAS = None
 SYNC = None
 _remote = persist.from_env()
 if _remote:     # cachés en Supabase: sobreviven a los reinicios de Render. La descarga se acota para no retrasar el arranque.
-    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache_v2.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json", "punct_history_av.json", "punct_history_conv.json", "visits.json")})
+    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache_v2.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json", "punct_history_av.json", "punct_history_conv.json", "punct_history_cer.json", "visits.json")})
     _t = threading.Thread(target=SYNC.restore, daemon=True)
     _t.start()
     _t.join(60)
 VISITS = Visits(os.path.join(ROOT, "data", "visits.json"))
 PUNCT = {"all": punctuality.History(os.path.join(ROOT, "data", "punct_history.json")),
          "av": punctuality.History(os.path.join(ROOT, "data", "punct_history_av.json")),
-         "conv": punctuality.History(os.path.join(ROOT, "data", "punct_history_conv.json"))}
+         "conv": punctuality.History(os.path.join(ROOT, "data", "punct_history_conv.json")),
+         "cer": punctuality.History(os.path.join(ROOT, "data", "punct_history_cer.json"))}
 
 
 class H(BaseHTTPRequestHandler):
@@ -746,13 +775,20 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, APP.systems())
         if path == "/api/safety_systems":
             return self._send(200, _load("safety_systems.json"))
+        if path == "/api/fuentes":
+            return self._send(200, {"extras": EXTRAS.snapshot()["status"] if EXTRAS else {}, "noticias": (NEWS.api().get("status") if NEWS else None),
+                                    "renfe": getattr(APP.feed, "stats", None), "atribucion": "Origen de los datos: Renfe Operadora (CC BY 4.0; datos normalizados y combinados con sus horarios)"})
         if path == "/api/visitas":
             return self._send(200, VISITS.api())
         if path == "/api/punct":
             seg = (urllib.parse.parse_qs(self.path.partition("?")[2]).get("seg") or ["all"])[0]
-            if seg == "cer":     # el feed de Cercanías de Renfe solo trae posiciones, sin retrasos
-                return self._send(200, {"n": 0, "seg": "cer", "seg_label": punctuality.SEG_LABEL["cer"], "no_data": True,
-                                        "note": "El feed público de Cercanías de Renfe solo publica posiciones, sin retrasos: no se puede calcular su puntualidad."})
+            if seg == "cer":     # retraso de Cercanías: trip_updates del feed GTFS-RT oficial de Renfe (solo trenes con retraso informado)
+                rows = APP.cercanias.delay_rows() if APP.cercanias else []
+                if not rows:
+                    return self._send(200, {"n": 0, "seg": "cer", "seg_label": punctuality.SEG_LABEL["cer"], "no_data": True,
+                                            "note": "Aún no hay retrasos de Cercanías: el feed oficial de Renfe no los ha informado todavía o no responde."})
+                k = punctuality.compute(rows, "cer")
+                return self._send(200, {**k, "history": PUNCT["cer"].series(), "source": "Feed GTFS-RT de Renfe Cercanías (trip_updates); solo trenes con retraso informado"})
             seg = seg if seg in punctuality.SEGMENTS else "all"
             k = punctuality.compute(((t.n, t.ret, t.cat) for t in APP.engine.trains), seg)
             return self._send(200, {**k, "history": PUNCT[seg].series(), "source": "Feed GTFS-RT de Renfe (larga distancia, AVE, Avant); umbrales del compromiso de puntualidad de Renfe"})
@@ -834,7 +870,7 @@ class H(BaseHTTPRequestHandler):
 
 
 def main():
-    global APP, INFRA, LTV, EMG, TRAF, NEWS
+    global APP, INFRA, LTV, EMG, TRAF, NEWS, EXTRAS
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", help="'renfe' (feed oficial) o URL con el esquema de /api/estado")
     ap.add_argument("--gtfs", help="google_transit.zip de Renfe (ruta o URL); necesario para parada anterior, destino y producto")
@@ -856,6 +892,10 @@ def main():
     if a.source == "renfe" and os.environ.get("RG_TRAFFIC", "1") != "0":
         TRAF = Traffic(os.path.join(ROOT, "data", "traffic_cache.json"))
         TRAF.start()
+    if a.source == "renfe" and os.environ.get("RG_EXTRAS", "1") != "0":   # Red Eléctrica, IGN, AEMET y FIRMS: gratuitas y sin clave
+        from extras import Extras
+        EXTRAS = Extras()
+        EXTRAS.start()
     if a.source == "renfe" and os.environ.get("RG_NEWS", "1") != "0":
         NEWS = News(os.path.join(ROOT, "data", "news_cache.json"))
         NEWS.start()
@@ -879,7 +919,9 @@ def main():
         if a.source == "renfe":
             rows = [(t.n, t.ret, t.cat) for t in APP.engine.trains]
             for sg, h in PUNCT.items():
-                h.add(punctuality.compute(rows, sg))
+                crow = APP.cercanias.delay_rows() if sg == "cer" and APP.cercanias else rows
+                if sg != "cer" or crow:
+                    h.add(punctuality.compute(crow, sg))
     threading.Thread(target=loop, args=(tick, a.period), daemon=True).start()
     threading.Thread(target=loop, args=(APP.prox_tick, 1.0), daemon=True).start()
     print(f"RailGuard ({APP.mode}) en http://{a.host}:{a.port}   ·   cabina: /tablet"

@@ -218,18 +218,18 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 
 /* Pantallas bajas: una sola barra de scroll de la página (sin paneles con scroll propio) */
 @media(min-width:1101px){
-  body{height:auto;min-height:100vh;grid-template-rows:auto auto auto auto auto auto auto}
+  body{height:auto;min-height:100vh;grid-template-rows:auto auto auto auto auto auto auto auto auto}
   .panel,#chain,#log,#cabins{overflow:visible;max-height:none}
   #right{display:contents}
   /* Tres columnas sin huecos: izquierda (defensas) | centro (mapa, peligros, registro) | derecha (retrasos, cola, cabinas) */
   #pun{grid-column:1/4;grid-row:3}#mapwrap{grid-column:1/3;grid-row:4}
   #rtop{grid-column:3;grid-row:4;display:flex;flex-direction:column;gap:10px;min-width:0}#rtop .panel{flex:none}#rtop #cabins{flex:1 1 auto}
   /* Defensa en profundidad: franja horizontal inferior a todo el ancho, tarjetas iguales que se reparten el espacio (sin huecos) */
-  #chain{grid-column:1/-1;grid-row:7;display:block}
+  #chain{grid-column:1/-1;grid-row:8;display:block}#attr{grid-row:9}
   #chain #bars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:stretch}@media(min-width:1300px){#chain #bars{grid-template-columns:repeat(8,1fr)}}#chain #bars>*{margin:0;min-width:0}#chain #bars .arrow{display:none}
   #chain .bar{overflow:hidden}#chain .bar .t{flex-direction:column;align-items:flex-start;gap:4px}#chain .bar .t i{white-space:nowrap;max-width:100%}
-  #hzp{grid-column:1/4;grid-row:5;min-width:0}#log{grid-column:1/4;grid-row:6;display:flex;flex-direction:column}#log .more{margin-top:auto}
-  body.full #pun{display:none}body.full #rtop{display:contents}body.full #hzp{grid-column:auto;grid-row:auto}body.full #hz{display:block}body.full #cabins{display:none}
+  #wat{grid-column:1/4;grid-row:5;min-width:0}#hzp{grid-column:1/4;grid-row:6;min-width:0}#log{grid-column:1/4;grid-row:7;display:flex;flex-direction:column}#log .more{margin-top:auto}
+  body.full #attr{display:none}body.full #wat{display:none}body.full #pun{display:none}body.full #rtop{display:contents}body.full #hzp{grid-column:auto;grid-row:auto}body.full #hz{display:block}body.full #cabins{display:none}
   #hz{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:start}#hz .hzc{margin:0}#hz>.empty,#hz>.ll,#hz>div:not(.hzc){grid-column:1/-1}
   /* el mapa ocupa todo el alto de su fila (la fila la fija la columna derecha si es más alta): nunca queda hueco bajo él */
   #mapwrap{height:auto;min-height:clamp(520px,calc(100vh - 300px),720px);align-self:stretch}#mapwrap canvas{position:absolute;inset:0}
@@ -256,6 +256,12 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   body.full #right{display:grid}body.full #cabins{display:none}
 }
 
+#wat h2{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#wat .wi{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:7px 9px;border:1px solid var(--line);border-left-width:4px;border-radius:8px;margin:6px 0;background:#0e1620}
+#wat .wi.s0{border-left-color:var(--stop)}#wat .wi.s1{border-left-color:var(--res)}#wat .wi.s2{border-left-color:var(--cau)}#wat .wi.s3{border-left-color:var(--mut)}
+#wat .wi b{font-size:12.5px}#wat .wi small{color:var(--mut);grid-column:2}#wat .wi .sv{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);align-self:center}
+#wat .wok{color:var(--ok);font-size:12.5px;margin:6px 0}#wat .wsrc{color:var(--mut);font-size:11px;margin-top:6px}#wat .wsrc .bad{color:var(--res)}
+#wat .ree{display:inline-block;margin:4px 0;padding:3px 9px;border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--mut)}#wat .ree b{color:var(--tx)}
 #pun h2{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.pmut{font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--mut)}
 #punk{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
 .pk{background:#0b121a;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0;display:flex;flex-direction:column}
@@ -354,6 +360,8 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 </section>
 
 <section class="panel" id="pun" hidden><h2>Puntualidad de la red <span class="pmut" id="punsub"></span></h2><div class="pseg" id="pseg" role="group" aria-label="Segmento"></div><div id="punk"></div><div id="pund"></div></section>
+<section class="panel" id="wat"><h2>Vigilancia contextual <span class="pmut" id="watsub">informativa · no actúa sobre las barreras</span></h2><div id="watree"></div><div id="watl"></div><div class="wsrc" id="watsrc"></div></section>
+<footer id="attr" style="grid-column:1/-1;color:var(--mut);font-size:11px;padding:2px 4px">Origen de los datos: Renfe Operadora (CC BY 4.0; datos normalizados y combinados con sus horarios) · Red Eléctrica (REData) · IGN (CC-BY 4.0) · AEMET · NASA FIRMS · Herramienta consultiva, sin certificar; no sustituye a los sistemas de seguridad de Adif ni de los operadores.</footer>
 <button id="fullx">✕ Cerrar vista completa</button>
 <div id="tvov" hidden></div>
 <div id="dm" hidden></div>
@@ -418,11 +426,19 @@ function renderOuts(list){
   if(hard.length>2){const m=h('div','oi','+'+(hard.length-2)+' más · ver todos');m.onclick=openSys;kids.push(m)}
   if(info.length){const m=h('div','oi','ℹ '+info.map(o=>o.title).join(' · '));m.title='Cobertura no disponible (no es una avería). Pulse para ver cómo se compensa.';m.onclick=openSys;kids.push(m)}
   box.replaceChildren(...kids)}
+const WSEV={'muy alta':0,'alta':1,'media':2,'baja':3};
+function renderWatch(){const w=S.watch||[],box=$('watl');if(!box)return;
+  const r=S.ree,st=S.extras_status||{};
+  $('watree').replaceChildren(...(r&&r.demandMW?[(()=>{const d=h('span','ree',null,[document.createTextNode('⚡ Demanda eléctrica '),h('b',null,Math.round(r.demandMW).toLocaleString('es-ES')+' MW'),document.createTextNode(r.deviation==null?'':' · '+(r.deviation>=0?'+':'')+(r.deviation*100).toFixed(1)+' % vs previsión')]);d.title='Red Eléctrica (REData). Una caída brusca frente a lo previsto puede indicar un apagón';return d})()]:[]));
+  box.replaceChildren(...(w.length?w.map(i=>{const s=WSEV[i.sev]??3,d=h('div','wi s'+s,null,[h('span','sv',i.sev),h('b',null,i.title),h('small',null,i.detail+(i.trains&&i.trains.length&&i.type!=='detenido'&&i.type!=='salto-retraso'?'':''))]);return d}):[h('div','wok','✓ Sin situaciones que vigilar ahora mismo (trenes parados fuera de estación, saltos de retraso, avisos meteorológicos, terremotos, focos de calor, red eléctrica)')]));
+  const names={ree:'Red Eléctrica',ign:'IGN terremotos',aemet:'AEMET avisos',firms:'NASA FIRMS'};
+  $('watsrc').replaceChildren(...Object.keys(names).filter(k=>st[k]).map(k=>{const o=st[k],sp=h('span',o.ok===false?'bad':null,names[k]+(o.ok===false?' ✗':o.ok?' ✓':' …'));sp.title=(o.license||'')+(o.err?'\nError: '+o.err:'');return sp}).flatMap((e,i)=>i?[document.createTextNode(' · '),e]:[e]));
+  $('wat').hidden=!(S.watch&&S.mode==='live'||r||Object.keys(st).length)}
 function render(){
   $('mode').textContent=S.mode==='sim'?'SIMULACIÓN sobre captura real':'EN VIVO';$('mode').className='pill '+S.mode;
   $('clock').textContent=fmt(S.now)+' · ciclo '+S.cycle;
   const b=$('banner');b.style.display=S.degraded?'block':'none';if(S.degraded)b.textContent='⚠ '+S.degraded;
-  renderOuts(S.outages||[]);renderForecast();renderDelays();renderTV();try{notifyCheck()}catch(e){}try{renderCab()}catch(e){}
+  renderOuts(S.outages||[]);try{renderWatch()}catch(e){}renderForecast();renderDelays();renderTV();try{notifyCheck()}catch(e){}try{renderCab()}catch(e){}
   const k=S.kpi,ks=$('kpis');ks.replaceChildren(...[['trains','trenes'],['clear','libres'],['caution','precaución'],['restrict','restringidos'],['stop','STOP']].map(([a,l])=>h('div','kpi',null,[h('b',null,k[a]),h('small',null,l)])));
   // cadena
   const bars=$('bars');bars.replaceChildren();
@@ -629,7 +645,7 @@ function donut(pct,col){const r=34,c=2*Math.PI*r,f=c*Math.max(0,Math.min(100,pct
 const fmin=m=>m>=60?Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min':m+' min';
 let PSEG='all';try{PSEG=localStorage.getItem('pseg')||'all'}catch(e){}
 const PSEGS=[['all','Toda la red'],['av','Alta velocidad'],['conv','Convencional'],['cer','Cercanías']];
-function paintSeg(){const b=$('pseg');if(!b)return;b.innerHTML=PSEGS.map(s=>'<button data-s="'+s[0]+'" aria-pressed="'+(s[0]===PSEG)+'" title="'+({all:'Larga y media distancia (sin Cercanías)',av:'AVE, Avlo y Avant',conv:'Larga distancia, media distancia y regional',cer:'El feed de Cercanías no trae retrasos'}[s[0]])+'">'+s[1]+'</button>').join('');
+function paintSeg(){const b=$('pseg');if(!b)return;b.innerHTML=PSEGS.map(s=>'<button data-s="'+s[0]+'" aria-pressed="'+(s[0]===PSEG)+'" title="'+({all:'Larga y media distancia (sin Cercanías)',av:'AVE, Avlo y Avant',conv:'Larga distancia, media distancia y regional',cer:'Retraso de Cercanías según el feed oficial de Renfe (solo trenes con retraso informado)'}[s[0]])+'">'+s[1]+'</button>').join('');
   b.querySelectorAll('button').forEach(e=>e.onclick=()=>{PSEG=e.dataset.s;try{localStorage.setItem('pseg',PSEG)}catch(x){}paintSeg();loadPunct()})}
 async function loadPunct(){try{paintSeg();const r=await fetch('/api/punct?seg='+PSEG,{cache:'no-store'});if(!r.ok)throw 0;const k=await r.json();
   if(k&&k.no_data){$('pun').hidden=false;$('punk').innerHTML='<div class="pk" style="grid-column:1/-1"><div class="l">'+k.seg_label+'</div><div class="s" style="font-size:12.5px;margin-top:6px">'+k.note+'</div></div>';$('pund').innerHTML='';$('punsub').textContent='sin datos';return}
