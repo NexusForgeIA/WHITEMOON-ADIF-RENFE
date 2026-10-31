@@ -80,6 +80,9 @@ def _hms(t):
 STALE_MIN = 20   # un retraso cuya llegada estimada lleva > 20 min en el pasado ya no describe un viaje en curso
 
 
+MIN_DELAY_S = -30 * 60   # un tren no va más de 30 min adelantado: menos que eso es un dato erróneo del feed
+
+
 def eta_epoch(info, delay_s, now):
     """Llegada estimada al destino (epoch s) = hora programada + retraso del feed; None si el GTFS no trae horas.
     Los horarios GTFS son segundos desde las 00:00 del día de servicio (pueden pasar de 86400)."""
@@ -178,7 +181,10 @@ class RenfeFeed:
                 if stu:
                     d = _g(_g(stu[0], "arrival", default={}), "delay")
             if tid is not None and d is not None:
-                out[tid] = int(d)
+                d = int(d)
+                if d < MIN_DELAY_S:    # el feed da a veces -3 h en trenes parados: no es creíble, se ignora y manda el horario
+                    continue
+                out[tid] = d
         return out
 
     def _nm(self, sid):

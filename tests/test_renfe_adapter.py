@@ -196,3 +196,11 @@ def test_duplicado_prefiere_el_que_tiene_parada():
     con["vehicle"]["trip"]["tripId"] = "55555312026-10-30"
     _, tr = feed_with([(T0, [sin, con])]).fetch()
     assert len(tr) == 1 and tr[0]["sig"] == "S1"
+
+
+def test_retraso_imposible_del_feed_se_ignora():
+    from renfe_adapter import RenfeFeed
+    tu = {"entity": [{"tripUpdate": {"trip": {"tripId": "A"}, "delay": -11640}},
+                     {"tripUpdate": {"trip": {"tripId": "B"}, "delay": -240}},
+                     {"tripUpdate": {"trip": {"tripId": "C"}, "delay": 5220}}]}
+    assert RenfeFeed._delays(tu) == {"B": -240, "C": 5220}
