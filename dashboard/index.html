@@ -599,7 +599,7 @@ cv.addEventListener('pointermove',e=>{
   hover=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10)||null;
   if(hover){tip.style.display='block';tip.style.left=(mx+14>r.width-340?Math.max(4,mx-340):mx+14)+'px';tip.style.top=(my+14)+'px';
     const o=(S.operators||[]).find(x=>x.id===hover.op);
-    tip.replaceChildren(h('b',null,hover.n+' · '+({NONE:'NONE (libre)',CAUTION:'CAUTION (precaución)',RESTRICT:'RESTRICT (restringido)',STOP:'STOP'}[hover.cmd]||hover.cmd)+' · '+hover.kmh+' km/h'),h('div',null,(o?o.name:hover.op)+' · retraso '+hover.ret+' min'),
+    tip.replaceChildren(h('b',null,hover.n+' · '+({NONE:'NONE (libre)',CAUTION:'CAUTION (precaución)',RESTRICT:'RESTRICT (restringido)',STOP:'STOP'}[hover.cmd]||hover.cmd)+' · '+vf(hover.kmh)),h('div',null,(o?o.name:hover.op)+' · retraso '+hover.ret+' min'),
       h('div',null,(hover.from||'?')+' → '+(hover.to||'?')+(hover.dest?'  (destino '+hover.dest+')':'')),
       h('div',null,hover.line?hover.line+' · '+hover.signalling:'línea sin catalogar'),
       h('div',null,'ATP a bordo: '+(hover.atp||'sin telemetría')+' · posición: '+(hover.src==='tablet'?'GPS tablet':'feed')))}
@@ -663,6 +663,9 @@ function loadEmg(){clearTimeout(emgT);let again=300000;fetch('/api/emergencia',{
   if(e){e.textContent=EMD?'('+EMD.length+(ld?'…':'')+')':(ld?'(cargando…)':'(sin datos)');e.title=ld&&st.tiles_total?'Descargando de OpenStreetMap: '+(st.tiles_done||0)+' de '+st.tiles_total+' zonas':''}
   if(ld)again=15000;if(typeof draw==='function')draw()}).catch(()=>{again=30000}).finally(()=>{emgT=setTimeout(loadEmg,again)})}
 setTimeout(loadEmg,3000);
+/* La velocidad se DERIVA de posiciones sucesivas (el feed no la trae): precisión típica ±10 %, por eso se redondea a 5 km/h; por encima de 340 es imposible en la red y no se muestra */
+const VBAD=340,vr=k=>Math.round(k/5)*5;
+function vf(k,a){return k>VBAD?'sin dato fiable':(a?'≈ ':'')+vr(k)+' km/h'}
 const kmTo=(a,b)=>{const u=S.unit_km||1;return Math.hypot(a.x*u-b.x,a.y*u-b.y)};
 const fkm=d=>(d<10?d.toFixed(1):Math.round(d)).toString().replace('.',',')+' km';
 function nearEmg(t,k){if(!EMD||!t)return null;let best=null,bd=1e9;EMD.forEach(i=>{if(i.k!==k)return;const d=kmTo(t,i);if(d<bd){bd=d;best=i}});return best?{i:best,d:bd}:null}
@@ -839,7 +842,7 @@ function renderCab(){
   const act=(S.hazards||[]).filter(x=>x.trains.includes(t.n));
   const lab={NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[t.cmd],col=t.cmd==='NONE'?'#14703a':TVCOL[t.cmd];
   const kids=[el('who','▣ '+why+': <b>'+t.n+'</b>'+(t.line?' · '+t.line:'')+(t.op&&t.op!=='?'?' · '+((S.operators||[]).find(o=>o.id===t.op)||{}).name:'')),
-    el('ct','<h4>Velocidad actual</h4><div class="big" style="font-size:28px">'+t.kmh+' <span style="font-size:12px;font-weight:600;color:#5b6f82">km/h · límite '+t.vmax+'</span></div>'+cabBar(t.kmh,t.vmax)),
+    el('ct','<h4>Velocidad actual</h4><div class="big" style="font-size:28px">'+(t.kmh>VBAD?'—':vr(t.kmh))+' <span style="font-size:12px;font-weight:600;color:#5b6f82">km/h · límite '+t.vmax+'</span></div>'+cabBar(t.kmh,t.vmax)),
     el('ct','<h4>Dirección</h4><div class="big">'+(t.to?'→ '+t.to:'—')+'</div><div class="sub">'+(t.dest?'Destino '+t.dest:'')+'</div>'),
     el('ct','<h4>Posición actual</h4><div class="big">'+(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'Hacia '+t.to:'—'))+'</div><div class="sub">'+(t.src==='tablet'?'GPS de tablet de cabina':'Posición del feed')+'</div>'),
     el('ct','<h4>Estado de seguridad</h4><div class="big" style="color:'+col+'">'+lab+'</div><div class="sub">'+(act.length?act[0].msg:'Sin peligros detectados')+'</div>'),
@@ -864,7 +867,7 @@ function showDM(title,sub,rows,foot){const d=$('dm');if(!d)return;
   d.replaceChildren(box);d.hidden=false;d.onclick=ev=>{if(ev.target===d)closeDM()}}
 const SEVL={NONE:'libre',CAUTION:'precaución',RESTRICT:'restringido',STOP:'STOP'};
 function trainRows(f){return (S.trains||[]).filter(f).sort((a,b)=>(CABR[b.cmd]-CABR[a.cmd])||(b.ret-a.ret)).map(t=>{const hz=(S.hazards||[]).filter(x=>x.trains.includes(t.n));
-  return{main:t.n,sev:t.cmd,text:(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'→ '+t.to:''))+' · '+t.kmh+' km/h'+(t.ret>=5?' · +'+t.ret+' min':'')+(hz.length?' · '+hz[0].msg:'')}})}
+  return{main:t.n,sev:t.cmd,text:(t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t.to?'→ '+t.to:''))+' · '+vf(t.kmh)+(t.ret>=5?' · +'+t.ret+' min':'')+(hz.length?' · '+hz[0].msg:'')}})}
 function kpiModal(key,label,f0){const f=f0||{trains:()=>true,clear:t=>t.cmd==='NONE',caution:t=>t.cmd==='CAUTION',restrict:t=>t.cmd==='RESTRICT',stop:t=>t.cmd==='STOP'}[key]||(()=>true);
   const rows=trainRows(f0?f0:(key==='trains'?()=>true:f));showDM(label+' ('+rows.length+')','Pulse un tren para verlo en el mapa. Estado según la orden vigente de RailGuard.',rows)}
 function barrierModal(x){
@@ -1056,12 +1059,12 @@ function renderTV(){
   const ret=d.delay_s!=null?Math.round(d.delay_s/60):t.ret,act=(S.hazards||[]).filter(x=>x.trains.includes(t.n));
   const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;e.innerHTML=html;return e};
   const tile=(ti,body)=>el('div','tl','<h4>'+ti+'</h4>'+body);
-  const card=(o,me)=>o?el('div','tc'+(me?' me':''),'<b>'+o.n+'</b><div>'+o.kmh+' km/h'+(o.ret>=5?' · <span class="bad">+'+o.ret+' min</span>':'')+'</div><div style="color:'+(o.cmd==='NONE'?'#14703a':TVCOL[o.cmd])+'">● '+({NONE:'libre',CAUTION:'precaución',RESTRICT:'restringido',STOP:'STOP'}[o.cmd])+'</div>'+(me?'<div class="dk">Nuestro tren</div>':'<div class="dk">'+(o.d<10?o.d.toFixed(1):Math.round(o.d)).toString().replace('.',',')+' km '+(o.ahead?'delante':'detrás')+'</div>')):el('div','tc e','—');
+  const card=(o,me)=>o?el('div','tc'+(me?' me':''),'<b>'+o.n+'</b><div>'+vf(o.kmh)+(o.ret>=5?' · <span class="bad">+'+o.ret+' min</span>':'')+'</div><div style="color:'+(o.cmd==='NONE'?'#14703a':TVCOL[o.cmd])+'">● '+({NONE:'libre',CAUTION:'precaución',RESTRICT:'restringido',STOP:'STOP'}[o.cmd])+'</div>'+(me?'<div class="dk">Nuestro tren</div>':'<div class="dk">'+(o.d<10?o.d.toFixed(1):Math.round(o.d)).toString().replace('.',',')+' km '+(o.ahead?'delante':'detrás')+'</div>')):el('div','tc e','—');
   const slot=(a,i,n)=>a[a.length-n+i]||null;
   const hd=el('div','hd','<div style="font-size:30px">🚆</div><div><h1>'+(d.product?d.product+' ':'')+t.n+'</h1><small>'+(d.ori&&d.des?d.ori+' → '+d.des:(t.from||'?')+' → '+(t.to||'?')+(t.dest?' (destino '+t.dest+')':''))+(t.line?' · '+t.line:'')+'</small></div><div class="st '+t.cmd+'">'+TVTXT[t.cmd]+'<small>'+(act.length?act.length+' aviso(s) de barreras':'Sin avisos de las barreras')+'</small></div><div class="sp"></div><div style="text-align:right;font-size:13px;color:#44586b">'+fmt(S.now)+'<br>ciclo '+S.cycle+' · '+(S.mode==='sim'?'SIMULACIÓN':'EN VIVO')+'</div>');
   const cb=h('button',null,'✕ Cerrar');cb.onclick=closeTV;hd.appendChild(cb);
   const tiles=el('div','tiles','');
-  tiles.append(tile('Velocidad actual',tvGauge(t.kmh,t.vmax)+'<div class="sub">Verde: permitida · amarillo +3 % aviso · naranja +8 % restricción · rojo +15 % freno de emergencia. Límite de referencia de RailGuard, no el oficial de la línea.</div>'),
+  tiles.append(tile('Velocidad actual',tvGauge(Math.min(t.kmh,VBAD),t.vmax)+'<div class="sub">Verde: permitida · amarillo +3 % aviso · naranja +8 % restricción · rojo +15 % freno de emergencia. Límite de referencia de RailGuard, no el oficial de la línea.</div>'),
     tile('Dirección','<div class="big" style="font-size:20px">'+(t.to?'→ '+t.to:'—')+'</div><div class="sub">'+(t.dest?'Destino: '+t.dest:'')+'</div>'),
     tile('Posición actual','<div class="big" style="font-size:19px">'+(t.from&&t.to&&t.from!==t.to?'Entre '+t.from+' y '+t.to:(d.where||(t.to?'Hacia '+t.to:'—')))+'</div><div class="sub">'+(t.src==='tablet'?'GPS de la tablet de cabina':'Posición del feed de Renfe')+' · sin P.K. (pendiente de datos de Adif)</div>'),
     tile('Estado de seguridad','<div class="big" style="color:'+(t.cmd==='NONE'?'#14703a':TVCOL[t.cmd])+'">'+({NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[t.cmd])+'</div><div class="sub">'+(act.length?act.slice(0,2).map(x=>x.barrier+' · '+x.msg).join('<br>'):'Ninguna barrera detecta riesgo')+'</div>'),
@@ -1093,7 +1096,7 @@ function renderCard(d,t){
   kids[0].onclick=closeCard;
   {const vb=h('button',null,'▣ Vista de tren');vb.style.cssText='margin:4px 0 8px;width:100%;padding:8px;border-radius:8px;border:1px solid #2b6cb0;background:#12304f;color:#cfe6ff;font-weight:700;cursor:pointer';vb.onclick=()=>openTV(d.n);kids.push(vb)}
   [row('Retraso',ret==null?null:fmtDelay(ret),ret>0),row('Llegada prevista',d.dest_sched),row('Llegada estimada',d.dest_est,ret>0),
-   row('Velocidad','≈ '+d.kmh+' km/h'),row('Dónde',d.where||(d.from&&d.to?'Entre '+d.from+' y '+d.to:null)),
+   row('Velocidad',vf(d.kmh,1)),row('Dónde',d.where||(d.from&&d.to?'Entre '+d.from+' y '+d.to:null)),
    d.next?row('Llega a '+d.next.name,(d.next.est||d.next.sched)):null,
    row('Estado de seguridad',{NONE:'Libre',CAUTION:'Precaución',RESTRICT:'Restringido',STOP:'STOP'}[d.cmd]||d.cmd,d.cmd==='STOP'),
    row('Línea',d.line?d.line+(d.signalling?' · '+d.signalling:''):null),row('ATP a bordo',d.atp||'sin telemetría'),

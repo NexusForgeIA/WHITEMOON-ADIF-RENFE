@@ -8,7 +8,7 @@ Fuentes
 
 El feed de posiciones NO trae velocidad, rumbo ni marca de tiempo por vehículo (solo lat/lon,
 stopId, currentStatus y la cabecera). Aquí se derivan de posiciones sucesivas:
-  * velocidad  = distancia/Δt entre sondeos, suavizada (EMA)
+  * velocidad  = distancia geodésica entre dos posiciones distintas / tiempo real entre ambas (base ≥ 60 s); >450 km/h se descarta
   * rumbo      = dirección del desplazamiento
   * congelado  = posición idéntica mientras iba a >60 km/h (un frenazo real deja desplazamiento
                  decreciente, no cero): se conserva la marca de tiempo antigua para que B1 lo vea caducar.
@@ -80,6 +80,13 @@ def _hms(t):
 STALE_MIN = 20   # un retraso cuya llegada estimada lleva > 20 min en el pasado ya no describe un viaje en curso
 
 
+def haversine_km(la1, lo1, la2, lo2):
+    p1, p2 = math.radians(la1), math.radians(la2)
+    a = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(math.radians(lo2 - lo1) / 2) ** 2
+    return 2 * 6371.0088 * math.asin(math.sqrt(a))
+
+
+SPEED_WINDOW_S = 60   # base mínima entre dos posiciones distintas para calcular la velocidad
 MIN_DELAY_S = -30 * 60   # un tren no va más de 30 min adelantado: menos que eso es un dato erróneo del feed
 
 
@@ -236,11 +243,12 @@ class RenfeFeed:
             trip_id = _g(_g(v, "trip", default={}), "tripId", "trip_id")
             sig = _g(v, "stopId", "stop_id")
             status = _g(v, "currentStatus", "current_status", default="IN_TRANSIT_TO")
-            x, y = project(float(_g(pos, "latitude")), float(_g(pos, "longitude")))
+            lat, lon = float(_g(pos, "latitude")), float(_g(pos, "longitude"))
+            x, y = project(lat, lon)
             seen.add(vid)
             vts = _g(v, "timestamp")
             v_ms = (int(vts) * 1000 + (self.skew_ms or 0)) if vts else ts_ms   # marca propia del vehículo si existe
-            st = self.state.setdefault(vid, {"x": x, "y": y, "ts": v_ms, "kmh": None, "ux": 0.0, "uy": 0.0,
+            st = self.state.setdefault(vid, {"x": x, "y": y, "lat": lat, "lon": lon, "fixes": [(v_ms, lat, lon)], "ts": v_ms, "kmh": None, "ux": 0.0, "uy": 0.0,
                                               "last_move": ts_ms, "sig": sig, "ant": None})
             dt = (v_ms - st["ts"]) / 1000
             d = math.hypot(x - st["x"], y - st["y"])
@@ -249,15 +257,25 @@ class RenfeFeed:
                 prev = st["kmh"]
                 if d < 0.005 and prev is not None and prev > 60:   # congelado a velocidad
                     kmh, out_ts = prev, st["last_move"]
+                elif d < 0.005:      # misma posición: decae (si iba despacio) hacia 0
+                    kmh = 0.0 if prev is None else 0.4 * prev
                 else:
-                    inst = d / dt * 3600
-                    kmh = (prev if prev is not None else 0.0) if inst > 450 else (inst if prev is None else 0.6 * inst + 0.4 * prev)
-                    if d >= 0.005:
-                        st["last_move"] = v_ms
-                        st["ux"], st["uy"] = (x - st["x"]) / d, (y - st["y"]) / d
+                    # Velocidad entre posiciones DISTINTAS usando el momento en que se vio cada una (no el ciclo de sondeo): el feed repite a
+                    # veces la posición y luego «se pone al día»; dividir ese salto por un solo ciclo duplicaba la velocidad (hasta ~400 km/h).
+                    # Base de ≥ 60 s para amortiguar el retraso variable con que Renfe publica cada fix (error típico < 10 %, peor caso ~25 %).
+                    fx = st["fixes"]
+                    fx.append((v_ms, lat, lon))
+                    while len(fx) > 2 and v_ms - fx[1][0] > 300_000:
+                        fx.pop(0)
+                    ref = next((f for f in reversed(fx[:-1]) if v_ms - f[0] >= SPEED_WINDOW_S * 1000), fx[0])
+                    dc = max((v_ms - ref[0]) / 1000, 1.0)
+                    inst = haversine_km(ref[1], ref[2], lat, lon) / dc * 3600       # distancia geodésica: sin el error de la proyección
+                    kmh = (prev if prev is not None else 0.0) if inst > 450 else inst   # >450 km/h es imposible: se ignora la lectura
+                    st["last_move"] = v_ms
+                    st["ux"], st["uy"] = (x - st["x"]) / d, (y - st["y"]) / d
                 if st["sig"] != sig:
                     st["ant"] = st["sig"]
-                st.update(x=x, y=y, ts=v_ms, kmh=kmh, sig=sig)
+                st.update(x=x, y=y, lat=lat, lon=lon, ts=v_ms, kmh=kmh, sig=sig)
             else:
                 kmh = st["kmh"] or 0.0  # cabecera sin avanzar: la caducidad la detecta B1 con la hora de la cabecera
             if status == "STOPPED_AT":

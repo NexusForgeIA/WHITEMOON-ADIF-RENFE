@@ -204,3 +204,30 @@ def test_retraso_imposible_del_feed_se_ignora():
                      {"tripUpdate": {"trip": {"tripId": "B"}, "delay": -240}},
                      {"tripUpdate": {"trip": {"tripId": "C"}, "delay": 5220}}]}
     assert RenfeFeed._delays(tu) == {"B": -240, "C": 5220}
+
+
+def _recorrido(v_kmh, n, repetida_cada=0):
+    """Tren a velocidad constante; si repetida_cada, el feed repite la posición y luego 'se pone al día' (patrón real)."""
+    seq, shown = [], 41.0
+    for i in range(n):
+        lat = 41.0 + v_kmh * 15 * i / 3600 / 111.19
+        if not (repetida_cada and i and i % repetida_cada == 0):
+            shown = lat
+        seq.append((T0 + 15 * i, [ent("11111", shown, -3.0, "S2")]))
+    return seq
+
+
+def test_velocidad_no_se_duplica_cuando_el_feed_repite_la_posicion():
+    """Antes: con el feed repitiendo posición cada 3 ciclos, un tren a 200 km/h salía a ~340. Ahora la base es el tiempo real entre posiciones."""
+    f = feed_with(_recorrido(200, 60, repetida_cada=3))
+    vs = [f.fetch()[1][0]["kmh"] for _ in range(60)][6:]
+    assert max(vs) < 215 and min(vs) > 185
+
+
+def test_velocidad_usa_distancia_geodesica():
+    """110 km en 30 min en dirección este a 41ºN deben dar ~220 km/h; la proyección plana tenía hasta ~3 % de error."""
+    import math
+    dlon = 110 / (111.195 * math.cos(math.radians(41.0)))
+    f = feed_with([(T0 + 15 * i, [ent("11111", 41.0, -3.0 + dlon * i / 120, "S2")]) for i in range(121)])
+    v = [f.fetch()[1][0]["kmh"] for _ in range(121)][-1]
+    assert 215 < v < 225
