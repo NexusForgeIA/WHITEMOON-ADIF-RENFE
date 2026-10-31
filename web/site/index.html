@@ -663,7 +663,7 @@ async function loadPunct(){try{paintSeg();const r=await fetch('/api/punct?seg='+
     return '<div class="pb"><span>'+p.label+'</span><div class="trk"><i style="width:'+q+'%;background:'+c+'"></i></div><span>'+p.delayed+'/'+p.n+' · '+q+'%</span></div>'}).join('')+'</div>';
   $('pund').innerHTML=hist+worst+prod;
   $('pund').querySelectorAll('.wr').forEach(e=>e.onclick=()=>{if(typeof focusTrain==='function')focusTrain(e.dataset.n)});
-  $('punsub').textContent=(PSEG==='all'?'':k.seg_label+' · ')+(H.length>1?'evolución de hoy · '+hm(H[0][0])+' – '+hm(last[0])+' · actualiza cada 30 s':'acumulando evolución…';
+  $('punsub').textContent=(PSEG==='all'?'':k.seg_label+' · ')+(H.length>1?'evolución de hoy · '+hm(H[0][0])+' – '+hm(last[0])+' · actualiza cada 30 s':'acumulando evolución…');
   $('pun').title='Umbrales de indemnización de Renfe (retraso actual como aproximación): '+Object.entries(k.thresholds).map(([a,b])=>a+' ≥ '+b+' min').join(' · ')+'. Informativo; no interviene en la seguridad.'}catch(e){$('pun').hidden=true}}
 loadPunct();setInterval(loadPunct,30000);
 let EMD=null,EMS=null;
