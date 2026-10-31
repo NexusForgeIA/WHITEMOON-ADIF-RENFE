@@ -44,6 +44,9 @@ def compute(rows):
     return {"n": N, "delayed": len(delayed), "pct_delayed": round(100 * len(delayed) / N, 1) if N else 0.0,
             "mean_min": round(total / N, 1) if N else 0.0, "max_min": max((r[1] for r in L), default=0), "sum_min": total,
             "indem": len(indem), "pct_indem": round(100 * len(indem) / N, 1) if N else 0.0,
+            "on_time": N - len(delayed), "pct_on_time": round(100 * (N - len(delayed)) / N, 1) if N else 0.0,
+            "median_min": sorted(r[1] for r in L)[N // 2] if N else 0,
+            "worst": [{"n": r[0], "min": r[1], "cat": r[2], "label": LABEL.get(r[2], r[2])} for r in sorted(L, key=lambda r: -r[1])[:6] if r[1] >= DELAY_MIN],
             "by_product": sorted(prod.values(), key=lambda p: -p["n"]),
             "buckets": [{"label": lb, "n": sum(1 for r in L if lo <= r[1] < hi)} for lo, hi, lb in BUCKETS],
             "thresholds": {LABEL[k]: v for k, v in INDEM_MIN.items()}}

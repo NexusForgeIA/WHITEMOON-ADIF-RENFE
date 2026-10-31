@@ -30,3 +30,11 @@ def test_historia_una_muestra_por_minuto(tmp_path):
     assert h.add(k, t0) and not h.add(k, t0 + 30) and h.add(k, t0 + 70)
     assert len(h.series()["pts"]) == 2
     assert len(pu.History(str(tmp_path / "h.json")).series()["pts"]) == 2   # persiste dentro del mismo día
+
+
+def test_peores_trenes_mediana_y_a_tiempo():
+    import punctuality as pu
+    k = pu.compute([("A", 0, "AVE"), ("B", 90, "AVE"), ("C", 20, "MD"), ("D", 3, "MD"), ("E", 61, "LD")])
+    assert [w["n"] for w in k["worst"]] == ["B", "E", "C"]      # solo retrasos >= 5 min, de mayor a menor
+    assert k["median_min"] == 20 and k["on_time"] == 2 and k["pct_on_time"] == 40.0
+    assert pu.compute([])["worst"] == [] and pu.compute([])["median_min"] == 0

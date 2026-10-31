@@ -259,17 +259,24 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 }
 
 #pun h2{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.pmut{font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--mut)}
-#punk{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
-.pk{background:#0b121a;border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-width:0}
-.pk .l{font-size:11px;color:var(--mut)}.pk .v{font-size:25px;font-weight:700;line-height:1.15;margin:2px 0}.pk .v small{font-size:12px;font-weight:500;color:var(--mut);margin-left:3px}
-.pk .s{font-size:10.5px;color:var(--mut)}.pk svg{display:block;width:100%;height:34px;margin-top:6px}
+#punk{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.pk{background:#0b121a;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0;display:flex;flex-direction:column}
+.pk .l{font-size:11px;color:var(--mut)}.pk .v{font-size:27px;font-weight:700;line-height:1.15;margin:2px 0}.pk .v small{font-size:12px;font-weight:500;color:var(--mut);margin-left:3px}
+.pk .s{font-size:10.5px;color:var(--mut)}.pk svg:not(.dn){display:block;width:100%;height:58px;margin-top:auto;padding-top:6px}
+.pk .dl{font-size:10.5px;margin-top:4px;color:var(--mut)}.pk .dl.bd,.pk em.bd{color:#ff7b86}.pk .dl.gd{color:#3ddc97}
+.pk .ax{display:flex;justify-content:space-between;font-size:9.5px;color:#6f8396;margin-top:2px}
 .pk.ok .v{color:#3ddc97}.pk.mid .v{color:#ff9f43}.pk.bad .v{color:#ff6b6b}
-#pund{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
-@media(min-width:1101px){#pun{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto 1fr;column-gap:14px}#pun h2{grid-column:1/-1}
-  #punk{grid-template-columns:repeat(4,minmax(150px,1fr));align-self:stretch}#pund{grid-template-columns:1fr;margin-top:0;align-content:start;width:300px}
-  .pb{grid-template-columns:96px 1fr 40px}}#pund h3{margin:0 0 5px;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);font-weight:600}
-.pb{display:grid;grid-template-columns:104px 1fr 44px;align-items:center;gap:6px;font-size:11px;margin:3px 0}.pb i{display:block;height:7px;border-radius:4px;background:#ff9f43;min-width:1px}.pb span:last-child{text-align:right;color:var(--mut)}
-@media(max-width:700px){#pund{grid-template-columns:1fr}}
+.pk.hero{align-items:center}.pk.hero .dw{position:relative;width:118px;height:118px;margin:6px 0}.pk.hero .dn{width:100%;height:100%;padding:0;margin:0}
+.pk.hero .dv{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700}.pk.hero .dv small{font-size:12px;color:var(--mut);margin-left:2px}
+.legs{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:auto;padding-top:8px;font-size:10.5px;color:var(--mut)}.legs i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+#pund{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.pk h3{margin:0 0 8px;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.hs{display:flex;align-items:flex-end;gap:8px;height:120px}.hc{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.hc b{font-size:11px;margin-bottom:3px}.hc i{display:block;width:100%;border-radius:4px 4px 0 0}.hc span{font-size:10px;color:var(--mut);margin-top:4px;white-space:nowrap}
+.wr{display:grid;grid-template-columns:54px 1fr auto;gap:8px;align-items:center;padding:6px 4px;border-top:1px solid #16212d;font-size:11.5px;cursor:pointer}.wr:first-of-type{border-top:0}.wr:hover{background:#101b27}
+.wr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mut)}.wr em{font-style:normal;font-weight:600;color:#ff9f43;white-space:nowrap}
+.pb{display:grid;grid-template-columns:104px 1fr 78px;align-items:center;gap:8px;font-size:11px;margin:5px 0}.pb .trk{height:8px;border-radius:4px;background:#1c2a39;overflow:hidden}.pb .trk i{display:block;height:100%;border-radius:4px;min-width:1px}.pb span:last-child{text-align:right;color:var(--mut);white-space:nowrap}
+@media(max-width:900px){#pund{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -613,21 +620,43 @@ const endP=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;
   if(window.ResizeObserver)new ResizeObserver(f).observe(tb);addEventListener('resize',f)})();
 
 // ── Puntualidad (KPIs propios con el feed de Renfe; umbrales del compromiso de puntualidad de Renfe) ──
-function spark(pts,col){if(!pts||pts.length<2)return'';const W=200,H=34,mn=Math.min(...pts),mx=Math.max(...pts),r=(mx-mn)||1;
-  const xy=pts.map((v,i)=>[(i/(pts.length-1))*(W-6)+3,H-4-((v-mn)/r)*(H-9)]),d=xy.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' '),e=xy[xy.length-1];
-  return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"><path d="'+d+' L'+e[0]+' '+H+' L'+xy[0][0]+' '+H+'Z" fill="'+col+'" opacity=".12"/><path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="1.6" vector-effect="non-scaling-stroke"/><circle cx="'+e[0].toFixed(1)+'" cy="'+e[1].toFixed(1)+'" r="2.6" fill="'+col+'"/></svg>'}
+function spark(pts,col,ts){if(!pts||pts.length<2)return'';const W=220,H=58,mx=Math.max(...pts,1),mn=0,pad=4;
+  const xy=pts.map((v,i)=>[(i/(pts.length-1))*(W-2*pad)+pad,H-pad-((v-mn)/(mx-mn))*(H-2*pad-8)]),d=xy.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');
+  const im=pts.indexOf(Math.max(...pts)),pk=xy[im];
+  return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="'+(H-pad)+'" x2="'+W+'" y2="'+(H-pad)+'" stroke="#2c3e52" stroke-width="1" vector-effect="non-scaling-stroke"/><path d="'+d+' L'+xy[xy.length-1][0]+' '+(H-pad)+' L'+xy[0][0]+' '+(H-pad)+'Z" fill="'+col+'" opacity=".16"/><path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="1.7" vector-effect="non-scaling-stroke"/></svg>'}
+const hm=t=>new Date(t*1000).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'});
+function donut(pct,col){const r=34,c=2*Math.PI*r,f=c*Math.max(0,Math.min(100,pct))/100;
+  return '<svg class="dn" viewBox="0 0 90 90" aria-hidden="true"><circle cx="45" cy="45" r="'+r+'" fill="none" stroke="#1c2a39" stroke-width="10"/><circle cx="45" cy="45" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+f.toFixed(1)+' '+c.toFixed(1)+'" transform="rotate(-90 45 45)"/></svg>'}
+const fmin=m=>m>=60?Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min':m+' min';
 async function loadPunct(){try{const r=await fetch('/api/punct',{cache:'no-store'});if(!r.ok)throw 0;const k=await r.json();if(!k||!k.n){$('pun').hidden=true;return}
-  $('pun').hidden=false;const H=(k.history&&k.history.pts)||[],col=i=>H.map(p=>p[i]),nf=x=>x.toLocaleString('es-ES');
-  const card=(l,v,u,sub,cls,i,c)=>'<div class="pk '+cls+'"><div class="l">'+l+'</div><div class="v">'+v+'<small>'+u+'</small></div><div class="s">'+sub+'</div>'+spark(col(i),c)+'</div>';
+  $('pun').hidden=false;
+  let H=((k.history&&k.history.pts)||[]).slice();const mxn=Math.max(1,...H.map(p=>p[1]));H=H.filter(p=>p[1]>=0.3*mxn);   // se descartan las muestras del arranque (parciales)
+  const col=i=>H.map(p=>p[i]),nf=x=>x.toLocaleString('es-ES'),cm=x=>String(x).replace('.',',');
+  const last=H[H.length-1],ref=last&&H.filter(p=>p[0]<=last[0]-3600).pop();
+  const delta=(i,unit,badUp)=>{if(!last||!ref)return'<div class="dl">vs hace 1 h: acumulando…</div>';const d=last[i]-ref[i];if(Math.abs(d)<0.05)return'<div class="dl">= igual que hace 1 h</div>';
+    const bad=badUp?d>0:d<0;return '<div class="dl '+(bad?'bd':'gd')+'">'+(d>0?'▲ +':'▼ ')+cm(Math.round(d*10)/10)+unit+' vs hace 1 h</div>'};
+  const axis=i=>H.length>1?'<div class="ax"><span>'+hm(H[0][0])+'</span><span>máx '+cm(Math.round(Math.max(...col(i))*10)/10)+'</span><span>ahora</span></div>':'';
   const lv=(x,a,b)=>x>=b?'bad':x>=a?'mid':'ok';
-  $('punk').innerHTML=card('Con retraso (≥ 5 min)',String(k.pct_delayed).replace('.',','),'%',k.delayed+' de '+k.n+' trenes','' + lv(k.pct_delayed,20,40),5,'#ff9f43')
-   +card('Retraso medio por tren',String(k.mean_min).replace('.',','),'min','máximo '+k.max_min+' min',lv(k.mean_min,8,20),2,'#ff9f43')
+  const card=(l,v,u,sub,cls,i,c,badUp)=>'<div class="pk '+cls+'"><div class="l">'+l+'</div><div class="v">'+v+'<small>'+u+'</small></div><div class="s">'+sub+'</div>'+delta(i,u==='%'?' pp':' '+u,badUp!==false)+spark(col(i),c)+axis(i)+'</div>';
+  const ot=k.pct_on_time,oc=ot>=80?'#3ddc97':ot>=60?'#ff9f43':'#ff6b6b';
+  const hero='<div class="pk hero"><div class="l">Puntualidad de la red</div><div class="dw">'+donut(ot,oc)+'<div class="dv" style="color:'+oc+'">'+cm(ot)+'<small>%</small></div></div><div class="s" style="text-align:center">'+k.on_time+' de '+k.n+' trenes a tiempo (&lt; 5 min)</div>'
+    +'<div class="legs"><span><i style="background:#3ddc97"></i>'+k.on_time+' a tiempo</span><span><i style="background:#ff9f43"></i>'+k.delayed+' con retraso</span></div></div>';
+  $('punk').innerHTML=hero
+   +card('Con retraso (≥ 5 min)',cm(k.pct_delayed),'%',k.delayed+' de '+k.n+' trenes','' + lv(k.pct_delayed,20,40),5,'#ff9f43')
+   +card('Retraso medio por tren',cm(k.mean_min),'min','mediana '+k.median_min+' min · máximo '+k.max_min+' min',lv(k.mean_min,8,20),2,'#ff9f43')
    +card('Minutos de retraso acumulados',nf(k.sum_min),'min','suma de los '+k.n+' trenes en circulación',lv(k.sum_min/Math.max(1,k.n),8,20),3,'#ff9f43')
-   +card('Con derecho a indemnización',String(k.pct_indem).replace('.',','),'%',k.indem+' de '+k.n+' superan el umbral de Renfe',lv(k.pct_indem,10,25),4,'#ff6b6b');
-  const mxb=Math.max(1,...k.buckets.map(b=>b.n)),mxp=Math.max(1,...k.by_product.map(p=>p.n));
-  $('pund').innerHTML='<div><h3>Distribución del retraso</h3>'+k.buckets.map(b=>'<div class="pb"><span>'+b.label+'</span><i style="width:'+Math.round(100*b.n/mxb)+'%"></i><span>'+b.n+'</span></div>').join('')+'</div>'
-   +'<div><h3>Por producto (con retraso / total)</h3>'+k.by_product.map(p=>'<div class="pb"><span>'+p.label+'</span><i style="width:'+Math.round(100*p.n/mxp)+'%"></i><span>'+p.delayed+'/'+p.n+'</span></div>').join('')+'</div>';
-  $('punsub').textContent=H.length>1?'evolución de hoy · '+H.length+' min':'acumulando evolución…';
+   +card('Con derecho a indemnización',cm(k.pct_indem),'%',k.indem+' de '+k.n+' superan el umbral de Renfe',lv(k.pct_indem,10,25),4,'#ff6b6b');
+  const BC=['#3ddc97','#e6c84a','#ff9f43','#ff7a45','#ff6b6b','#e0334c'],mxb=Math.max(1,...k.buckets.map(b=>b.n));
+  const hist='<div class="pk"><h3>Distribución del retraso</h3><div class="hs">'+k.buckets.map((b,x)=>'<div class="hc"><b>'+b.n+'</b><i style="height:'+Math.max(2,Math.round(100*b.n/mxb))+'%;background:'+BC[x]+'"></i><span>'+b.label+'</span></div>').join('')+'</div></div>';
+  const byN={};((S&&S.trains)||[]).forEach(t=>byN[t.n]=t);
+  const wl=k.worst.length?k.worst.map(w=>{const t=byN[w.n],rt=t&&t.from&&t.to&&t.from!==t.to?t.from+' → '+t.to:(t&&t.to?'→ '+t.to:'');
+    return '<div class="wr" data-n="'+w.n+'" title="Ver en el mapa"><b>'+w.n+'</b><span>'+(rt||w.label)+'</span><em class="'+(w.min>=60?'bd':'')+'">+'+fmin(w.min)+'</em></div>'}).join(''):'<div class="empty" style="cursor:default">Ningún tren con retraso de 5 min o más.</div>';
+  const worst='<div class="pk"><h3>Los más retrasados ahora</h3>'+wl+'</div>';
+  const prod='<div class="pk"><h3>Por producto · % con retraso</h3>'+k.by_product.map(p=>{const q=p.n?Math.round(100*p.delayed/p.n):0,c=q>=60?'#ff6b6b':q>=35?'#ff9f43':'#3ddc97';
+    return '<div class="pb"><span>'+p.label+'</span><div class="trk"><i style="width:'+q+'%;background:'+c+'"></i></div><span>'+p.delayed+'/'+p.n+' · '+q+'%</span></div>'}).join('')+'</div>';
+  $('pund').innerHTML=hist+worst+prod;
+  $('pund').querySelectorAll('.wr').forEach(e=>e.onclick=()=>{if(typeof focusTrain==='function')focusTrain(e.dataset.n)});
+  $('punsub').textContent=H.length>1?'evolución de hoy · '+hm(H[0][0])+' – '+hm(last[0])+' · actualiza cada 30 s':'acumulando evolución…';
   $('pun').title='Umbrales de indemnización de Renfe (retraso actual como aproximación): '+Object.entries(k.thresholds).map(([a,b])=>a+' ≥ '+b+' min').join(' · ')+'. Informativo; no interviene en la seguridad.'}catch(e){$('pun').hidden=true}}
 loadPunct();setInterval(loadPunct,30000);
 let EMD=null,EMS=null;
