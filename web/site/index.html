@@ -652,12 +652,12 @@ var NWD=[];
 function nwEsc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function renderNews(){var b=$('nwb');if(!b)return;var now=Date.now()/1000,L=NWD.filter(function(i){return now-i.ts<6*3600&&i.k!=='otr'});
  if(!L.length){b.style.display='none';return}
- var U=L.filter(function(i){return i.l==='ult'}),O=L.filter(function(i){return i.l!=='ult'});
- var K={inc:'Incendio',acc:'Accidente',cor:'Corte'},LV={ult:'ÚLTIMA HORA',seg:'Seguimiento',inf:'Noticia'};
- var rows=U.slice(0,3).concat(O.slice(0,Math.max(1,4-Math.min(3,U.length))));
+ var U=L.filter(function(i){return i.l==='ult'&&now-i.ts<2*3600}),O=L.filter(function(i){return i.l!=='ult'});
+ var K={inc:'Incendio',acc:'Accidente',cor:'Corte'},LV={ult:'ÚLTIMA HORA',seg:'Seguimiento'};
+ O=L.filter(function(i){return U.indexOf(i)<0});var rows=U.slice(0,3).concat(O.slice(0,Math.max(1,4-Math.min(3,U.length))));
  b.style.display='block';b.style.background=U.length?'':'#16202b';b.style.borderColor=U.length?'':'#2f4257';b.style.color=U.length?'':'#cfd8e3';
  b.innerHTML='<b>Noticias en medios</b> <span style="opacity:.7">· '+(U.length?U.length+' de última hora · ':'')+L.length+' titulares · Google Noticias, sin verificar, no confirma incidencias en la red</span>'+rows.map(function(i){var m=Math.max(1,Math.round((now-i.ts)/60));
-  return '<div><b style="opacity:'+(i.l==='ult'?1:.75)+'">'+LV[i.l||'inf']+'</b> · '+K[i.k]+' · <a href="'+nwEsc(i.u)+'" target="_blank" rel="noopener" style="color:inherit">'+nwEsc(i.t)+'</a> <span style="opacity:.7">— '+nwEsc(i.s)+', hace '+(m<90?m+' min':Math.round(m/60)+' h')+'</span></div>'}).join('')}
+  var u=U.indexOf(i)>=0;return '<div><b style="opacity:'+(u?1:.75)+'">'+(u?LV.ult+' · '+K[i.k]:LV.seg)+'</b> · <a href="'+nwEsc(i.u)+'" target="_blank" rel="noopener" style="color:inherit">'+nwEsc(i.t)+'</a> <span style="opacity:.7">— '+nwEsc(i.s)+', hace '+(m<90?m+' min':Math.round(m/60)+' h')+'</span></div>'}).join('')}
 function loadNews(){fetch('/api/noticias',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){NWD=j.items||[];renderNews()}).catch(function(){})}
 setTimeout(loadNews,4000);setInterval(loadNews,300000);
 

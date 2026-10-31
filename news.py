@@ -20,7 +20,7 @@ KIND = {"inc": "Incendio", "acc": "Accidente", "cor": "Corte o interrupción", "
 # Una noticia solo es "última hora" si el propio titular lo dice; lo demás es seguimiento o información general
 BREAKING = re.compile(r"[uú]ltima hora|en directo|\bahora\b|urgente|en vivo|minuto a minuto|se registra|se produce|se declara", re.I)
 FOLLOWUP = re.compile(r"superviviente|hospitalizad|investig|juicio|v[ií]ctimas|homenaje|funeral|duelo|balance|causas?|declara|reclama|critica|acusa|"
-                      r"dimisi|ministro|oposici|pol[ií]tic|indemniz|recuerd|testimon|muere|falleci|identific|ingresad|heridos? siguen|crisis", re.I)
+                      r"reanud|trabajos|piden|mantienen|maquinistas|sindicat|retrasos?|circulaci[oó]n|restablec|vuelven|dimisi|ministro|oposici|pol[ií]tic|indemniz|recuerd|testimon|muere|falleci|identific|ingresad|heridos? siguen|crisis", re.I)
 
 
 def parse(xml_text):
@@ -41,7 +41,7 @@ def parse(xml_text):
         except Exception:
             continue
         k = next((k for k, rx in SEV if rx.search(title)), "otr")
-        lvl = "ult" if BREAKING.search(title) else ("seg" if FOLLOWUP.search(title) else "inf")
+        lvl = "seg" if FOLLOWUP.search(title) else ("ult" if BREAKING.search(title) else "seg")
         out.append({"t": title, "s": src, "ts": int(ts), "u": (it.findtext("link") or "").strip(), "k": k, "l": lvl})
     return out
 

@@ -45,4 +45,9 @@ def test_nivel_ultima_hora_seguimiento_info():
 <item><title>Renfe suspende trenes por un incendio junto a la vía - ABC</title><link>u</link><pubDate>{n}</pubDate></item>
 </channel></rss>""".format(n=fmt(time.time()))
     r = {i["t"][:10]: i["l"] for i in news.parse(x)}
-    assert r["Accidente "] == "ult" and r["34 heridos"] == "seg" and r["Renfe susp"] == "inf"
+    assert r["Accidente "] == "ult" and r["34 heridos"] == "seg" and r["Renfe susp"] == "seg"
+
+
+def test_reanudan_trabajos_es_seguimiento():
+    x = "<rss><channel><item><title>Última hora del accidente: se reanudan los trabajos y se mantienen 69 fallecidos - ENCLM</title><link>u</link><pubDate>%s</pubDate></item></channel></rss>" % fmt(time.time())
+    assert news.parse(x)[0]["l"] == "seg"
