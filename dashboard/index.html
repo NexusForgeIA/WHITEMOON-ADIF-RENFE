@@ -218,15 +218,17 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 
 /* Pantallas bajas: una sola barra de scroll de la página (sin paneles con scroll propio) */
 @media(min-width:1101px){
-  body{height:auto;min-height:100vh;grid-template-rows:auto auto auto auto auto auto}
+  body{height:auto;min-height:100vh;grid-template-rows:auto auto auto auto auto auto auto}
   .panel,#chain,#log,#cabins{overflow:visible;max-height:none}
   #right{display:contents}
   /* Tres columnas sin huecos: izquierda (defensas) | centro (mapa, peligros, registro) | derecha (retrasos, cola, cabinas) */
-  #pun{grid-column:2/4;grid-row:3}#mapwrap{grid-column:2;grid-row:4}
+  #pun{grid-column:1/4;grid-row:3}#mapwrap{grid-column:1/3;grid-row:4}
   #rtop{grid-column:3;grid-row:4;display:flex;flex-direction:column;gap:10px;min-width:0}#rtop .panel{flex:none}#rtop #cabins{flex:1 1 auto}
-  #chain{grid-row:3/7;display:flex;flex-direction:column}
-  #chain #bars{flex:1 1 auto;display:flex;flex-direction:column;gap:8px}#chain #bars>*{flex:1 1 auto;margin:0}
-  #hzp{grid-column:2/4;grid-row:5;min-width:0}#log{grid-column:2/4;grid-row:6;display:flex;flex-direction:column}#log .more{margin-top:auto}
+  /* Defensa en profundidad: franja horizontal inferior a todo el ancho, tarjetas iguales que se reparten el espacio (sin huecos) */
+  #chain{grid-column:1/-1;grid-row:7;display:block}
+  #chain #bars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:stretch}@media(min-width:1300px){#chain #bars{grid-template-columns:repeat(8,1fr)}}#chain #bars>*{margin:0;min-width:0}#chain #bars .arrow{display:none}
+  #chain .bar{overflow:hidden}#chain .bar .t{flex-direction:column;align-items:flex-start;gap:4px}#chain .bar .t i{white-space:nowrap;max-width:100%}
+  #hzp{grid-column:1/4;grid-row:5;min-width:0}#log{grid-column:1/4;grid-row:6;display:flex;flex-direction:column}#log .more{margin-top:auto}
   body.full #pun{display:none}body.full #rtop{display:contents}body.full #hzp{grid-column:auto;grid-row:auto}body.full #hz{display:block}body.full #cabins{display:none}
   #hz{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:start}#hz .hzc{margin:0}#hz>.empty,#hz>.ll,#hz>div:not(.hzc){grid-column:1/-1}
   /* el mapa ocupa todo el alto de su fila (la fila la fija la columna derecha si es más alta): nunca queda hueco bajo él */
