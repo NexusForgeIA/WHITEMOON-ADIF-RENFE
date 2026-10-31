@@ -1158,7 +1158,7 @@ function renderTV(){
   const tile=(ti,body)=>el('div','tl','<h4>'+ti+'</h4>'+body);
   const card=(o,me)=>o?el('div','tc'+(me?' me':''),'<b>'+o.n+'</b><div>'+vf(o.kmh)+(o.ret>=5?' · <span class="bad">+'+o.ret+' min</span>':'')+'</div><div style="color:'+(o.cmd==='NONE'?'#14703a':TVCOL[o.cmd])+'">● '+({NONE:'libre',CAUTION:'precaución',RESTRICT:'restringido',STOP:'STOP'}[o.cmd])+'</div>'+(me?'<div class="dk">Nuestro tren</div>':'<div class="dk">'+(o.d<10?o.d.toFixed(1):Math.round(o.d)).toString().replace('.',',')+' km '+(o.ahead?'delante':'detrás')+'</div>')):el('div','tc e','—');
   const slot=(a,i,n)=>a[a.length-n+i]||null;
-  const hd=el('div','hd','<div style="font-size:30px">🚆</div><div><h1>'+(d.product?d.product+' ':'')+t.n+'</h1><small>'+(d.ori&&d.des?d.ori+' → '+d.des:(t.from||'?')+' → '+(t.to||'?')+(t.dest?' (destino '+t.dest+')':''))+(t.line?' · '+t.line:'')+'</small></div><div class="st '+t.cmd+'">'+TVTXT[t.cmd]+'<small>'+(act.length?act.length+' aviso(s) de barreras':'Sin avisos de las barreras')+'</small></div><div class="sp"></div><div style="text-align:right;font-size:13px;color:#44586b">'+fmt(S.now)+'<br>ciclo '+S.cycle+' · '+(S.mode==='sim'?'SIMULACIÓN':'EN VIVO')+'</div>');
+  const hd=el('div','hd',trainArt(d.product,((S.operators||[]).find(o=>o.id===t.op)||{}).name,150)+'<div><h1>'+(d.product?d.product+' ':'')+t.n+'</h1><small>'+(d.ori&&d.des?d.ori+' → '+d.des:(t.from||'?')+' → '+(t.to||'?')+(t.dest?' (destino '+t.dest+')':''))+(t.line?' · '+t.line:'')+'</small></div><div class="st '+t.cmd+'">'+TVTXT[t.cmd]+'<small>'+(act.length?act.length+' aviso(s) de barreras':'Sin avisos de las barreras')+'</small></div><div class="sp"></div><div style="text-align:right;font-size:13px;color:#44586b">'+fmt(S.now)+'<br>ciclo '+S.cycle+' · '+(S.mode==='sim'?'SIMULACIÓN':'EN VIVO')+'</div>');
   const cb=h('button',null,'✕ Cerrar');cb.onclick=closeTV;hd.appendChild(cb);
   const tiles=el('div','tiles','');
   tiles.append(tile('Velocidad actual',tvGauge(Math.min(t.kmh,VBAD),t.vmax)+'<div class="sub">Verde: permitida · amarillo +3 % aviso · naranja +8 % restricción · rojo +15 % freno de emergencia. Límite de referencia de RailGuard, no el oficial de la línea.</div>'),
@@ -1182,6 +1182,28 @@ async function loadTV(){if(!tvN)return;try{const r=await fetch('/api/train?n='+e
 function openTV(n){tvN=n;tvD=null;$('tvov').hidden=false;document.body.style.overflow='hidden';renderTV();loadTV();clearInterval(tvT);tvT=setInterval(loadTV,10000)}
 function closeTV(){$('tvov').hidden=true;document.body.style.overflow='';clearInterval(tvT);tvN=null}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('tvov').hidden)closeTV()});
+// ---- ilustración propia del tren (silueta esquemática con los colores del operador; sin logos ni fotos) ----
+let ART_N=0;
+function trainArt(prod,oper,w){
+  const k=((prod||'')+' '+(oper||'')).toUpperCase(),id='ta'+(++ART_N);
+  let kind='ave';if(/IRYO/.test(k))kind='iryo';else if(/OUIGO/.test(k))kind='ouigo';else if(/AVLO/.test(k))kind='avlo';else if(!/AVE|ALTARIA|ALVIA|AVANT|EUROMED|INTERCITY|TALGO/.test(k))kind='gen';
+  const L={
+    ave:{b:'#f2f3f1',roof:'#8fa3a8',dec:'<rect x="0" y="27" width="240" height="1.6" fill="#b4b5b0"/><rect x="0" y="29.5" width="240" height="4.6" fill="#7b2a6b"/>',nose:''},
+    gen:{b:'#eceeed',roof:'#9aa7ab',dec:'<rect x="0" y="29.5" width="240" height="3" fill="#7b2a6b" opacity=".75"/>',nose:''},
+    avlo:{b:'#f2f3f1',roof:'#8fa3a8',dec:'<rect x="0" y="27" width="240" height="2" fill="#f28c28"/><rect x="0" y="29.5" width="240" height="4.6" fill="#00a39b"/>',nose:''},
+    iryo:{b:'#d8281f',roof:'#2a2a2e',dec:'<path d="M0 24C70 19 150 23 240 30L240 33C150 27 70 24 0 29Z" fill="#f1f1f1"/><rect x="0" y="34" width="240" height="8" fill="#b9bcc1"/>',nose:''},
+    ouigo:{b:'#f6f6f6',roof:'#d4d6d8',dec:'<circle cx="70" cy="27" r="14" fill="#e5195e"/><circle cx="104" cy="27" r="14" fill="#2aa7c9"/>',nose:'<path d="M196 8h44v40h-44z" fill="#1c2430" opacity=".92"/>'}
+  }[kind];
+  const win=[];for(let x=14;x<164;x+=15)win.push('<rect x="'+x+'" y="16" width="10" height="6.5" rx="2" fill="#1b2733" opacity=".85"/>');
+  return '<svg viewBox="0 0 240 54" width="'+(w||160)+'" role="img" aria-label="Ilustración esquemática '+kind.toUpperCase()+'" style="display:block;flex:none"><title>Ilustración esquemática (no es el material real)</title>'
+   +'<defs><clipPath id="'+id+'"><path d="M4 14Q4 9 10 9L168 9C197 9 216 21 231 36Q234 41 228 42L10 42Q4 42 4 37Z"/></clipPath></defs>'
+   +'<path d="M70 9L79 2L93 2L101 9" fill="none" stroke="#6b7782" stroke-width="1.6" stroke-linejoin="round"/>'
+   +'<g clip-path="url(#'+id+')"><rect width="240" height="54" fill="'+L.b+'"/><rect y="9" width="240" height="5" fill="'+L.roof+'"/>'+L.dec+L.nose+'</g>'
+   +'<path d="M4 14Q4 9 10 9L168 9C197 9 216 21 231 36Q234 41 228 42L10 42Q4 42 4 37Z" fill="none" stroke="#0004" stroke-width="1"/>'
+   +win.join('')+'<path d="M178 14C192 14 203 21 211 28L180 28Z" fill="#1b2733" opacity=".9"/>'
+   +'<rect x="12" y="42" width="212" height="4" rx="2" fill="#3a444d"/>'
+   +[32,54,150,196].map(x=>'<circle cx="'+x+'" cy="48" r="4.5" fill="#222a31"/><circle cx="'+x+'" cy="48" r="1.6" fill="#8d98a1"/>').join('')+'</svg>';
+}
 // ---- ficha de tren ----
 const card=$('card');let cardN=null,cardTimer=null;
 const fmtDelay=m=>m>0?(m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'):m<0?'adelantado '+(-m)+' min':'a tiempo';
@@ -1190,7 +1212,7 @@ function renderCard(d,t){
   const ret=d.delay_s!=null?Math.round(d.delay_s/60):(d.ret_min!=null?d.ret_min:t&&t.ret);
   const kids=[h('button','x','×'),h('h3',null,(d.product?d.product+' ':'')+d.n),
     h('div','sub',d.ori&&d.des?d.ori+' → '+d.des:(d.from||'?')+' → '+(d.to||'?')+(d.dest?' (destino '+d.dest+')':''))];
-  kids[0].onclick=closeCard;
+  kids[0].onclick=closeCard;{const a=h('div');a.style.cssText='margin:2px 0 6px';a.innerHTML=trainArt(d.product,d.operator,170);kids.splice(2,0,a)}
   {const vb=h('button',null,'▣ Vista de tren');vb.style.cssText='margin:4px 0 8px;width:100%;padding:8px;border-radius:8px;border:1px solid #2b6cb0;background:#12304f;color:#cfe6ff;font-weight:700;cursor:pointer';vb.onclick=()=>openTV(d.n);kids.push(vb)}
   [row('Retraso',ret==null?null:fmtDelay(ret),ret>0),row('Llegada prevista',d.dest_sched),row('Llegada estimada',d.dest_est,ret>0),
    row('Velocidad',vf(d.kmh,1)),row('Dónde',d.where||(d.from&&d.to?'Entre '+d.from+' y '+d.to:null)),
