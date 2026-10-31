@@ -405,7 +405,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 
 <section class="panel" id="pun" hidden><h2>Puntualidad de la red <span class="pmut" id="punsub"></span></h2><div class="pseg" id="pseg" role="group" aria-label="Segmento"></div><div id="punk"></div><div id="pund"></div></section>
 <section class="panel" id="wat"><h2>Vigilancia contextual <span class="pmut" id="watsub">informativa · no actúa sobre las barreras</span></h2><div id="watree"></div><div id="watl"></div><div class="wsrc" id="watsrc"></div></section>
-<footer id="attr" style="grid-column:1/-1;color:var(--mut);font-size:11px;padding:2px 4px">Origen de los datos: Renfe Operadora (CC BY 4.0; datos normalizados y combinados con sus horarios) · Red Eléctrica (REData) · IGN (CC-BY 4.0) · AEMET · NASA FIRMS · Herramienta consultiva, sin certificar; no sustituye a los sistemas de seguridad de Adif ni de los operadores.</footer>
+<footer id="attr" style="grid-column:1/-1;color:var(--mut);font-size:11px;padding:2px 4px">Fotos de trenes: Wikimedia Commons (B. Leris CC BY 2.0; C. Teixidor Cadenas y Triplecaña CC BY-SA 4.0) · Origen de los datos: Renfe Operadora (CC BY 4.0; datos normalizados y combinados con sus horarios) · Red Eléctrica (REData) · IGN (CC-BY 4.0) · AEMET · NASA FIRMS · Herramienta consultiva, sin certificar; no sustituye a los sistemas de seguridad de Adif ni de los operadores.</footer>
 <button id="fullx">✕ Cerrar vista completa</button>
 <div id="tvov" hidden></div>
 <div id="dm" hidden></div>
@@ -1158,7 +1158,8 @@ function renderTV(){
   const tile=(ti,body)=>el('div','tl','<h4>'+ti+'</h4>'+body);
   const card=(o,me)=>o?el('div','tc'+(me?' me':''),'<b>'+o.n+'</b><div>'+vf(o.kmh)+(o.ret>=5?' · <span class="bad">+'+o.ret+' min</span>':'')+'</div><div style="color:'+(o.cmd==='NONE'?'#14703a':TVCOL[o.cmd])+'">● '+({NONE:'libre',CAUTION:'precaución',RESTRICT:'restringido',STOP:'STOP'}[o.cmd])+'</div>'+(me?'<div class="dk">Nuestro tren</div>':'<div class="dk">'+(o.d<10?o.d.toFixed(1):Math.round(o.d)).toString().replace('.',',')+' km '+(o.ahead?'delante':'detrás')+'</div>')):el('div','tc e','—');
   const slot=(a,i,n)=>a[a.length-n+i]||null;
-  const hd=el('div','hd',trainArt(d.product,((S.operators||[]).find(o=>o.id===t.op)||{}).name,150)+'<div><h1>'+(d.product?d.product+' ':'')+t.n+'</h1><small>'+(d.ori&&d.des?d.ori+' → '+d.des:(t.from||'?')+' → '+(t.to||'?')+(t.dest?' (destino '+t.dest+')':''))+(t.line?' · '+t.line:'')+'</small></div><div class="st '+t.cmd+'">'+TVTXT[t.cmd]+'<small>'+(act.length?act.length+' aviso(s) de barreras':'Sin avisos de las barreras')+'</small></div><div class="sp"></div><div style="text-align:right;font-size:13px;color:#44586b">'+fmt(S.now)+'<br>ciclo '+S.cycle+' · '+(S.mode==='sim'?'SIMULACIÓN':'EN VIVO')+'</div>');
+  const hd=el('div','hd','<div><h1>'+(d.product?d.product+' ':'')+t.n+'</h1><small>'+(d.ori&&d.des?d.ori+' → '+d.des:(t.from||'?')+' → '+(t.to||'?')+(t.dest?' (destino '+t.dest+')':''))+(t.line?' · '+t.line:'')+'</small></div><div class="st '+t.cmd+'">'+TVTXT[t.cmd]+'<small>'+(act.length?act.length+' aviso(s) de barreras':'Sin avisos de las barreras')+'</small></div><div class="sp"></div><div style="text-align:right;font-size:13px;color:#44586b">'+fmt(S.now)+'<br>ciclo '+S.cycle+' · '+(S.mode==='sim'?'SIMULACIÓN':'EN VIVO')+'</div>');
+  hd.insertBefore(trainPic(d.product,((S.operators||[]).find(o=>o.id===t.op)||{}).name,200,112),hd.firstChild);
   const cb=h('button',null,'✕ Cerrar');cb.onclick=closeTV;hd.appendChild(cb);
   const tiles=el('div','tiles','');
   tiles.append(tile('Velocidad actual',tvGauge(Math.min(t.kmh,VBAD),t.vmax)+'<div class="sub">Verde: permitida · amarillo +3 % aviso · naranja +8 % restricción · rojo +15 % freno de emergencia. Límite de referencia de RailGuard, no el oficial de la línea.</div>'),
@@ -1204,6 +1205,27 @@ function trainArt(prod,oper,w){
    +'<rect x="12" y="42" width="212" height="4" rx="2" fill="#3a444d"/>'
    +[32,54,150,196].map(x=>'<circle cx="'+x+'" cy="48" r="4.5" fill="#222a31"/><circle cx="'+x+'" cy="48" r="1.6" fill="#8d98a1"/>').join('')+'</svg>';
 }
+// ---- fotos con licencia libre (Wikimedia Commons), enlazadas; si no cargan queda la ilustración SVG ----
+const WM='https://upload.wikimedia.org/wikipedia/commons/thumb/';
+const PHOTO={
+  ave:{u:WM+'e/ea/RENFE_AVE_S-103_15.jpg/640px-RENFE_AVE_S-103_15.jpg',by:'Bonaventura Leris',lic:'CC BY 2.0',pg:'https://commons.wikimedia.org/wiki/File:RENFE_AVE_S-103_15.jpg',alt:'AVE serie 103'},
+  iryo:{u:WM+'3/39/Estaci%C3%B3n_%22Madrid-Puerta_de_Atocha%22._Tren_%22Iryo%22_Frecciarossa._Madrid%2C_Espa%C3%B1a%2C_Spain.jpg/640px-Estaci%C3%B3n_%22Madrid-Puerta_de_Atocha%22._Tren_%22Iryo%22_Frecciarossa._Madrid%2C_Espa%C3%B1a%2C_Spain.jpg',by:'Carlos Teixidor Cadenas',lic:'CC BY-SA 4.0',pg:'https://commons.wikimedia.org/wiki/File:Estaci%C3%B3n_%22Madrid-Puerta_de_Atocha%22._Tren_%22Iryo%22_Frecciarossa._Madrid,_Espa%C3%B1a,_Spain.jpg',alt:'Iryo Frecciarossa'},
+  ouigo:{u:WM+'d/df/Tren_Ouigo_en_Atocha%2C_Madrid%2C_Tripleca%C3%B1a%2C_2021-12-01.jpg/640px-Tren_Ouigo_en_Atocha%2C_Madrid%2C_Tripleca%C3%B1a%2C_2021-12-01.jpg',by:'Triplecaña',lic:'CC BY-SA 4.0',pg:'https://commons.wikimedia.org/wiki/File:Tren_Ouigo_en_Atocha,_Madrid,_Tripleca%C3%B1a,_2021-12-01.jpg',alt:'Ouigo'}};
+function trainKind(prod,oper){const k=((prod||'')+' '+(oper||'')).toUpperCase();return /IRYO/.test(k)?'iryo':/OUIGO/.test(k)?'ouigo':/AVLO/.test(k)?'avlo':/\bAVE\b/.test(k)?'ave':''}
+// foto (si hay) con crédito; al fallar o sin foto, silueta SVG
+const PHOK={};
+function trainPic(prod,oper,w,h){
+  const k=trainKind(prod,oper),P=PHOTO[k],box=document.createElement('div');
+  if(!P||PHOK[k]===0){box.innerHTML=trainArt(prod,oper,w);return box}
+  if(PHOK[k]!==1)box.innerHTML=trainArt(prod,oper,w);
+  const im=new Image();im.alt=P.alt+' (foto ilustrativa)';im.loading='lazy';im.referrerPolicy='no-referrer';
+  im.style.cssText='display:block;width:'+w+'px;height:'+(h||Math.round(w*.56))+'px;object-fit:cover;border-radius:8px';
+  im.onload=()=>{const c=document.createElement('div');c.style.cssText='font-size:9px;opacity:.65;margin-top:2px;max-width:'+w+'px';
+    const a=document.createElement('a');a.href=P.pg;a.target='_blank';a.rel='noopener';a.style.color='inherit';a.textContent='Foto: '+P.by+' · '+P.lic+' · Wikimedia Commons';c.appendChild(a);
+    box.replaceChildren(im,c)};
+  im.onload=((f)=>()=>{PHOK[k]=1;f()})(im.onload);im.onerror=()=>{PHOK[k]=0};
+  im.src=P.u;return box;
+}
 // ---- ficha de tren ----
 const card=$('card');let cardN=null,cardTimer=null;
 const fmtDelay=m=>m>0?(m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'):m<0?'adelantado '+(-m)+' min':'a tiempo';
@@ -1212,7 +1234,7 @@ function renderCard(d,t){
   const ret=d.delay_s!=null?Math.round(d.delay_s/60):(d.ret_min!=null?d.ret_min:t&&t.ret);
   const kids=[h('button','x','×'),h('h3',null,(d.product?d.product+' ':'')+d.n),
     h('div','sub',d.ori&&d.des?d.ori+' → '+d.des:(d.from||'?')+' → '+(d.to||'?')+(d.dest?' (destino '+d.dest+')':''))];
-  kids[0].onclick=closeCard;{const a=h('div');a.style.cssText='margin:2px 0 6px';a.innerHTML=trainArt(d.product,d.operator,170);kids.splice(2,0,a)}
+  kids[0].onclick=closeCard;{const a=trainPic(d.product,d.operator,290);a.style.margin='2px 0 8px';kids.splice(2,0,a)}
   {const vb=h('button',null,'▣ Vista de tren');vb.style.cssText='margin:4px 0 8px;width:100%;padding:8px;border-radius:8px;border:1px solid #2b6cb0;background:#12304f;color:#cfe6ff;font-weight:700;cursor:pointer';vb.onclick=()=>openTV(d.n);kids.push(vb)}
   [row('Retraso',ret==null?null:fmtDelay(ret),ret>0),row('Llegada prevista',d.dest_sched),row('Llegada estimada',d.dest_est,ret>0),
    row('Velocidad',vf(d.kmh,1)),row('Dónde',d.where||(d.from&&d.to?'Entre '+d.from+' y '+d.to:null)),
