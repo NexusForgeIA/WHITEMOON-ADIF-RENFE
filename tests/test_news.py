@@ -72,10 +72,10 @@ def test_parse_atom_y_fuente_del_feed():
 
 def test_un_feed_caido_no_afecta_a_los_demas(tmp_path):
     def op(u):
-        if "rtve" in u:
+        if "elmundo" in u:
             raise OSError("caído")
         return RSS.format(now=fmt(time.time()), old=fmt(time.time()))
     n = news.News(str(tmp_path / "n.json"), opener=op)
     n.refresh()
     f = n.api()["status"]["feeds"]
-    assert f["RTVE"]["err"] == 1 and f["El País"]["ok"] == 1 and n.api()["ready"]
+    assert f["El Mundo"]["err"] == 1 and f["El País"]["ok"] == 1 and n.api()["ready"]

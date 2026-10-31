@@ -17,13 +17,11 @@ QUERIES = ["(incendio OR humo) (tren OR AVE OR Renfe OR Adif OR vía) when:1d",
            "(AVE OR Alta Velocidad OR Cercanías OR Rodalies) (incendio OR avería OR corte OR evacuados) when:1d"]
 # Feeds RSS públicos y gratuitos de medios: salen antes que Google Noticias (que tiene que indexarlos). Cada uno se prueba por separado
 # y el estado de cada feed se ve en /api/noticias → status.feeds; si alguno cambia de dirección o falla, se ignora sin afectar al resto.
-FEEDS = [("RTVE", "https://www.rtve.es/api/noticias.rss"),
-         ("El País", "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada"),
+FEEDS = [("El País", "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada"),
          ("El Mundo", "https://e00-elmundo.uecdn.es/elmundo/rss/espana.xml"),
          ("20minutos", "https://www.20minutos.es/rss/"),
          ("Europa Press", "https://www.europapress.es/rss/rss.aspx"),
          ("La Vanguardia", "https://www.lavanguardia.com/rss/home.xml"),
-         ("El Periódico", "https://www.elperiodico.com/es/rss/rss_portada.xml"),
          ("ABC", "https://www.abc.es/rss/2.0/espana/")]
 RAILWORDS = re.compile(r"\b(coche|turismo|cami[oó]n|carretera|autov[ií]a|autopista|dgt|paso a nivel|ave|tren(es)?|renfe|adif|ferroviari\w*|cercan[ií]as|rodalies|v[ií]as?|alta velocidad|locomotora|catenaria|apeadero|estaci[oó]n)\b", re.I)
 SEV = [("inc", re.compile(r"incendi|humo|llamas|fuego", re.I)), ("acc", re.compile(r"descarril|colisi|accident|arrolla|herid|muert|fallecid", re.I)),
