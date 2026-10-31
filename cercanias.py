@@ -68,10 +68,31 @@ def parse(doc, now=None, km_per_px=1.0):
     return out, hdr
 
 
+MAX_AGE_H = 6        # un aviso sin fecha de fin más antiguo que esto se descarta
+STALE_MIN = 90       # si el texto cita una hora (p. ej. «a las 08:30h») y pasó hace más de esto, ya no vale
+
+
+def _madrid_min(ts):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    d = datetime.fromtimestamp(ts, ZoneInfo("Europe/Madrid"))
+    return d.hour * 60 + d.minute
+
+
+_HORA = re.compile(r"\b(?:a las|de las|sobre las|las)\s+([01]?\d|2[0-3])[:.]([0-5]\d)\s*h?", re.I)
+
+
+def _past_hours(text, hm_now):
+    """True si TODAS las horas citadas en el texto pasaron hace más de STALE_MIN (hoy, hora de Madrid)."""
+    hs = [int(m.group(1)) * 60 + int(m.group(2)) for m in _HORA.finditer(text)]
+    return bool(hs) and all(0 <= hm_now - h > STALE_MIN for h in hs)
+
+
 def parse_alerts(doc, now=None, limit=12):
     """Avisos de servicio activos (no accesibilidad/ascensores), más recientes primero. Solo informativo."""
     now = now or time.time()
-    hdr = int(_g(_g(doc, "header", default={}), "timestamp", default=0) or 0) or now
+    hdr = now   # la edad y la vigencia se miden contra la hora real, no contra la cabecera del feed (puede ir retrasada)
+    hm_now = _madrid_min(now)
     out, seen = [], set()
     for e in doc.get("entity", []) or []:
         a = _g(e, "alert")
@@ -79,8 +100,10 @@ def parse_alerts(doc, now=None, limit=12):
             continue
         per = (_g(a, "activePeriod", "active_period", default=[]) or [{}])[0]
         start, end = int(per.get("start") or 0), int(per.get("end") or 0)
-        if (start and start > hdr) or (end and end < hdr):
+        if (start and start > hdr + 300) or (end and end < hdr):
             continue
+        if start and hdr - start > MAX_AGE_H * 3600 and not end:
+            continue   # aviso sin fin y antiguo: casi seguro olvidado en el feed
         tr = (_g(_g(a, "descriptionText", "description_text", default={}), "translation", default=[]) or [{}])[0]
         text = re.sub(r"\s+", " ", str(tr.get("text") or "")).strip()
         if not text or _ACCESS.search(text) or not _SERVICE.search(text):
@@ -89,12 +112,15 @@ def parse_alerts(doc, now=None, limit=12):
         routes = [r for r in routes if r]
         lines = sorted({m.group(1) for r in routes for m in [re.search(r"([CRT]\d+)[a-z]?$", r)] if m})
         region = REGION.get(routes[0][:2], "Cercanías") if routes else "Cercanías"
+        if _past_hours(text, hm_now):
+            continue   # habla de un tren/hora concreta ya pasada hace tiempo
         key = (region, text[:80])
         if key in seen:
             continue
         seen.add(key)
         out.append({"id": str(_g(e, "id", default="")), "region": region, "lines": lines[:8], "text": text[:420],
-                    "age_h": max(0, int((hdr - start) // 3600)) if start else 0, "start": start})
+                    "age_h": max(0, int((hdr - start) // 3600)) if start else 0,
+                    "age_min": max(0, int((hdr - start) // 60)) if start else 0, "start": start})
     out.sort(key=lambda x: -x["start"])
     return out[:limit]
 

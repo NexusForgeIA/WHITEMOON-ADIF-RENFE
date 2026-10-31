@@ -51,7 +51,31 @@ def test_avisos_filtra_ascensores_y_antiguos_y_mapea_lineas():
          "descriptionText": {"translation": [{"text": "Sin servicio futuro"}]}}},
         {"id": "D", "alert": {"activePeriod": [{"start": "1"}], "informedEntity": [{"routeId": "10T0014C4a"}],
          "descriptionText": {"translation": [{"text": "Por reajuste de servicio, tren con salida a las 09:05h inicia su recorrido en Tres Cantos"}]}}}]}
-    al = cercanias.parse_alerts(doc)
-    assert [a["id"] for a in al] == ["A", "D"]
+    al = cercanias.parse_alerts(doc, now=100000)
+    assert [a["id"] for a in al] == ["A"]   # D: sin fin y de 1970 → caducado
     assert al[0]["lines"] == ["R3"] and al[0]["region"] == "Rodalies Catalunya" and al[0]["age_h"] == 1
-    assert al[1]["lines"] == ["C4"] and al[1]["region"] == "Madrid"
+    assert al[0]["age_min"] == 60
+
+
+def _al(i, text, start, end=None):
+    per = {"start": str(start)}
+    if end:
+        per["end"] = str(end)
+    return {"id": i, "alert": {"activePeriod": [per], "informedEntity": [{"routeId": "10T0014C4"}],
+            "descriptionText": {"translation": [{"text": text}]}}}
+
+
+def test_avisos_edad_con_hora_real_y_caducidad():
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    now = int(datetime(2026, 10, 30, 21, 16, tzinfo=ZoneInfo("Europe/Madrid")).timestamp())
+    h = now - 12 * 3600   # cabecera del feed atrasada no debe rejuvenecer avisos
+    doc = {"header": {"timestamp": str(h)}, "entity": [
+        _al("viejo_hora", "Tren con salida a las 08:30h no efectúa parada en Atocha. Servicio afectado", now - 3600),
+        _al("viejo_sinfin", "Retrasos por incidencia en la línea, servicio afectado", now - 9 * 3600),
+        _al("caducado", "Servicio interrumpido por obras", now - 5 * 3600, now - 600),
+        _al("vigente", "Servicio interrumpido entre Atocha y Chamartín por incidencia", now - 25 * 60),
+        _al("hora_reciente", "Tren con salida a las 20:50h suprimido por incidencia", now - 30 * 60)]}
+    al = cercanias.parse_alerts(doc, now=now)
+    assert [a["id"] for a in al] == ["hora_reciente", "vigente"]
+    assert {a["id"]: a["age_min"] for a in al}["vigente"] == 25

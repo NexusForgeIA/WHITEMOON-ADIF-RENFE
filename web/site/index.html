@@ -1007,7 +1007,7 @@ let fcTab=false,avTab=false;
 let FULL=false;
 function drawAv(C,AL){const bx=$('av');bx.replaceChildren(h('div',null,'Avisos oficiales de Renfe para Cercanías/Rodalies. Informativo: no interviene en la seguridad.'));bx.firstChild.id='fcnote';
   if(!AL.length)bx.appendChild(h('div','empty',C&&C.alerts_ok===false?'Sin datos de avisos (feed no disponible).':'Sin avisos de servicio activos.'));
-  AL.forEach(a=>bx.appendChild(h('div','fci',null,[h('div','t',null,[h('em',null,a.region+(a.lines.length?' · '+a.lines.join(' '):'')),h('small',null,a.age_h<1?'hace <1 h':'hace '+a.age_h+' h')]),h('div','m',a.text)])))}
+  AL.forEach(a=>bx.appendChild(h('div','fci',null,[h('div','t',null,[h('em',null,a.region+(a.lines.length?' · '+a.lines.join(' '):'')),h('small',null,(a.age_min==null?a.age_h:a.age_min)<(a.age_min==null?1:2)?'hace <1 min':(a.age_min!=null&&a.age_min<60?'hace '+a.age_min+' min':'hace '+(a.age_min!=null?Math.floor(a.age_min/60):a.age_h)+' h'))]),h('div','m',a.text)])))}
 function drawFc(F){const n=F.items.length,box=$('fc');box.replaceChildren(h('div',null,'Posibles conflictos en los próximos '+Math.round((F.horizon_s||1200)/60)+' min «si nada cambia». Informativo: no ordena nada.'));box.firstChild.id='fcnote';
   if(!n){box.appendChild(h('div','empty','Sin conflictos previstos en la ventana.'));box.appendChild(h('div','sg2',F.note||''));return}
   F.items.forEach(f=>box.appendChild(h('div','fci'+(f.level==='PRÓXIMO'?' soon':''),null,[
