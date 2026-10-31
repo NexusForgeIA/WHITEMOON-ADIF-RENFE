@@ -283,7 +283,7 @@ class RenfeFeed:
             cat = punctuality.category(info.get("rname")) if info else "OTRO"
             eta = eta_epoch(info, dly, self.now()) if info else None
             k = kmh / 3600
-            cand.append((v_ms, 1 if ori else 0, {"n": label, "p": prod, "x": x, "y": y, "kmh": round(kmh, 1),
+            cand.append((v_ms, (2 if ori else 0) + (1 if sig else 0), {"n": label, "p": prod, "x": x, "y": y, "kmh": round(kmh, 1),
                            "vx": st["ux"] * k if kmh > 1 else 0.0, "vy": st["uy"] * k if kmh > 1 else 0.0,
                            "ts": out_ts, "ret": round(dly / 60), "eta": round(eta) if eta else 0, "cat": cat, "ant": ant, "sig": sig,
                            "ori": ori, "des": des, "mat": f"v{vid}", "op": "renfe-viajeros"}))

@@ -187,3 +187,12 @@ def test_mismo_tren_repetido_en_el_feed_sale_una_vez():
     f = feed_with([(T0, [a, b, ent("44444", 40.0, -3.0, "S1")])])
     _, tr = f.fetch()
     assert sorted(t["n"] for t in tr) == ["33333", "44444"] and f.stats["duplicados"] == 1
+
+
+def test_duplicado_prefiere_el_que_tiene_parada():
+    """En el feed real el mismo tren llega con 2-6 viajes (sufijos 1,2,3…); algunos sin stopId: gana el que lo tiene."""
+    sin, con = ent("55555", 41.0, -3.0, "S1"), ent("55555", 41.0, -3.0, "S1")
+    del sin["vehicle"]["stopId"]
+    con["vehicle"]["trip"]["tripId"] = "55555312026-10-30"
+    _, tr = feed_with([(T0, [sin, con])]).fetch()
+    assert len(tr) == 1 and tr[0]["sig"] == "S1"
