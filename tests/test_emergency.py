@@ -44,3 +44,20 @@ def test_resultados_parciales_visibles_durante_la_descarga(tmp_path):
     e.refresh()
     assert visto[0][0] == 0 and any(n > 0 for n, _ in visto[1:])      # a partir de la 2.ª zona ya hay datos que dibujar
     assert visto[-1][1] == "cargando" and e.status["state"] == "oficial-osm"
+
+
+def test_con_cache_no_se_publican_parciales(tmp_path):
+    import emergency as em
+    e = em.Emergency(str(tmp_path / "c.json"), opener=lambda ep, q: {"elements": []})
+    e.items = [{"k": "gc", "n": "x", "x": 0, "y": 0, "a": "", "t": "", "w": "", "id": "n1"}] * 5
+    seen = []
+    orig = e.open
+    def op(ep, q):
+        seen.append(len(e.items))
+        return {"elements": [{"type": "node", "id": len(seen), "lat": 40, "lon": -3, "tags": {"amenity": "police", "name": "Guardia Civil"}}]}
+    e.open = op
+    try:
+        e.refresh()
+    except Exception:
+        pass
+    assert set(seen) == {5}      # durante la descarga la lista visible no cambia

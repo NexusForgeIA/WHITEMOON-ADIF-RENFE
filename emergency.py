@@ -99,6 +99,7 @@ class Emergency:
 
     def refresh(self):
         els, failed, total = [], 0, sum(1 for _ in tiles())
+        had = bool(self.items)      # con caché ya cargada no se publican parciales: bajaría de 1777 a 105 puntos durante minutos
         for n, b in enumerate(tiles(), 1):
             ok = False
             for ep in ENDPOINTS:
@@ -112,7 +113,7 @@ class Emergency:
             failed += not ok
             part = parse(els)
             with self.lock:       # los resultados parciales ya se pueden dibujar mientras se descarga el resto
-                if part:
+                if part and not had:
                     self.items = part
                 self.status = {**self.status, "state": "cargando", "tiles_done": n, "tiles_total": total, "n": len(self.items), "failed_tiles": failed}
             print(f"[emergencia] tesela {n}/{total} · {len(self.items)} recursos · fallidas {failed}", flush=True)
