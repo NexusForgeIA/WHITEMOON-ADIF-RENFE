@@ -219,7 +219,7 @@ class RenfeFeed:
             self.skew_ms = int(round(off / 1800.0) * 1800 * 1000) if abs(off) > 300 else 0
             self.skew_note = f"desfase de reloj del feed corregido: {self.skew_ms // 1000} s" if self.skew_ms else None
         ts_ms += self.skew_ms or 0
-        trains, seen, matched, stale, unknown = [], set(), 0, 0, 0
+        trains, cand, seen, matched, stale, unknown = [], [], set(), 0, 0, 0
         for e in vp.get("entity", []):
             v = _g(e, "vehicle")
             pos = _g(v, "position")
@@ -283,16 +283,23 @@ class RenfeFeed:
             cat = punctuality.category(info.get("rname")) if info else "OTRO"
             eta = eta_epoch(info, dly, self.now()) if info else None
             k = kmh / 3600
-            trains.append({"n": label, "p": prod, "x": x, "y": y, "kmh": round(kmh, 1),
+            cand.append((v_ms, 1 if ori else 0, {"n": label, "p": prod, "x": x, "y": y, "kmh": round(kmh, 1),
                            "vx": st["ux"] * k if kmh > 1 else 0.0, "vy": st["uy"] * k if kmh > 1 else 0.0,
                            "ts": out_ts, "ret": round(dly / 60), "eta": round(eta) if eta else 0, "cat": cat, "ant": ant, "sig": sig,
-                           "ori": ori, "des": des, "mat": f"v{vid}", "op": "renfe-viajeros"})
+                           "ori": ori, "des": des, "mat": f"v{vid}", "op": "renfe-viajeros"}))
+        by = {}
+        for v_ms, has, t in cand:   # el feed repite el mismo tren en varias entidades: una sola por nº de tren (la más reciente y con horario)
+            k = by.get(t["n"])
+            if k is None or (has, v_ms) > (k[1], k[0]):
+                by[t["n"]] = (v_ms, has, t)
+        dup = len(cand) - len(by)
+        trains = [t for _, _, t in by.values()]
         for gone in set(self.state) - seen:
             del self.state[gone]
         for gone in set(self.detail) - {t["n"] for t in trains}:
             del self.detail[gone]
         self.stats = {"entities": len(trains), "header_age_s": round(self.now() - ts_ms / 1000),
-                      "gtfs_matched": matched, "retrasos_caducados": stale, "sin_horario": unknown, "gtfs_loaded": bool(self.gtfs), "skew_s": (self.skew_ms or 0) // 1000}
+                      "gtfs_matched": matched, "retrasos_caducados": stale, "sin_horario": unknown, "duplicados": dup, "gtfs_loaded": bool(self.gtfs), "skew_s": (self.skew_ms or 0) // 1000}
         return self.est, trains
 
 
