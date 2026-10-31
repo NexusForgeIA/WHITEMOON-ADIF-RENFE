@@ -64,7 +64,7 @@ def merge(lists, now=None, max_age=36 * 3600):
 
 
 class News:
-    def __init__(self, cache="data/news_cache.json", opener=None, period=600):
+    def __init__(self, cache="data/news_cache.json", opener=None, period=180):
         self.cache, self.period = cache, period
         self.open = opener or self._http
         self.items, self.status = [], {"state": "pendiente"}
