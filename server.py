@@ -26,6 +26,7 @@ from traffic import Traffic
 from news import News
 import persist
 import punctuality
+from visits import Visits
 import systems
 import forecast
 
@@ -689,10 +690,11 @@ NEWS = None
 SYNC = None
 _remote = persist.from_env()
 if _remote:     # cachés en Supabase: sobreviven a los reinicios de Render. La descarga se acota para no retrasar el arranque.
-    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache_v2.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json", "punct_history_av.json", "punct_history_conv.json")})
+    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache_v2.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json", "punct_history_av.json", "punct_history_conv.json", "visits.json")})
     _t = threading.Thread(target=SYNC.restore, daemon=True)
     _t.start()
     _t.join(60)
+VISITS = Visits(os.path.join(ROOT, "data", "visits.json"))
 PUNCT = {"all": punctuality.History(os.path.join(ROOT, "data", "punct_history.json")),
          "av": punctuality.History(os.path.join(ROOT, "data", "punct_history_av.json")),
          "conv": punctuality.History(os.path.join(ROOT, "data", "punct_history_conv.json"))}
@@ -744,6 +746,8 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, APP.systems())
         if path == "/api/safety_systems":
             return self._send(200, _load("safety_systems.json"))
+        if path == "/api/visitas":
+            return self._send(200, VISITS.api())
         if path == "/api/punct":
             seg = (urllib.parse.parse_qs(self.path.partition("?")[2]).get("seg") or ["all"])[0]
             if seg == "cer":     # el feed de Cercanías de Renfe solo trae posiciones, sin retrasos
@@ -802,6 +806,10 @@ class H(BaseHTTPRequestHandler):
                 raise ValueError
         except Exception:
             return self._send(400, {"ok": False, "msg": "JSON inválido"})
+        if self.path == "/api/v":       # contador de visitas: sin IP ni cookies guardadas (ver visits.py)
+            ip = (self.headers.get("X-Forwarded-For", "").split(",")[0].strip() or self.client_address[0])
+            VISITS.hit(ip, self.headers.get("User-Agent", ""))
+            return self._send(200, {"ok": True})
         if self.path in ("/api/tablet/pos", "/api/tablet/ack"):  # canal de cabina: token de maquinista, no el del panel
             rec, err = APP.auth_tablet(self.headers.get("X-Driver-Token", ""), self.client_address[0])
             if not rec:
@@ -867,6 +875,7 @@ def main():
         if LTV:
             APP.engine.cfg["ltv_items"] = LTV.items
         APP.tick()
+        VISITS.save()
         if a.source == "renfe":
             rows = [(t.n, t.ret, t.cat) for t in APP.engine.trains]
             for sg, h in PUNCT.items():

@@ -1181,5 +1181,10 @@ function aux(){
   document.addEventListener('click',()=>set(false));addEventListener('keydown',e=>{if(e.key==='Escape')set(false)})})();
 load();setInterval(load,1000);setInterval(()=>{if(S&&(S.trains.some(t=>t.cmd==='STOP')||(S.proximity||[]).some(x=>x.level==='RED')))draw()},120);
 </script>
+<script>
+/* Contador de visitas sin IP ni cookies. Para que NO cuenten tus propias visitas abre una vez la web con ?yo=1 (y ?yo=0 para volver a contar). */
+(function(){try{var q=location.search.match(/[?&]yo=([01])/);if(q){localStorage.setItem('rg_yo',q[1])}
+if(localStorage.getItem('rg_yo')==='1')return;if(navigator.webdriver)return;navigator.sendBeacon('/api/v','{}')}catch(e){}})();
+</script>
 </body>
 </html>
