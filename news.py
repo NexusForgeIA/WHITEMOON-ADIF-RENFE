@@ -138,7 +138,7 @@ class News:
         with self.lock:
             self.items = items
             self.status = {"state": "ok", "fetched": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "n": len(items), "errors": errs, "feeds": feeds}
-        print("[noticias] " + " · ".join(f"{k}: {'ok' if v['ok'] else 'ERROR'} ({v['n']})" for k, v in feeds.items()) + f" → {len(items)} titulares", flush=True)
+        print("[noticias] " + " · ".join(f"{k}: {'ok' if v['ok'] else 'ERROR ' + v.get('last_error', '')} ({v['n']})" for k, v in feeds.items()) + f" → {len(items)} titulares", flush=True)
         try:
             os.makedirs(os.path.dirname(self.cache) or ".", exist_ok=True)
             json.dump({"fetched": self.status["fetched"], "items": items}, open(self.cache, "w", encoding="utf-8"), separators=(",", ":"))
