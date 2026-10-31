@@ -32,6 +32,45 @@ header h1{font-size:16px;margin:0;letter-spacing:.04em}header h1 span{color:#ff2
 .bar.ALERT{border-left-color:var(--res);background:#1c1710}.bar.FAULT{border-left-color:var(--stop);background:#2a1216}.bar.OFF{opacity:.5}.bar.NODATA{border-left-color:var(--mut);opacity:.75}.bar.ext{border-style:dashed}
 .bar .t{display:flex;justify-content:space-between;font-weight:600}.bar .t i{font-style:normal;color:var(--mut);font-weight:500}
 .bar p{margin:2px 0 0;color:var(--mut);font-size:11px}.bar .n{margin-top:3px;font-size:11px}
+
+/* ---- Cabecera renovada: marca y estado · KPIs · barra de acciones · avisos · noticias ---- */
+header{padding:10px 14px!important;row-gap:10px!important;column-gap:10px!important;background:linear-gradient(180deg,#131f2c,#0f1822)}
+header .pill{padding:4px 11px;font-size:11.5px;background:#0c141d}
+header #cbar{display:flex;gap:6px;flex-wrap:wrap}
+.kpis{margin-left:auto;gap:8px!important}
+.kpi{min-width:84px;text-align:center!important;padding:7px 12px!important;background:#0c141d;border:1px solid var(--line);border-top:3px solid #3b5068;border-radius:10px!important;transition:transform .12s,border-color .12s}
+.kpi:hover{transform:translateY(-1px);background:#14212f!important}
+.kpi b{font-size:23px!important;font-variant-numeric:tabular-nums}.kpi small{display:block;margin-top:3px;font-size:10px!important;letter-spacing:.05em;text-transform:uppercase}
+.kpi:nth-child(2){border-top-color:var(--ok)}.kpi:nth-child(2) b{color:var(--ok)}
+.kpi:nth-child(3){border-top-color:var(--cau)}.kpi:nth-child(3) b{color:var(--cau)}
+.kpi:nth-child(4){border-top-color:var(--res)}.kpi:nth-child(4) b{color:var(--res)}
+.kpi:nth-child(5){border-top-color:var(--stop)}.kpi:nth-child(5) b{color:var(--stop)}
+header .hrow{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-top:10px;border-top:1px solid #1a2a3a}
+header .hrow #ochip{margin-right:6px;padding:7px 14px;border-radius:10px;font-size:12.5px}
+header .hrow .sysb,header .hrow #adm{background:#0c141d;border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:background .12s,border-color .12s}
+header .hrow .sysb:hover,header .hrow #adm:hover{background:#16263a;border-color:#35506b}
+header .hrow #ntb{color:#ffe9a8}header .hrow #fullb{color:#cfe6ff;border-color:#2b4a6b}header .hrow #ssb{color:#c9f2de}
+header .hrow #adm{margin-left:auto;padding:7px 11px}
+header .hban{flex:1 1 100%;display:flex;flex-direction:column;gap:6px}header .hban:empty{display:none}
+header .hban .banner,header .hban #pbanner{max-width:none!important;white-space:normal!important;border-radius:10px;padding:7px 12px}
+header .hban #pbanner:empty{display:none}
+/* Noticias en medios: tarjeta con filas ordenadas */
+.nwc{flex:1 1 100%;background:#0c141d;border:1px solid #2f4257;border-left:4px solid #5b7a99;border-radius:12px;padding:10px 14px;text-align:left;font-weight:400}
+.nwc.hot{border-color:#7a2a33;border-left-color:var(--stop);background:linear-gradient(90deg,#2a1218,#0c141d 55%)}
+.nwc .nh{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px}
+.nwc .nt{font-weight:700;font-size:13px;letter-spacing:.02em}
+.nwc .nk{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;background:#16263a;color:#cfe4ff}.nwc.hot .nk.u{background:#b00012;color:#fff}
+.nwc .nn{flex:1 1 260px;font-size:11px;color:var(--mut)}
+.nwc .nx{background:none;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer}.nwc .nx:hover{color:#fff;border-color:#35506b}
+.nwc .nr{display:grid;grid-template-columns:116px 82px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 4px;border-top:1px solid #172433;color:inherit;text-decoration:none;font-size:12.5px}
+.nwc .nr:first-of-type{border-top:0}.nwc .nr:hover{background:#111d2a;border-radius:8px}
+.nwc .nb{justify-self:start;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:800;letter-spacing:.05em;white-space:nowrap}
+.nwc .nb.u{background:#d6182a;color:#fff;animation:nwp 2s ease-in-out infinite}.nwc .nb.s{background:#16263a;color:#9fb3c8;border:1px solid #2a3f55}
+.nwc .nc{justify-self:start;font-size:11px;font-weight:600;white-space:nowrap}.nwc .nc.acc{color:#ff8a94}.nwc .nc.inc{color:#ffb25e}.nwc .nc.cor{color:#f2d56b}
+.nwc .nz{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nwc .nr:hover .nz{text-decoration:underline}
+.nwc .ns{font-size:11px;color:var(--mut);white-space:nowrap;text-align:right}
+@keyframes nwp{50%{opacity:.7}}
+@media(max-width:900px){.kpis{margin-left:0;flex:1 1 100%}.kpi{flex:1}.nwc .nr{grid-template-columns:auto 1fr;gap:4px 8px}.nwc .nz{grid-column:1/-1;white-space:normal}.nwc .ns{grid-column:1/-1;text-align:left}header .hrow #adm{margin-left:0}}
 .arrow{align-self:center;color:var(--mut);font-size:11px;line-height:14px}
 .human{border-left-color:var(--acc)}
 #mapwrap{position:relative;padding:0;overflow:hidden}canvas{width:100%;height:100%;display:block}
@@ -288,16 +327,17 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 <div id="toasts" aria-live="polite"></div>
 <header>
   <a href="/" class="brand" style="display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit"><img src="/logo.png" alt="" height="36" style="height:36px;width:auto;display:block;border-radius:4px" style="display:block"><h1>RAIL<span>GUARD</span></h1></a><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
-  <div id="banner" class="banner"></div><div id="pbanner"></div><div id="actb" class="banner" style="display:none;cursor:help"></div><div id="nwb" class="banner" style="display:none;text-align:left;font-weight:400"></div>
-  <button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
-  <button id="cabb" class="sysb" title="Muestra u oculta la banda del tren en foco">▣ Cabina</button>
-  <button id="ntb" class="sysb" style="border-color:#6b5a2b;color:#ffe9a8" title="Avisos en pantalla, sonido y notificación del navegador cuando aparece un peligro nuevo o un sistema falla">🔔 Avisos: no</button>
-  <button id="fullb" class="sysb" style="border-color:#2b6cb0;color:#cfe6ff" title="Abre a pantalla completa retrasos, cola del operador, peligros, previsión y avisos">⤢ Ver todo</button>
-  <button id="ssb" class="sysb" style="border-color:#2b7a5a;color:#c9f2de" title="Instalaciones de seguridad por línea (señalización, ATP, detectores, CTC), de documentación de Adif">📋 Líneas</button>
-  <button id="abb" class="sysb" style="border-color:#3a4a5c;color:#d6e1ec" title="Qué datos son reales, qué es simulado y qué límites tiene este sistema">ℹ Fuentes</button>
-  <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas</button>
-  <button id="adm" title="Token de administración (RAILGUARD_TOKEN)">🔑</button>
   <div class="kpis" id="kpis"></div>
+  <div class="hrow"><button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
+  <button id="cabb" class="sysb" title="Muestra u oculta la banda del tren en foco">▣ Cabina</button>
+  <button id="ntb" class="sysb" title="Avisos en pantalla, sonido y notificación del navegador cuando aparece un peligro nuevo o un sistema falla">🔔 Avisos: no</button>
+  <button id="fullb" class="sysb" title="Abre a pantalla completa retrasos, cola del operador, peligros, previsión y avisos">⤢ Ver todo</button>
+  <button id="ssb" class="sysb" title="Instalaciones de seguridad por línea (señalización, ATP, detectores, CTC), de documentación de Adif">📋 Líneas</button>
+  <button id="abb" class="sysb" title="Qué datos son reales, qué es simulado y qué límites tiene este sistema">ℹ Fuentes</button>
+  <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas</button>
+  <button id="adm" title="Token de administración (RAILGUARD_TOKEN)">🔑</button></div>
+  <div class="hban"><div id="banner" class="banner"></div><div id="pbanner"></div><div id="actb" class="banner" style="display:none;cursor:help"></div></div>
+  <div id="nwb" class="nwc" style="display:none"></div>
 </header>
 
 <section id="cab" aria-label="Tren en foco"></section>
@@ -705,14 +745,19 @@ function loadRoad(){fetch('/api/trafico',{cache:'no-store'}).then(r=>r.json()).t
 setTimeout(loadRoad,5000);setInterval(loadRoad,300000);
 var NWD=[];
 function nwEsc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var NWX=false;
 function renderNews(){var b=$('nwb');if(!b)return;var now=Date.now()/1000,L=NWD.filter(function(i){return now-i.ts<6*3600&&i.k!=='otr'});
  if(!L.length){b.style.display='none';return}
- var U=L.filter(function(i){return i.l==='ult'&&now-i.ts<2*3600}),O=L.filter(function(i){return i.l!=='ult'});
- var K={inc:'Incendio',acc:'Accidente',cor:'Corte'},LV={ult:'ÚLTIMA HORA',seg:'Seguimiento'};
- O=L.filter(function(i){return U.indexOf(i)<0});var rows=U.slice(0,3).concat(O.slice(0,Math.max(1,4-Math.min(3,U.length))));
- b.style.display='block';b.style.background=U.length?'':'#16202b';b.style.borderColor=U.length?'':'#2f4257';b.style.color=U.length?'':'#cfd8e3';
- b.innerHTML='<b>Noticias en medios</b> <span style="opacity:.7">· '+(U.length?U.length+' de última hora · ':'')+L.length+' titulares · titulares de medios (RSS públicos y Google Noticias) · no es un aviso oficial de Adif/Renfe</span>'+rows.map(function(i){var m=Math.max(1,Math.round((now-i.ts)/60));
-  var u=U.indexOf(i)>=0;return '<div><b style="opacity:'+(u?1:.75)+'">'+(u?LV.ult+' · '+K[i.k]:LV.seg)+'</b> · <a href="'+nwEsc(i.u)+'" target="_blank" rel="noopener" style="color:inherit">'+nwEsc(i.t)+'</a> <span style="opacity:.7">— '+nwEsc(i.s)+', hace '+(m<90?m+' min':Math.round(m/60)+' h')+'</span></div>'}).join('')}
+ var U=L.filter(function(i){return i.l==='ult'&&now-i.ts<2*3600}),O=L.filter(function(i){return U.indexOf(i)<0});
+ var K={inc:'🔥 Incendio',acc:'⚠ Accidente',cor:'⛔ Corte'},all=U.concat(O),max=NWX?12:4,rows=U.slice(0,3).concat(O).slice(0,Math.max(max,Math.min(3,U.length)));
+ var ok=function(u){return /^https?:\/\//i.test(u||'')?u:'#'};
+ b.style.display='block';b.className='nwc'+(U.length?' hot':'');
+ b.innerHTML='<div class="nh"><span class="nt">📰 Noticias en medios</span>'+(U.length?'<span class="nk u">'+U.length+' de última hora</span>':'')+'<span class="nk">'+L.length+' titulares</span>'
+  +'<span class="nn">Titulares de medios (RSS públicos y Google Noticias) · no es un aviso oficial de Adif/Renfe</span>'
+  +(all.length>4?'<button class="nx" type="button" id="nwtg">'+(NWX?'Ver menos':'Ver más ('+Math.min(12,all.length)+')')+'</button>':'')+'</div>'
+  +rows.map(function(i){var m=Math.max(1,Math.round((now-i.ts)/60)),u=U.indexOf(i)>=0;
+   return '<a class="nr" href="'+nwEsc(ok(i.u))+'" target="_blank" rel="noopener"><span class="nb '+(u?'u':'s')+'">'+(u?'ÚLTIMA HORA':'SEGUIMIENTO')+'</span><span class="nc '+nwEsc(i.k)+'">'+(u?(K[i.k]||''):'')+'</span><span class="nz" title="'+nwEsc(i.t)+'">'+nwEsc(i.t)+'</span><span class="ns">'+nwEsc(i.s)+' · hace '+(m<90?m+' min':Math.round(m/60)+' h')+'</span></a>'}).join('');
+ var tg=$('nwtg');if(tg)tg.onclick=function(){NWX=!NWX;renderNews()}}
 function loadNews(){fetch('/api/noticias',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){NWD=j.items||[];renderNews()}).catch(function(){})}
 setTimeout(loadNews,4000);setInterval(loadNews,120000);
 
