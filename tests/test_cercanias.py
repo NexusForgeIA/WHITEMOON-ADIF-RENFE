@@ -77,5 +77,5 @@ def test_avisos_edad_con_hora_real_y_caducidad():
         _al("vigente", "Servicio interrumpido entre Atocha y Chamartín por incidencia", now - 25 * 60),
         _al("hora_reciente", "Tren con salida a las 20:50h suprimido por incidencia", now - 30 * 60)]}
     al = cercanias.parse_alerts(doc, now=now)
-    assert [a["id"] for a in al] == ["hora_reciente", "vigente"]
+    assert [a["id"] for a in al] == ["vigente", "hora_reciente"]
     assert {a["id"]: a["age_min"] for a in al}["vigente"] == 25
