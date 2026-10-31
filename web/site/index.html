@@ -274,7 +274,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 <div id="toasts" aria-live="polite"></div>
 <header>
   <a href="./" class="brand" style="display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit"><img src="logo.png" alt="" height="36" style="height:36px;width:auto;display:block;border-radius:4px" style="display:block"><h1>RAIL<span>GUARD</span></h1></a><span id="mode" class="pill">—</span><span id="clock" class="pill">—</span><select id="dv" title="Vista"><option value="nacional">Centro Nacional</option><option value="madrid">Madrid · Atocha</option><option value="barcelona">Barcelona · Sants</option><option value="sevilla">Sevilla · Santa Justa</option></select><a id="dtab" class="pill" href="tablet.html" style="text-decoration:none">📱 App de cabina</a><span id="dprog" class="pill"></span><button id="drs" title="Reiniciar la reproducción">↻</button><span id="cname" class="pill live" style="display:none"></span><div id="cbar" style="display:flex;gap:5px"></div>
-  <div id="banner" class="banner"></div><div id="pbanner"></div><div id="actb" class="banner" style="display:none;cursor:help"></div>
+  <div id="banner" class="banner"></div><div id="pbanner"></div><div id="actb" class="banner" style="display:none;cursor:help"></div><div id="nwb" class="banner" style="display:none;text-align:left;font-weight:400"></div>
   <button id="ochip" title="Estado global de los sistemas de seguridad. Pulse para ver el detalle">🛡 —</button>
   <button id="cabb" class="sysb" title="Muestra u oculta la banda del tren en foco">▣ Cabina</button>
   <button id="ntb" class="sysb" style="border-color:#6b5a2b;color:#ffe9a8" title="Avisos en pantalla, sonido y notificación del navegador cuando aparece un peligro nuevo o un sistema falla">🔔 Avisos: no</button>
@@ -648,6 +648,17 @@ function openPoi(i){EMS={n:i.id};cardN=null;clearInterval(cardTimer);
 let RDD=null,RDS=null;const RDC={acc:'#e040fb',ret:'#ff4081',obr:'#b08d57',cor:'#b08d57',vel:'#9aa5b1',met:'#4dd0e1',cal:'#4dd0e1',otr:'#9aa5b1'};let RDK={};
 function loadRoad(){fetch('/api/trafico',{cache:'no-store'}).then(r=>r.json()).then(j=>{RDD=j.items&&j.items.length?j.items:null;RDK=j.kinds||{};const e=$('rdn');if(e)e.textContent=RDD?'('+RDD.length+')':(j.ready?'(0)':'(cargando…)');if(typeof draw==='function')draw()}).catch(()=>{})}
 setTimeout(loadRoad,5000);setInterval(loadRoad,300000);
+var NWD=[];
+function nwEsc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function renderNews(){var b=$('nwb');if(!b)return;var now=Date.now()/1000,L=NWD.filter(function(i){return now-i.ts<6*3600});
+ var hot=L.filter(function(i){return i.k!=='otr'});if(!hot.length){b.style.display='none';return}
+ var K={inc:'🔥 Incendio',acc:'⚠ Accidente',cor:'⛔ Corte'};
+ b.style.display='block';
+ b.innerHTML='<b>Noticias en medios ('+hot.length+')</b> <span style="opacity:.7">· Google Noticias, sin verificar, solo informativo</span><br>'+hot.slice(0,4).map(function(i){var m=Math.max(1,Math.round((now-i.ts)/60));
+  return '<div>'+(K[i.k]||'')+' · <a href="'+nwEsc(i.u)+'" target="_blank" rel="noopener" style="color:inherit">'+nwEsc(i.t)+'</a> <span style="opacity:.7">— '+nwEsc(i.s)+', hace '+(m<90?m+' min':Math.round(m/60)+' h')+'</span></div>'}).join('')}
+function loadNews(){fetch('/api/noticias',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){NWD=j.items||[];renderNews()}).catch(function(){})}
+setTimeout(loadNews,4000);setInterval(loadNews,300000);
+
 const midR=i=>({x:(i.x+(i.x1==null?i.x:i.x1))/2,y:(i.y+(i.y1==null?i.y:i.y1))/2});
 function nearRoad(t,r){if(!RDD||!t)return[];return RDD.map(i=>({i,d:kmTo(t,midR(i))})).filter(o=>o.d<=r).sort((a,b)=>a.d-b.d)}
 function openRoad(i){RDS={id:i.id};EMS=null;cardN=null;clearInterval(cardTimer);
