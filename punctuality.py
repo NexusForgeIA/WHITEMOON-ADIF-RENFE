@@ -1,6 +1,9 @@
 """Puntualidad de la red: KPIs calculados con el feed de Renfe que ya usa RailGuard (no se copian datos de terceros).
 
-Umbrales de indemnización: «Compromiso de puntualidad» de Renfe (renfe.com, consultado 30/10/2026). Se aplican al retraso ACTUAL del tren
+Umbrales de indemnización: «Compromiso de puntualidad» de Renfe (renfe.com/es/es/ayuda/compromiso-puntualidad, consultado 31/10/2026; página actualizada el 30/01/2026).
+Escalones: AVE/Avlo/Alvia/Euromed/Intercity/LD 60 min (50 %) y >90 (100 %); Avant >15 (50 %) y >30 (100 %); Media Distancia >15/30/60 (25/50/100 %);
+Regional >30/45/60 (25/50/100 %). Cercanías: Renfe no publica escalones. Se usa el primer escalón. No hay derecho si el retraso es fuerza mayor ni (billetes desde 31/01/2026)
+por limitaciones temporales de velocidad de Adif; el feed no distingue la causa, así que el contador es un máximo teórico. Se aplican al retraso ACTUAL del tren
 como aproximación: la indemnización real depende del retraso a la llegada. Informativo; no interviene en ninguna barrera de seguridad.
 """
 import json
