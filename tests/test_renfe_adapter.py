@@ -182,8 +182,8 @@ def test_tren_terminado_no_se_dibuja():
 
 def test_mismo_tren_repetido_en_el_feed_sale_una_vez():
     """El feed publica a veces varias entidades con la misma etiqueta de tren: en el panel debe aparecer una sola."""
-    a, b = ent("33333", 41.0, -3.0), ent("33333", 41.0, -3.0)
+    a, b = ent("33333", 41.0, -3.0, "S1"), ent("33333", 41.0, -3.0, "S1")
     b["id"] = "VP_otra"; b["vehicle"]["vehicle"]["id"] = "v2"
-    f = feed_with([(T0, [a, b, ent("44444", 40.0, -3.0)])])
+    f = feed_with([(T0, [a, b, ent("44444", 40.0, -3.0, "S1")])])
     _, tr = f.fetch()
     assert sorted(t["n"] for t in tr) == ["33333", "44444"] and f.stats["duplicados"] == 1
