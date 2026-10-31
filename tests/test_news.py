@@ -61,3 +61,21 @@ def test_descarta_politica_y_acepta_trafico():
 </channel></rss>""".format(n=fmt(time.time()))
     r = news.parse(x)
     assert len(r) == 1 and "coche" in r[0]["t"] and r[0]["k"] == "acc"
+
+
+def test_parse_atom_y_fuente_del_feed():
+    x = """<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>Incendio junto a la vía del tren en Lleida</title>
+<link href="http://x/a"/><updated>{iso}</updated></entry></feed>""".format(iso=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+    r = news.parse(x, "RTVE")
+    assert len(r) == 1 and r[0]["s"] == "RTVE" and r[0]["u"] == "http://x/a" and r[0]["k"] == "inc"
+
+
+def test_un_feed_caido_no_afecta_a_los_demas(tmp_path):
+    def op(u):
+        if "rtve" in u:
+            raise OSError("caído")
+        return RSS.format(now=fmt(time.time()), old=fmt(time.time()))
+    n = news.News(str(tmp_path / "n.json"), opener=op)
+    n.refresh()
+    f = n.api()["status"]["feeds"]
+    assert f["RTVE"]["err"] == 1 and f["El País"]["ok"] == 1 and n.api()["ready"]
