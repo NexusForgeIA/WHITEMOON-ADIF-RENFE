@@ -79,3 +79,15 @@ def test_un_feed_caido_no_afecta_a_los_demas(tmp_path):
     n.refresh()
     f = n.api()["status"]["feeds"]
     assert f["El Mundo"]["err"] == 1 and f["El País"]["ok"] == 1 and n.api()["ready"]
+
+
+def test_solo_espana_descarta_extranjero():
+    def feed(t, src, url="https://www.example.es"):
+        return f'<rss><channel><item><title>{t} - {src}</title><link>{url}/a</link><pubDate>Sat, 31 Oct 2026 16:00:00 GMT</pubDate><source url="{url}">{src}</source></item></channel></rss>'
+    assert not news.parse(feed("Accidente de coche en la carretera Matamoros-Reynosa", "Vox Populi"))
+    assert not news.parse(feed("Accidente de tren en Buenos Aires", "Medio X"))
+    assert not news.parse(feed("Accidente de tren con heridos", "Infobae", "https://www.infobae.com"))
+    assert not news.parse(feed("Accidente de tren con heridos", "Diario", "https://www.diario.com.mx"))
+    assert news.parse(feed("Accidente de tren en Urda: heridos", "20minutos", "https://www.20minutos.es"))
+    assert news.parse(feed("Accidente de tren en La Puebla de Cazalla", "Diario Sevilla", "https://www.diariodesevilla.es"))
+    assert news.parse(feed("Accidente de coche en Cubas de la Sagra", "Telemadrid", "https://www.telemadrid.es"))

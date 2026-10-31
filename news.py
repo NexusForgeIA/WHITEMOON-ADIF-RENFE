@@ -27,6 +27,17 @@ RAILWORDS = re.compile(r"\b(coche|turismo|cami[oó]n|carretera|autov[ií]a|autop
 SEV = [("inc", re.compile(r"incendi|humo|llamas|fuego", re.I)), ("acc", re.compile(r"descarril|colisi|accident|arrolla|herid|muert|fallecid", re.I)),
        ("cor", re.compile(r"cort|interrump|suspend|evacu|sin servicio|paralizad", re.I))]
 # Política, obras, crisis y opinión: no son sucesos, se descartan del todo
+# Solo España: fuera lo que mencione lugares/países extranjeros o venga de medios o dominios de fuera (Google Noticias a veces los cuela).
+FOREIGN = re.compile(r"\b(m[eé]xico|mexican|tamaulipas|reynosa|matamoros|cdmx|monterrey|jalisco|veracruz|oaxaca|chihuahua|sonora|yucat[aá]n|"
+                     r"argentin|buenos aires|chile|santiago de chile|per[uú]\b|lima\b|colombia|bogot[aá]|medell[ií]n|venezuela|caracas|ecuador|quito|bolivia|paraguay|uruguay|"
+                     r"cuba|habana|guatemala|honduras|nicaragua|costa rica|panam[aá]|puerto rico|rep[uú]blica dominicana|brasil|portugal|lisboa|oporto|francia|par[ií]s|italia|roma\b|"
+                     r"alemania|berl[ií]n|reino unido|londres|india|china|jap[oó]n|ee\.? ?uu|estados unidos|nueva york|texas|california|rusia|ucrania|israel|egipto|marruecos|"
+                     r"pakist[aá]n|banglad|ir[aá]n|irak|turqu[ií]a|suiza|b[eé]lgica|pa[ií]ses bajos|holanda|polonia|grecia|austria|suecia|noruega|dinamarca|sud[aá]frica|nigeria|kenia|filipinas|indonesia|tailandia|vietnam|corea|australia|canad[aá]|nyc|metro de (m[eé]xico|santiago de chile|lima|bogot[aá]|buenos aires|caracas))\b", re.I)
+FOREIGN_SRC = re.compile(r"vox populi|infobae|el universal|milenio|excelsior|excélsior|la jornada|el financiero|televisa|tv azteca|el comercio|clar[ií]n|la naci[oó]n|el tiempo|semana|el espectador|"
+                         r"el mercurio|la tercera|biobio|bbc|cnn|reuters|france 24|dw\b|rfi|sputnik|rt en espa|telesur|prensa latina|hispantv|univision|telemundo|"
+                         r"el diario ny|la opini[oó]n de los angeles|publimetro|debate|el sol de|el informador|n\+|imagen|uno tv|aristegui|proceso|animal pol[ií]tico|"
+                         r"diario de yucat[aá]n|el heraldo de (m[eé]xico|honduras)|el pa[ií]s am[eé]rica|ol[eé] brasil|\bg1\b|globo|publico\.pt|expresso|observador|sic not[ií]cias|\bcm\b|jornal", re.I)
+FOREIGN_TLD = re.compile(r"\.(mx|ar|cl|pe|co|ve|ec|uy|bo|py|cr|gt|hn|ni|pa|do|cu|br|pt|fr|it|de|uk|us|ru|in|cn|jp)(/|$)", re.I)
 DROP = re.compile(r"feij[oó]o|s[aá]nchez|puente|ministr|gobierno|\bpp\b|psoe|vox|sumar|oposici|congreso|elecciones|obras de renovaci|crisis|plazas|huelga|billetes|precio", re.I)
 KIND = {"inc": "Incendio", "acc": "Accidente", "cor": "Corte o interrupción", "otr": "Incidencia"}
 # Una noticia solo es "última hora" si el propio titular lo dice; lo demás es seguimiento o información general
@@ -72,7 +83,11 @@ def parse(xml_text, source=None):
         src = _txt(it, "source") or source or ""
         if src and title.endswith(" - " + src):
             title = title[:-(len(src) + 3)]
-        if not title or not RAILWORDS.search(title) or DROP.search(title):
+        if not title or not RAILWORDS.search(title) or DROP.search(title) or FOREIGN.search(title) or FOREIGN_SRC.search(src):
+            continue
+        sn = next((e for e in it if _ln(e.tag) == "source"), None)
+        host = re.sub(r"^https?://", "", (sn.get("url") if sn is not None else "") or "")
+        if host and FOREIGN_TLD.search(host.split("/")[0] + "/"):
             continue
         ts = _when(_txt(it, "pubDate", "published", "updated", "date"))
         if ts is None:
