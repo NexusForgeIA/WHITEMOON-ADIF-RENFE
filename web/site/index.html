@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="es">
 <head>
+<link rel="stylesheet" href="/vendor/maplibre/maplibre-gl.css">
+<script src="/vendor/maplibre/maplibre-gl.js" defer></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RailGuard Demo</title>
@@ -76,6 +78,8 @@ header .hban #pbanner:empty{display:none}
 .arrow{align-self:center;color:var(--mut);font-size:11px;line-height:14px}
 .human{border-left-color:var(--acc)}
 #mapwrap{position:relative;padding:0;overflow:hidden}canvas{width:100%;height:100%;display:block}
+#bm{position:absolute;inset:0;pointer-events:none;z-index:0;background:#0a1017}#bm.off{visibility:hidden}#mapwrap canvas#cv{position:absolute;inset:0;z-index:1}
+#bmattr{position:absolute;right:6px;bottom:3px;z-index:3;font-size:9.5px;color:#8aa0b5;background:#0a1017b3;padding:1px 6px;border-radius:5px}#bmattr a{color:#a8bfd6}
 #card{position:absolute;top:12px;right:12px;width:min(320px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;background:#0b121aF2;border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:8px;padding:12px 14px;font-size:13px;z-index:5}
 #card h3{margin:0;font-size:19px;letter-spacing:.3px}#card .sub{color:var(--mut);margin:2px 0 8px}#card .x{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--mut);font-size:20px;cursor:pointer}
 #card .r{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-top:1px solid #16212d}#card .r span:first-child{color:var(--mut)}#card .r span:last-child{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
@@ -355,7 +359,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   </details>
 </section>
 
-<section class="panel" id="mapwrap"><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
+<section class="panel" id="mapwrap"><div id="bm"></div><div id="bmattr" hidden>© <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> · © <a href="https://openmaptiles.org" target="_blank" rel="noopener">OpenMapTiles</a> · Datos © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
   <div class="tb"><button id="zi" title="Acercar">+</button><button id="zo" title="Alejar">−</button><button id="zr" title="Ajustar a toda la red">⌂</button>
     <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lcl" hidden title="Cercanías: posición de parada, sin velocidad; solo informativo"><input type="checkbox" id="lc" checked>Cercanías <span id="lcn"></span></label><label title="Dibuja el contorno de España y países vecinos"><input type="checkbox" id="lbm" checked>Mapa</label><label title="Resalta las líneas de alta velocidad (AVE) y su nombre"><input type="checkbox" id="lave" checked>AVE</label><label title="Limitaciones temporales de velocidad publicadas por Adif (informativo)"><input type="checkbox" id="llt" checked>LTV <span id="ltn"></span></label><label title="Cuarteles/comandancias de la Guardia Civil y sedes de Cruz Roja (OpenStreetMap, no oficial). Pulse uno para ver su ficha"><input type="checkbox" id="lem" checked>Emergencias <span id="emn"></span></label><label title="Incidencias de carretera de la DGT: obras, cortes, retenciones y accidentes (no es tráfico ferroviario). Pulse una para ver su ficha"><input type="checkbox" id="lrd" checked>Tráfico DGT <span id="rdn"></span></label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
     <button id="lgb" title="Qué significan los colores y las etiquetas del mapa">? Leyenda</button><select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
@@ -522,14 +526,19 @@ function evm(e){const m=e.msg||'',x=m.match(/^Condición despejada: ([^|]+)\|([A
 const cv=$('cv'),cx=cv.getContext('2d'),tip=$('tip');
 let V={z:1,px:0,py:0},base=null,sel=null,opf='',drag=null,ptrs=new Map(),pinch0=0;
 const SIGCOL=sg=>!sg?'#8ea0b6':sg.includes('LZB')?'#ff9f43':sg.startsWith('ETCS')?'#4aa8ff':'#8ea0b6';
-function fit(){const r=cv.parentElement.getBoundingClientRect(),d=devicePixelRatio||1,w=Math.round(r.width*d),hh=Math.round(r.height*d);if(cv.width!==w)cv.width=w;if(cv.height!==hh)cv.height=hh;cx.setTransform(d,0,0,d,0,0);return r}
+function fit(){const r0=cv.parentElement.getBoundingClientRect(),r={width:cv.clientWidth||r0.width,height:cv.clientHeight||r0.height},d=devicePixelRatio||1,w=Math.round(r.width*d),hh=Math.round(r.height*d);if(cv.width!==w)cv.width=w;if(cv.height!==hh)cv.height=hh;cx.setTransform(d,0,0,d,0,0);return r}
+// En vivo, los datos están en km sobre la proyección de Renfe (project() del servidor): se pasan a Web Mercator para que cuadren con el mapa real.
+// En simulación (fixture con otro origen) se mantiene el mapa esquemático.
+const KML=111.32*Math.cos(40*Math.PI/180),KMA=111.19,LATN=44,LONW=-10,RAD=Math.PI/180;
+const GEO=()=>!!S&&S.mode==='live';
+function P(x,y){if(!GEO())return[x,y];const u=S.unit_km||1,lon=x*u/KML+LONW,lat=LATN-y*u/KMA;return[lon*RAD,-Math.log(Math.tan(Math.PI/4+lat*RAD/2))]}
 function setBase(W,H){
-  const xs=S.stations.map(s=>s.x),ys=S.stations.map(s=>s.y),pad=44;
+  const pts=S.stations.map(s=>P(s.x,s.y)),xs=pts.map(a=>a[0]),ys=pts.map(a=>a[1]),pad=44;
   const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
   const sc=Math.min((W-2*pad)/(x1-x0),(H-2*pad)/(y1-y0));
   base={x0,y0,sc,ox:pad+((W-2*pad)-(x1-x0)*sc)/2,oy:pad+((H-2*pad)-(y1-y0)*sc)/2,W,H};
 }
-const T=(x,y)=>{const bx=base.ox+(x-base.x0)*base.sc,by=base.oy+(y-base.y0)*base.sc;return[(bx-base.W/2)*V.z+base.W/2+V.px,(by-base.H/2)*V.z+base.H/2+V.py]};
+const T=(x,y)=>{const m=P(x,y),bx=base.ox+(m[0]-base.x0)*base.sc,by=base.oy+(m[1]-base.y0)*base.sc;return[(bx-base.W/2)*V.z+base.W/2+V.px,(by-base.H/2)*V.z+base.H/2+V.py]};
 function zoomAt(f,mx,my){const z=Math.max(.6,Math.min(80,V.z*f)),k=z/V.z,W=base.W,H=base.H;
   V.px=mx-W/2-(mx-W/2-V.px)*k;V.py=my-H/2-(my-H/2-V.py)*k;V.z=z;draw()}
 function visible(t){return !opf||t.op===opf}
@@ -542,15 +551,35 @@ function drawTrain(t,p,q,a){
   else cx.rect(-r*.7,-r*.7,r*1.4,r*1.4);
   cx.fill();cx.stroke();cx.restore();
 }
+// ---- mapa real de fondo (OpenFreeMap, gratuito y sin clave) bajo el lienzo; si no carga, se usa el trazado esquemático ----
+let BM=null,BMOK=false,BMFAIL=false,bmKey='';
+function bmFail(why){if(BMOK||BMFAIL)return;BMFAIL=true;try{BM&&BM.remove()}catch(e){}BM=null;const e=$('bm');if(e)e.classList.add('off');const a=$('bmattr');if(a)a.hidden=true;if(window.console)console.warn('Mapa base no disponible:',why);draw()}
+function bmInit(){
+  if(BM||BMFAIL||!GEO()||typeof maplibregl==='undefined')return;
+  try{BM=new maplibregl.Map({container:'bm',style:window.__BMSTYLE||'https://tiles.openfreemap.org/styles/dark',interactive:false,attributionControl:false,fadeDuration:0,renderWorldCopies:false,minZoom:0,maxZoom:22,center:[-3.7,40],zoom:5,bearing:0,pitch:0});
+    BM.on('load',()=>{BMOK=true;try{(BM.getStyle().layers||[]).forEach(l=>{if(/poi|housenumber|aeroway|mountain_peak/i.test(l.id))BM.setLayoutProperty(l.id,'visibility','none')})}catch(e){}
+      const a=$('bmattr');if(a)a.hidden=false;bmKey='';draw()});
+    BM.on('error',e=>{if(!BMOK&&e&&e.error&&/style|fetch|Failed|NetworkError|404|403/i.test(String(e.error.message||e.error)))bmFail(String(e.error.message||e.error))});
+    setTimeout(()=>{if(!BMOK)bmFail('tiempo de espera agotado')},12000)}catch(e){bmFail(String(e))}
+}
+function bmSync(W,H){
+  if(!BM||!BMOK||BMFAIL)return;const e=$('bm');if(e)e.classList.toggle('off',!($('lbm')&&$('lbm').checked));
+  const Z=base.sc*V.z;
+  const bx=W/2-V.px/V.z,by=H/2-V.py/V.z,m0=base.x0+(bx-base.ox)/base.sc,m1=base.y0+(by-base.oy)/base.sc;
+  const lon=m0/RAD,lat=(2*Math.atan(Math.exp(-m1))-Math.PI/2)/RAD,zoom=Math.log2(Z*2*Math.PI/512);
+  const key=[W,H,lon.toFixed(5),lat.toFixed(5),zoom.toFixed(4)].join('|');if(key===bmKey)return;
+  if(bmKey.split('|').slice(0,2).join('|')!==W+'|'+H)BM.resize();bmKey=key;BM.jumpTo({center:[lon,lat],zoom,bearing:0,pitch:0})
+}
 function draw(){
   if(!S)return;const r=fit(),W=r.width,H=r.height;cx.clearRect(0,0,W,H);
   if(!base||base.W!==W||base.H!==H)setBase(W,H);
+  bmInit();bmSync(W,H);
   const st={};S.stations.forEach(s=>st[s.c]=s);
   const sc=base.sc*V.z;                 // px de pantalla por unidad de datos
-  const kmpx=S.unit_km/sc;              // km por px de pantalla
+  const kmpx=GEO()?4880/sc:S.unit_km/sc;   // km por px de pantalla (en Mercator, a ~40° N)
   const lw=Math.min(4,1.2+V.z*.35);
   // mapa base: tierra (España resaltada) y mar
-  if(BASE&&$('lbm')&&$('lbm').checked){
+  if(BASE&&$('lbm')&&$('lbm').checked&&!(BMOK&&!BMFAIL)){
     const u=S.unit_km||1;cx.save();cx.lineJoin='round';
     BASE.countries.forEach(c=>{const es=c.n==='Spain';
       cx.beginPath();c.rings.forEach(r=>{r.forEach((q,i)=>{const [x,y]=T(q[0]/u,q[1]/u);i?cx.lineTo(x,y):cx.moveTo(x,y)});cx.closePath()});

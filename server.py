@@ -706,7 +706,9 @@ APP = None
 STATIC = {"/": ("index.html", "text/html"), "/index.html": ("index.html", "text/html"), "/tablet": ("tablet.html", "text/html"), "/centro": ("index.html", "text/html"),
           "/manifest.webmanifest": ("manifest.webmanifest", "application/manifest+json"),
           "/sw.js": ("sw.js", "text/javascript"), "/icon.svg": ("icon.svg", "image/svg+xml"),
-          "/logo.png": ("logo.png", "image/png"), "/og-image.png": ("og-image.png", "image/png"), "/favicon.png": ("favicon.png", "image/png"), "/basemap.json": ("basemap.json", "application/json")}
+          "/logo.png": ("logo.png", "image/png"), "/og-image.png": ("og-image.png", "image/png"), "/favicon.png": ("favicon.png", "image/png"), "/basemap.json": ("basemap.json", "application/json"),
+          "/vendor/maplibre/maplibre-gl.js": ("vendor/maplibre/maplibre-gl.js", "text/javascript"),
+          "/vendor/maplibre/maplibre-gl.css": ("vendor/maplibre/maplibre-gl.css", "text/css")}
 
 
 INFRA = None
@@ -767,7 +769,7 @@ class H(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split("?")[0]
         # abiertos con su propia autenticación o necesarios para la monitorización: salud, canal de centros y app de cabina
-        if path not in ("/api/health", "/api/centre/snapshot", "/manifest.webmanifest", "/sw.js", "/icon.svg", "/logo.png", "/og-image.png", "/favicon.png", "/basemap.json") and not path.startswith("/tablet") and not self._viewer_ok():
+        if path not in ("/api/health", "/api/centre/snapshot", "/manifest.webmanifest", "/sw.js", "/icon.svg", "/logo.png", "/og-image.png", "/favicon.png", "/basemap.json", "/vendor/maplibre/maplibre-gl.js", "/vendor/maplibre/maplibre-gl.css") and not path.startswith("/tablet") and not self._viewer_ok():
             return
         if path == "/api/snapshot":
             return self._send(200, APP.snapshot())
