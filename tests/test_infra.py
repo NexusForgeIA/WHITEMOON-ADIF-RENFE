@@ -71,3 +71,20 @@ def test_consulta_pide_coordenadas_de_los_nodos():
     from infra import query
     q = query((40, -4, 41, -3))
     assert q.rstrip().endswith("out body qt;") and "out tags qt;" not in q.split("->.r;")[1].split("node(w.r)")[1]
+
+
+def test_orden_de_fuentes_adif_osm_ign(tmp_path, monkeypatch):
+    """El IGN (solo trazado) no debe tapar a OpenStreetMap, que trae nº de vías, señales y desvíos."""
+    import infra as inf
+    llamadas = []
+    i = inf.Infra(str(tmp_path / "c.json"), str(tmp_path / "x.json"), opener=lambda ep, q: {"elements": [
+        {"type": "way", "id": 1, "tags": {"tracks": "2"}, "geometry": [{"lat": 40, "lon": -3}, {"lat": 40.1, "lon": -3.1}]},
+        {"type": "node", "id": 9, "lat": 40, "lon": -3, "tags": {"railway": "signal", "railway:signal:main": "x"}}]})
+    monkeypatch.setattr(inf, "tiles", lambda: iter([(40, -4, 41, -3)]))
+    monkeypatch.setattr(inf.time, "sleep", lambda s: None)
+    monkeypatch.setattr(i, "_official", lambda names=("adif", "ign"): llamadas.append(names) or False)
+    i.official = True
+    i.run()
+    assert llamadas == [("adif",)]                     # el IGN no se llama si OSM funciona
+    d = i.data
+    assert d["meta"]["counts"]["signals"] == 1

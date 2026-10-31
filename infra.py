@@ -187,9 +187,9 @@ class Infra:
         json.dump(data, open(self.cache, "w", encoding="utf-8"), separators=(",", ":"))
         self._set(data)
 
-    def _official(self):
-        """Fuentes oficiales por orden: Adif (con nº de vías) y después IGN (solo trazado). True si alguna funcionó."""
-        for name in ("adif", "ign"):
+    def _official(self, names=("adif", "ign")):
+        """Fuentes oficiales: Adif (con nº de vías y señales) e IGN (solo trazado). True si alguna funcionó."""
+        for name in names:
             diag = self.status.setdefault(name, {})
             try:
                 t0 = time.time()
@@ -212,12 +212,14 @@ class Infra:
                 self._set(json.load(open(self.cache, encoding="utf-8")))
                 return
             self.status["state"] = "descargando"
-            if self.official and self._official():
+            if self.official and self._official(("adif",)):     # Adif trae vías y señales; el IGN solo trazado, así que va DESPUÉS de OSM
                 return
             # 2) respaldo: OpenStreetMap (no oficial)
             els, failed, streak = [], [], 0
             for b in tiles():
-                if streak >= 3 and not els:   # Overpass inaccesible: no bloquear horas; se reintentará más tarde
+                if streak >= 3 and not els:   # Overpass inaccesible: último recurso, el trazado del IGN (sin vías ni señales)
+                    if self.official and self._official(("ign",)):
+                        return
                     self.status.update(state="error", error="Overpass inaccesible desde este servidor (3 zonas seguidas fallidas)")
                     return
                 try:
@@ -232,6 +234,8 @@ class Infra:
                 self.status["state"] = "descargando"
                 time.sleep(1)
             ways, points = build(els)
+            if not ways and self.official and self._official(("ign",)):
+                return
             data = {"ways": ways, "points": points + section_changes(ways), "failed_tiles": len(failed)}
             if ways:
                 os.makedirs(os.path.dirname(self.cache) or ".", exist_ok=True)
