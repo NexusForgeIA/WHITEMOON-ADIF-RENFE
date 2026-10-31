@@ -51,3 +51,13 @@ def test_nivel_ultima_hora_seguimiento_info():
 def test_reanudan_trabajos_es_seguimiento():
     x = "<rss><channel><item><title>Última hora del accidente de tren: se reanudan los trabajos y se mantienen 69 fallecidos - ENCLM</title><link>u</link><pubDate>%s</pubDate></item></channel></rss>" % fmt(time.time())
     assert news.parse(x)[0]["l"] == "seg"
+
+
+def test_descarta_politica_y_acepta_trafico():
+    x = """<rss><channel>
+<item><title>Feijóo acusa a Sánchez por el incendio del AVE - X</title><link>u</link><pubDate>{n}</pubDate></item>
+<item><title>Accidente de coche en la A-2 con tres heridos, informa la DGT - Y</title><link>u</link><pubDate>{n}</pubDate></item>
+<item><title>Transportes estudia cortar el AVE por obras de renovación - Z</title><link>u</link><pubDate>{n}</pubDate></item>
+</channel></rss>""".format(n=fmt(time.time()))
+    r = news.parse(x)
+    assert len(r) == 1 and "coche" in r[0]["t"] and r[0]["k"] == "acc"

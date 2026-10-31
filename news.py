@@ -12,10 +12,13 @@ BASE = "https://news.google.com/rss/search?hl=es&gl=ES&ceid=ES:es&q="
 QUERIES = ["(incendio OR humo) (tren OR AVE OR Renfe OR Adif OR vía) when:1d",
            "(descarrilamiento OR accidente ferroviario OR colisión tren) when:1d",
            "(Adif OR Renfe) (incidencia OR corte OR suspendida OR interrumpida OR retrasos) when:1d",
+           "(accidente OR colisión OR atropello) (coche OR turismo OR camión OR carretera OR autovía OR \"paso a nivel\" OR DGT) when:1d",
            "(AVE OR Alta Velocidad OR Cercanías OR Rodalies) (incendio OR avería OR corte OR evacuados) when:1d"]
-RAILWORDS = re.compile(r"\b(ave|tren(es)?|renfe|adif|ferroviari\w*|cercan[ií]as|rodalies|v[ií]as?|alta velocidad|locomotora|catenaria|apeadero|estaci[oó]n)\b", re.I)
+RAILWORDS = re.compile(r"\b(coche|turismo|cami[oó]n|carretera|autov[ií]a|autopista|dgt|paso a nivel|ave|tren(es)?|renfe|adif|ferroviari\w*|cercan[ií]as|rodalies|v[ií]as?|alta velocidad|locomotora|catenaria|apeadero|estaci[oó]n)\b", re.I)
 SEV = [("inc", re.compile(r"incendi|humo|llamas|fuego", re.I)), ("acc", re.compile(r"descarril|colisi|accident|arrolla|herid|muert|fallecid", re.I)),
        ("cor", re.compile(r"cort|interrump|suspend|evacu|sin servicio|paralizad", re.I))]
+# Política, obras, crisis y opinión: no son sucesos, se descartan del todo
+DROP = re.compile(r"feij[oó]o|s[aá]nchez|puente|ministr|gobierno|\bpp\b|psoe|vox|sumar|oposici|congreso|elecciones|obras de renovaci|crisis|plazas|huelga|billetes|precio", re.I)
 KIND = {"inc": "Incendio", "acc": "Accidente", "cor": "Corte o interrupción", "otr": "Incidencia"}
 # Una noticia solo es "última hora" si el propio titular lo dice; lo demás es seguimiento o información general
 BREAKING = re.compile(r"[uú]ltima hora|en directo|\bahora\b|urgente|en vivo|minuto a minuto|se registra|se produce|se declara", re.I)
@@ -34,13 +37,15 @@ def parse(xml_text):
         src = (it.findtext("source") or "").strip()
         if src and title.endswith(" - " + src):
             title = title[:-(len(src) + 3)]
-        if not title or not RAILWORDS.search(title):
+        if not title or not RAILWORDS.search(title) or DROP.search(title):
             continue
         try:
             ts = parsedate_to_datetime(it.findtext("pubDate")).timestamp()
         except Exception:
             continue
         k = next((k for k, rx in SEV if rx.search(title)), "otr")
+        if k == "otr":
+            continue
         lvl = "seg" if FOLLOWUP.search(title) else ("ult" if BREAKING.search(title) else "seg")
         out.append({"t": title, "s": src, "ts": int(ts), "u": (it.findtext("link") or "").strip(), "k": k, "l": lvl})
     return out
