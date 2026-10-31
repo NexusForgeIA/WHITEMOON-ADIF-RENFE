@@ -36,3 +36,13 @@ def test_todo_falla_da_error(tmp_path):
     def boom(u): raise OSError("x")
     with pytest.raises(RuntimeError):
         news.News(str(tmp_path / "n.json"), opener=boom).refresh()
+
+
+def test_nivel_ultima_hora_seguimiento_info():
+    x = """<rss><channel>
+<item><title>Accidente de tren, en directo última hora - RTVE</title><link>u</link><pubDate>{n}</pubDate></item>
+<item><title>34 heridos del accidente ferroviario siguen hospitalizados - RTVE</title><link>u</link><pubDate>{n}</pubDate></item>
+<item><title>Renfe suspende trenes por un incendio junto a la vía - ABC</title><link>u</link><pubDate>{n}</pubDate></item>
+</channel></rss>""".format(n=fmt(time.time()))
+    r = {i["t"][:10]: i["l"] for i in news.parse(x)}
+    assert r["Accidente "] == "ult" and r["34 heridos"] == "seg" and r["Renfe susp"] == "inf"

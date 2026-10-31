@@ -17,6 +17,10 @@ RAILWORDS = re.compile(r"\b(ave|tren(es)?|renfe|adif|ferroviari\w*|cercan[ií]as
 SEV = [("inc", re.compile(r"incendi|humo|llamas|fuego", re.I)), ("acc", re.compile(r"descarril|colisi|accident|arrolla|herid|muert|fallecid", re.I)),
        ("cor", re.compile(r"cort|interrump|suspend|evacu|sin servicio|paralizad", re.I))]
 KIND = {"inc": "Incendio", "acc": "Accidente", "cor": "Corte o interrupción", "otr": "Incidencia"}
+# Una noticia solo es "última hora" si el propio titular lo dice; lo demás es seguimiento o información general
+BREAKING = re.compile(r"[uú]ltima hora|en directo|\bahora\b|urgente|en vivo|minuto a minuto|se registra|se produce|se declara", re.I)
+FOLLOWUP = re.compile(r"superviviente|hospitalizad|investig|juicio|v[ií]ctimas|homenaje|funeral|duelo|balance|causas?|declara|reclama|critica|acusa|"
+                      r"dimisi|ministro|oposici|pol[ií]tic|indemniz|recuerd|testimon|muere|falleci|identific|ingresad|heridos? siguen|crisis", re.I)
 
 
 def parse(xml_text):
@@ -37,7 +41,8 @@ def parse(xml_text):
         except Exception:
             continue
         k = next((k for k, rx in SEV if rx.search(title)), "otr")
-        out.append({"t": title, "s": src, "ts": int(ts), "u": (it.findtext("link") or "").strip(), "k": k})
+        lvl = "ult" if BREAKING.search(title) else ("seg" if FOLLOWUP.search(title) else "inf")
+        out.append({"t": title, "s": src, "ts": int(ts), "u": (it.findtext("link") or "").strip(), "k": k, "l": lvl})
     return out
 
 
