@@ -530,6 +530,9 @@ function fit(){const r0=cv.parentElement.getBoundingClientRect(),r={width:cv.cli
 // En vivo, los datos están en km sobre la proyección de Renfe (project() del servidor): se pasan a Web Mercator para que cuadren con el mapa real.
 // En simulación (fixture con otro origen) se mantiene el mapa esquemático.
 const KML=111.32*Math.cos(40*Math.PI/180),KMA=111.19,LATN=44,LONW=-10,RAD=Math.PI/180;
+const ST3D={'60000':{n:'Madrid Puerta de Atocha',c:[-3.6892,40.4065],b:-25,u:'Estación histórica (1851, marquesina de Alberto de Palacio) con la ampliación de Rafael Moneo; alta velocidad a Barcelona, Sevilla, Valencia y Málaga.'},
+ '71801':{n:'Barcelona Sants',c:[2.1400,41.3791],b:20,u:'Mayor estación de Cataluña; cabecera de la alta velocidad Madrid–Barcelona–frontera francesa.'},
+ '51003':{n:'Sevilla Santa Justa',c:[-5.9753,37.3920],b:10,u:'Estación inaugurada en 1991 para la Expo 92; cabecera del AVE Madrid–Sevilla.'}};
 const GEO=()=>!!S&&S.mode==='live';
 function P(x,y){if(!GEO())return[x,y];const u=S.unit_km||1,lon=x*u/KML+LONW,lat=LATN-y*u/KMA;return[lon*RAD,-Math.log(Math.tan(Math.PI/4+lat*RAD/2))]}
 function setBase(W,H){
@@ -636,7 +639,8 @@ function draw(){
     const MAJOR=new Set(['17000','71801','51003','03216','22100','31412','10600','60911','15211','50500','54413','04040','78400','60000']);
     S.stations.forEach(s=>{const[p,q]=T(s.x,s.y),m=MAJOR.has(s.c);if(p<-20||q<-20||p>W+20||q>H+20)return;
       cx.fillStyle=m?'#5d7893':'#3a516a';cx.beginPath();cx.arc(p,q,(m?3.2:2.2)*Math.min(1.8,.8+V.z/4),0,7);cx.fill();
-      if(m||V.z>=2.2){cx.fillStyle=m?'#7e95ab':'#5b7289';cx.font=(m?11:10)+'px system-ui';cx.fillText(s.n.replace(/ - .*| Delicias| Pirineus|Chamartín|Atocha|Santa Justa| Nord|M\. Zambrano|J\. Sorolla/g,''),p+6,q-5)}});
+      if(m||V.z>=2.2){cx.fillStyle=m?'#7e95ab':'#5b7289';cx.font=(m?11:10)+'px system-ui';cx.fillText(s.n.replace(/ - .*| Delicias| Pirineus|Chamartín|Atocha|Santa Justa| Nord|M\. Zambrano|J\. Sorolla/g,''),p+6,q-5)}
+      if(GEO()&&ST3D[s.c]){cx.fillStyle='#2b6cb0';cx.fillRect(p+6,q+1,22,12);cx.fillStyle='#fff';cx.font='bold 9px system-ui';cx.fillText('3D',p+11,q+10)}});
   }
   // tramos enclavados
   cx.strokeStyle='#ff4d5e';cx.lineWidth=5+V.z*.4;cx.globalAlpha=.55;
@@ -696,7 +700,7 @@ cv.addEventListener('pointermove',e=>{
   draw()});
 const endP=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0;
   if(drag&&!drag.moved&&e.type==='pointerup'&&S){const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
-    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);const po=!t&&EMD&&$('lem')&&$('lem').checked?EMD.map(i=>({i,d:Math.hypot((i._p||-99)-mx,(i._q||-99)-my)})).filter(o=>o.d<(V.z>=2?12:6)).sort((a,b)=>a.d-b.d)[0]:null;sel=t?t.n:null;if(t){EMS=null;$('mt').value=t.n;openCard(t.n)}else if(po)openPoi(po.i);else{const ro=RDD&&$('lrd')&&$('lrd').checked?RDD.map(i=>({i,d:Math.hypot((i._p||-99)-mx,(i._q||-99)-my)})).filter(o=>o.d<(V.z>=2?12:6)).sort((a,b)=>a.d-b.d)[0]:null;if(ro)openRoad(ro.i);else{EMS=null;RDS=null;closeCard()}};try{renderCab()}catch(e){}draw()}
+    const t=S.trains.filter(visible).find(t=>Math.hypot((t._p||-9)-mx,(t._q||-9)-my)<10);const po=!t&&EMD&&$('lem')&&$('lem').checked?EMD.map(i=>({i,d:Math.hypot((i._p||-99)-mx,(i._q||-99)-my)})).filter(o=>o.d<(V.z>=2?12:6)).sort((a,b)=>a.d-b.d)[0]:null;sel=t?t.n:null;if(t){EMS=null;$('mt').value=t.n;openCard(t.n)}else if(po)openPoi(po.i);else{const s3=GEO()?(S.stations||[]).find(s=>ST3D[s.c]&&Math.hypot(T(s.x,s.y)[0]-mx,T(s.x,s.y)[1]-my)<14):null;if(s3){openStation(s3)}else{const ro=RDD&&$('lrd')&&$('lrd').checked?RDD.map(i=>({i,d:Math.hypot((i._p||-99)-mx,(i._q||-99)-my)})).filter(o=>o.d<(V.z>=2?12:6)).sort((a,b)=>a.d-b.d)[0]:null;if(ro)openRoad(ro.i);else{EMS=null;RDS=null;closeCard()}}};try{renderCab()}catch(e){}draw()}
   if(!ptrs.size)drag=null};
 
 
@@ -1227,6 +1231,26 @@ function trainPic(prod,oper,w,h){
     box.replaceChildren(im,c)};
   im.onload=((f)=>()=>{PHOK[k]=1;f()})(im.onload);im.onerror=()=>{PHOK[k]=0};
   im.src=P.u;return box;
+}
+// ---- ficha de estación con vista 3D real (edificios de OpenStreetMap vía OpenFreeMap; sin coste) ----
+let M3=null;
+function openStation(st){
+  const i=ST3D[st.c];EMS=null;cardN=null;clearInterval(cardTimer);if(M3){try{M3.remove()}catch(e){}M3=null}
+  const box=h('div');box.style.cssText='height:230px;border-radius:8px;overflow:hidden;background:#0b121a;margin:4px 0 6px;position:relative';
+  const fb=h('div','nt','Cargando vista 3D…');fb.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#7e95ab;font-size:12px;text-align:center;padding:10px';box.appendChild(fb);
+  const sub=h('div','sub','Estación de alta velocidad · '+(S.stations||[]).length+' estaciones en el mapa');sub.textContent='Estación · vista 3D';
+  const kids=[h('button','x','×'),h('h3',null,i.n),sub,box,h('div','nt',i.u)];kids[0].onclick=()=>{if(M3){try{M3.remove()}catch(e){}M3=null}card.hidden=true};
+  const tn=(S.trains||[]).filter(t=>t.to===st.n||t.from===st.n).length;
+  kids.push(h('div','r',null,[h('span',null,'Trenes con esta estación como origen/destino'),h('span',null,String(tn))]));
+  kids.push(h('div','nt','Arrastra para girar · rueda para zoom · Ctrl+arrastrar para inclinar. Edificios © colaboradores de OpenStreetMap vía OpenFreeMap; es una vista orientativa, no un modelo oficial de Adif.'));
+  card.replaceChildren(...kids);card.style.borderLeftColor='#2b6cb0';card.hidden=false;
+  if(!window.maplibregl){fb.textContent='Vista 3D no disponible (mapa base no cargado).';return}
+  try{
+    M3=new maplibregl.Map({container:box,style:'https://tiles.openfreemap.org/styles/liberty',center:i.c,zoom:16.6,pitch:62,bearing:i.b,attributionControl:false,maxPitch:80});
+    M3.on('load',()=>{fb.remove();try{M3.getStyle().layers.forEach(l=>{if(l.id==='building-3d')M3.setLayoutProperty(l.id,'visibility','visible')})}catch(e){}
+      new maplibregl.Marker({color:'#2b6cb0'}).setLngLat(i.c).addTo(M3)});
+    M3.on('error',e=>{if(fb.isConnected&&!M3.loaded())fb.textContent='No se pudo cargar el mapa 3D (sin conexión al servidor de teselas).'});
+  }catch(e){fb.textContent='Vista 3D no disponible en este navegador.'}
 }
 // ---- ficha de tren ----
 const card=$('card');let cardN=null,cardTimer=null;
