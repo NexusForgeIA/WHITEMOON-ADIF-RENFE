@@ -49,5 +49,5 @@ def test_nivel_ultima_hora_seguimiento_info():
 
 
 def test_reanudan_trabajos_es_seguimiento():
-    x = "<rss><channel><item><title>Última hora del accidente: se reanudan los trabajos y se mantienen 69 fallecidos - ENCLM</title><link>u</link><pubDate>%s</pubDate></item></channel></rss>" % fmt(time.time())
+    x = "<rss><channel><item><title>Última hora del accidente de tren: se reanudan los trabajos y se mantienen 69 fallecidos - ENCLM</title><link>u</link><pubDate>%s</pubDate></item></channel></rss>" % fmt(time.time())
     assert news.parse(x)[0]["l"] == "seg"
