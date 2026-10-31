@@ -16,6 +16,9 @@ DELAY_MIN = 5   # umbral de «con retraso» (criterio habitual de puntualidad)
 # categoría -> minutos de retraso a partir de los cuales hay indemnización (Renfe: «60 min o más» en AVE/LD; «más de» en el resto)
 INDEM_MIN = {"AVE": 60, "AVLO": 60, "LD": 60, "AVANT": 16, "MD": 16, "REG": 31}
 LABEL = {"AVE": "AVE", "AVLO": "Avlo", "LD": "Larga Distancia", "AVANT": "Avant", "MD": "Media Distancia", "REG": "Regional", "OTRO": "Otros"}
+# Segmentos como en retrasados.es: Alta velocidad = AVE, Avlo y Avant (circulan por línea de alta velocidad); Convencional = el resto de larga/media distancia
+SEGMENTS = {"all": None, "av": {"AVE", "AVLO", "AVANT"}, "conv": {"LD", "MD", "REG", "OTRO"}}
+SEG_LABEL = {"all": "Toda la red (sin Cercanías)", "av": "Alta velocidad", "conv": "Convencional", "cer": "Cercanías"}
 BUCKETS = [(0, 5, "< 5 min"), (5, 15, "5–15"), (15, 30, "15–30"), (30, 60, "30–60"), (60, 90, "60–90"), (90, 10 ** 6, "> 90")]
 
 
@@ -29,9 +32,10 @@ def category(rname):
     return "OTRO"
 
 
-def compute(rows):
+def compute(rows, seg="all"):
     """rows: iterable de (nº tren, retraso en min, categoría). Una fila por vehículo del feed, igual que el contador de trenes."""
-    L = [(n, max(0, int(ret or 0)), cat or "OTRO") for n, ret, cat in rows]   # mismo recuento que la barra superior (un registro por vehículo)
+    cats = SEGMENTS.get(seg)
+    L = [(n, max(0, int(ret or 0)), cat or "OTRO") for n, ret, cat in rows if cats is None or (cat or "OTRO") in cats]   # mismo recuento que la barra superior (un registro por vehículo)
     N = len(L)
     delayed = [r for r in L if r[1] >= DELAY_MIN]
     indem = [r for r in L if INDEM_MIN.get(r[2]) and r[1] >= INDEM_MIN[r[2]]]
@@ -49,7 +53,7 @@ def compute(rows):
             "worst": [{"n": r[0], "min": r[1], "cat": r[2], "label": LABEL.get(r[2], r[2])} for r in sorted(L, key=lambda r: -r[1])[:6] if r[1] >= DELAY_MIN],
             "by_product": sorted(prod.values(), key=lambda p: -p["n"]),
             "buckets": [{"label": lb, "n": sum(1 for r in L if lo <= r[1] < hi)} for lo, hi, lb in BUCKETS],
-            "thresholds": {LABEL[k]: v for k, v in INDEM_MIN.items()}}
+            "thresholds": {LABEL[k]: v for k, v in INDEM_MIN.items()}, "seg": seg, "seg_label": SEG_LABEL.get(seg, seg)}
 
 
 class History:

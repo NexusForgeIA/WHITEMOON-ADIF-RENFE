@@ -10,7 +10,7 @@ Superficies:
   /tablet    app de cabina (PWA, requiere HTTPS)  POST /api/tablet/pos · /api/tablet/ack  (cabecera X-Driver-Token)
 Variables: RAILGUARD_TOKEN -> los POST del panel exigen X-Token; emitir/revocar tokens de maquinista exige que exista.
 """
-import argparse, base64, hmac, json, math, os, random, threading, time, urllib.request
+import argparse, base64, hmac, json, math, os, random, threading, time, urllib.parse, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import gzip
@@ -689,11 +689,13 @@ NEWS = None
 SYNC = None
 _remote = persist.from_env()
 if _remote:     # cachés en Supabase: sobreviven a los reinicios de Render. La descarga se acota para no retrasar el arranque.
-    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache_v2.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json")})
+    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache_v2.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json", "punct_history_av.json", "punct_history_conv.json")})
     _t = threading.Thread(target=SYNC.restore, daemon=True)
     _t.start()
     _t.join(60)
-PUNCT = punctuality.History(os.path.join(ROOT, "data", "punct_history.json"))
+PUNCT = {"all": punctuality.History(os.path.join(ROOT, "data", "punct_history.json")),
+         "av": punctuality.History(os.path.join(ROOT, "data", "punct_history_av.json")),
+         "conv": punctuality.History(os.path.join(ROOT, "data", "punct_history_conv.json"))}
 
 
 class H(BaseHTTPRequestHandler):
@@ -743,8 +745,13 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/safety_systems":
             return self._send(200, _load("safety_systems.json"))
         if path == "/api/punct":
-            k = punctuality.compute((t.n, t.ret, t.cat) for t in APP.engine.trains)
-            return self._send(200, {**k, "history": PUNCT.series(), "source": "Feed GTFS-RT de Renfe (Larga Distancia, Avant, AVE); umbrales del compromiso de puntualidad de Renfe"})
+            seg = (urllib.parse.parse_qs(self.path.partition("?")[2]).get("seg") or ["all"])[0]
+            if seg == "cer":     # el feed de Cercanías de Renfe solo trae posiciones, sin retrasos
+                return self._send(200, {"n": 0, "seg": "cer", "seg_label": punctuality.SEG_LABEL["cer"], "no_data": True,
+                                        "note": "El feed público de Cercanías de Renfe solo publica posiciones, sin retrasos: no se puede calcular su puntualidad."})
+            seg = seg if seg in punctuality.SEGMENTS else "all"
+            k = punctuality.compute(((t.n, t.ret, t.cat) for t in APP.engine.trains), seg)
+            return self._send(200, {**k, "history": PUNCT[seg].series(), "source": "Feed GTFS-RT de Renfe (larga distancia, AVE, Avant); umbrales del compromiso de puntualidad de Renfe"})
         if path == "/api/noticias":
             return self._send(200, NEWS.api() if NEWS else {"ready": False, "items": []})
         if path == "/api/trafico":
@@ -861,7 +868,9 @@ def main():
             APP.engine.cfg["ltv_items"] = LTV.items
         APP.tick()
         if a.source == "renfe":
-            PUNCT.add(punctuality.compute((t.n, t.ret, t.cat) for t in APP.engine.trains))
+            rows = [(t.n, t.ret, t.cat) for t in APP.engine.trains]
+            for sg, h in PUNCT.items():
+                h.add(punctuality.compute(rows, sg))
     threading.Thread(target=loop, args=(tick, a.period), daemon=True).start()
     threading.Thread(target=loop, args=(APP.prox_tick, 1.0), daemon=True).start()
     print(f"RailGuard ({APP.mode}) en http://{a.host}:{a.port}   ·   cabina: /tablet"

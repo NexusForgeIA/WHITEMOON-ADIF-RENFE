@@ -38,3 +38,18 @@ def test_peores_trenes_mediana_y_a_tiempo():
     assert [w["n"] for w in k["worst"]] == ["B", "E", "C"]      # solo retrasos >= 5 min, de mayor a menor
     assert k["median_min"] == 20 and k["on_time"] == 2 and k["pct_on_time"] == 40.0
     assert pu.compute([])["worst"] == [] and pu.compute([])["median_min"] == 0
+
+
+def test_segmentos_alta_velocidad_y_convencional():
+    rows = [("1", 0, "AVE"), ("2", 61, "AVLO"), ("3", 20, "AVANT"), ("4", 15, "MD"), ("5", 45, "REG"), ("6", 70, "LD")]
+    av = pu.compute(rows, "av")
+    assert av["n"] == 3 and av["delayed"] == 2 and av["seg"] == "av" and av["seg_label"] == "Alta velocidad"
+    cv = pu.compute(rows, "conv")
+    assert cv["n"] == 3 and cv["delayed"] == 3 and cv["max_min"] == 70
+    todo = pu.compute(rows, "all")
+    assert todo["n"] == av["n"] + cv["n"] == 6
+
+
+def test_segmento_vacio_no_divide_por_cero():
+    k = pu.compute([("1", 5, "MD")], "av")
+    assert k["n"] == 0 and k["pct_delayed"] == 0.0 and k["worst"] == []

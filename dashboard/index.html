@@ -268,6 +268,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 .pk.hero .dv{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700}.pk.hero .dv small{font-size:12px;color:var(--mut);margin-left:2px}
 .legs{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:auto;padding-top:8px;font-size:10.5px;color:var(--mut)}.legs i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
 #pund{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.pseg{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}.pseg button{background:#0b121a;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:5px 11px;font-size:11.5px;font-weight:600;cursor:pointer}.pseg button[aria-pressed=true]{background:#12304f;border-color:#2b6cb0;color:#cfe4ff}.pseg button:hover{color:#fff}
 .pk h3{margin:0 0 8px;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);font-weight:600}
 .hs{display:flex;align-items:flex-end;gap:8px;height:120px}.hc{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
 .hc b{font-size:11px;margin-bottom:3px}.hc i{display:block;width:100%;border-radius:4px 4px 0 0}.hc span{font-size:10px;color:var(--mut);margin-top:4px;white-space:nowrap}
@@ -352,7 +353,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   <div id="ovl"><div id="acting"></div><div id="outs"></div></div><div id="infnote" hidden></div><div class="scale" id="scale"></div>
 </section>
 
-<section class="panel" id="pun" hidden><h2>Puntualidad de la red <span class="pmut" id="punsub"></span></h2><div id="punk"></div><div id="pund"></div></section>
+<section class="panel" id="pun" hidden><h2>Puntualidad de la red <span class="pmut" id="punsub"></span></h2><div class="pseg" id="pseg" role="group" aria-label="Segmento"></div><div id="punk"></div><div id="pund"></div></section>
 <button id="fullx">✕ Cerrar vista completa</button>
 <div id="tvov" hidden></div>
 <div id="dm" hidden></div>
@@ -626,7 +627,13 @@ const hm=t=>new Date(t*1000).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'
 function donut(pct,col){const r=34,c=2*Math.PI*r,f=c*Math.max(0,Math.min(100,pct))/100;
   return '<svg class="dn" viewBox="0 0 90 90" aria-hidden="true"><circle cx="45" cy="45" r="'+r+'" fill="none" stroke="#1c2a39" stroke-width="10"/><circle cx="45" cy="45" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+f.toFixed(1)+' '+c.toFixed(1)+'" transform="rotate(-90 45 45)"/></svg>'}
 const fmin=m=>m>=60?Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min':m+' min';
-async function loadPunct(){try{const r=await fetch('/api/punct',{cache:'no-store'});if(!r.ok)throw 0;const k=await r.json();if(!k||!k.n){$('pun').hidden=true;return}
+let PSEG='all';try{PSEG=localStorage.getItem('pseg')||'all'}catch(e){}
+const PSEGS=[['all','Toda la red'],['av','Alta velocidad'],['conv','Convencional'],['cer','Cercanías']];
+function paintSeg(){const b=$('pseg');if(!b)return;b.innerHTML=PSEGS.map(s=>'<button data-s="'+s[0]+'" aria-pressed="'+(s[0]===PSEG)+'" title="'+({all:'Larga y media distancia (sin Cercanías)',av:'AVE, Avlo y Avant',conv:'Larga distancia, media distancia y regional',cer:'El feed de Cercanías no trae retrasos'}[s[0]])+'">'+s[1]+'</button>').join('');
+  b.querySelectorAll('button').forEach(e=>e.onclick=()=>{PSEG=e.dataset.s;try{localStorage.setItem('pseg',PSEG)}catch(x){}paintSeg();loadPunct()})}
+async function loadPunct(){try{paintSeg();const r=await fetch('/api/punct?seg='+PSEG,{cache:'no-store'});if(!r.ok)throw 0;const k=await r.json();
+  if(k&&k.no_data){$('pun').hidden=false;$('punk').innerHTML='<div class="pk" style="grid-column:1/-1"><div class="l">'+k.seg_label+'</div><div class="s" style="font-size:12.5px;margin-top:6px">'+k.note+'</div></div>';$('pund').innerHTML='';$('punsub').textContent='sin datos';return}
+  if(!k||!k.n){$('pun').hidden=false;$('punk').innerHTML='<div class="pk" style="grid-column:1/-1"><div class="s" style="font-size:12.5px">Ningún tren de «'+((k&&k.seg_label)||'este segmento')+'» en circulación ahora mismo.</div></div>';$('pund').innerHTML='';$('punsub').textContent='';return}
   $('pun').hidden=false;
   let H=((k.history&&k.history.pts)||[]).slice();const mxn=Math.max(1,...H.map(p=>p[1]));H=H.filter(p=>p[1]>=0.3*mxn);   // se descartan las muestras del arranque (parciales)
   const col=i=>H.map(p=>p[i]),nf=x=>x.toLocaleString('es-ES'),cm=x=>String(x).replace('.',',');
@@ -654,7 +661,7 @@ async function loadPunct(){try{const r=await fetch('/api/punct',{cache:'no-store
     return '<div class="pb"><span>'+p.label+'</span><div class="trk"><i style="width:'+q+'%;background:'+c+'"></i></div><span>'+p.delayed+'/'+p.n+' · '+q+'%</span></div>'}).join('')+'</div>';
   $('pund').innerHTML=hist+worst+prod;
   $('pund').querySelectorAll('.wr').forEach(e=>e.onclick=()=>{if(typeof focusTrain==='function')focusTrain(e.dataset.n)});
-  $('punsub').textContent=H.length>1?'evolución de hoy · '+hm(H[0][0])+' – '+hm(last[0])+' · actualiza cada 30 s':'acumulando evolución…';
+  $('punsub').textContent=(PSEG==='all'?'':k.seg_label+' · ')+(H.length>1?'evolución de hoy · '+hm(H[0][0])+' – '+hm(last[0])+' · actualiza cada 30 s':'acumulando evolución…';
   $('pun').title='Umbrales de indemnización de Renfe (retraso actual como aproximación): '+Object.entries(k.thresholds).map(([a,b])=>a+' ≥ '+b+' min').join(' · ')+'. Informativo; no interviene en la seguridad.'}catch(e){$('pun').hidden=true}}
 loadPunct();setInterval(loadPunct,30000);
 let EMD=null,EMS=null;
