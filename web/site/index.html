@@ -385,7 +385,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
     <div class="lr"><i style="background:var(--cau);"></i><em>Precaución</em><span>Aviso leve: dato dudoso o ligero exceso de velocidad (3–8 %). Avisa a cabina y centro; no frena (CAUTION).</span></div>
     <div class="lr"><i style="background:var(--res);"></i><em>Restringido</em><span>Riesgo real: limita la velocidad y avisa por GSM-R (RESTRICT).</span></div>
     <div class="lr"><i style="background:var(--stop);"></i><em>STOP</em><span>Peligro inminente: freno de emergencia y bloque enclavado. Solo lo libera una persona con doble autorización (B7).</span></div>
-    <div class="lr"><i class="tri"></i><em>Flecha</em><span>Tren con rumbo conocido; el cuadrado es un tren sin rumbo. Atenuado = tren entrante o fuera del operador filtrado.</span></div>
+    <div class="lr"><i class="tri"></i><em>Icono de tren</em><span>Color por estado de seguridad si hay barrera activa; en operación normal, por retraso: verde &lt; 5 min, ámbar 5–14, salmón 15–59 y aro rojo desde 60. El triángulo marca el rumbo; sin triángulo, rumbo desconocido. Atenuado = tren entrante o fuera del operador filtrado.</span></div>
     <div class="lt">Líneas y señalización (Vías / Red real)</div>
     <div class="lr"><i class="ln" style="border-top:3px solid #4aa8ff;"></i><em>ETCS</em><span>Línea con ETCS (protección continua).</span></div>
     <div class="lr"><i class="ln" style="border-top:3px solid #ff9f43;"></i><em>LZB→ETCS</em><span>Línea con LZB en transición a ETCS.</span></div>
@@ -559,14 +559,23 @@ const T=(x,y)=>{const m=P(x,y),bx=base.ox+(m[0]-base.x0)*base.sc,by=base.oy+(m[1
 function zoomAt(f,mx,my){const z=Math.max(.6,Math.min(80,V.z*f)),k=z/V.z,W=base.W,H=base.H;
   V.px=mx-W/2-(mx-W/2-V.px)*k;V.py=my-H/2-(my-H/2-V.py)*k;V.z=z;draw()}
 function visible(t){return !opf||t.op===opf}
+// Icono de tren estilo «radar»: cuadrado redondeado con glifo de tren. Color: estado de seguridad si hay barrera activa;
+// en operación normal, por retraso (verde < 5 min, ámbar 5–14, salmón 15–59; aro rojo desde 60). El triángulo marca el rumbo.
+const dcol=r=>r>=15?'#ee7a5f':r>=5?'#f5a623':'#2fb344';
+function rrect(x,y,w,h,r){cx.beginPath();if(cx.roundRect)cx.roundRect(x,y,w,h,r);else cx.rect(x,y,w,h)}
 function drawTrain(t,p,q,a){
-  const col=COL[t.cmd],r=(t.cmd==='NONE'?5.5:7.5)*Math.min(1.8,Math.max(1,V.z/3+.8));
+  const k=Math.min(1.8,Math.max(1,V.z/3+.8)),s=(t.cmd==='NONE'?6:7.5)*k,ret=t.ret||0,safe=t.cmd!=='NONE';
+  const col=safe?COL[t.cmd]:dcol(ret);
   cx.save();cx.globalAlpha=a;cx.translate(p,q);
-  if(t.src==='tablet'){cx.strokeStyle='#fff';cx.setLineDash([2,2]);cx.lineWidth=1;cx.beginPath();cx.arc(0,0,r+4,0,7);cx.stroke();cx.setLineDash([])}
-  cx.fillStyle=col;cx.strokeStyle='#0a1017';cx.lineWidth=1.5;cx.beginPath();
-  if(t.hx!=null){cx.rotate(Math.atan2(t.hy,t.hx));cx.moveTo(r+3,0);cx.lineTo(-r,-r*.8);cx.lineTo(-r*.45,0);cx.lineTo(-r,r*.8);cx.closePath()}
-  else cx.rect(-r*.7,-r*.7,r*1.4,r*1.4);
-  cx.fill();cx.stroke();cx.restore();
+  if(t.src==='tablet'){cx.strokeStyle='#fff';cx.setLineDash([2,2]);cx.lineWidth=1;cx.beginPath();cx.arc(0,0,s+6,0,7);cx.stroke();cx.setLineDash([])}
+  if(ret>=60&&!safe){cx.strokeStyle='#e5484d';cx.lineWidth=1.8;cx.beginPath();cx.arc(0,0,s+4.5,0,7);cx.stroke()}
+  if(t.hx!=null){cx.save();cx.rotate(Math.atan2(t.hy,t.hx));cx.fillStyle=col;cx.strokeStyle='#0a1017';cx.lineWidth=1;cx.beginPath();cx.moveTo(s+5,0);cx.lineTo(s+.8,-s*.5);cx.lineTo(s+.8,s*.5);cx.closePath();cx.fill();cx.stroke();cx.restore()}
+  cx.fillStyle=col;cx.strokeStyle=safe?'#fff':'#0a1017';cx.lineWidth=safe?1.8:1.2;rrect(-s,-s,2*s,2*s,s*.4);cx.fill();cx.stroke();
+  if(s>=6.5){   // glifo: carrocería, parabrisas y ruedas
+    cx.strokeStyle='rgba(10,16,23,.88)';cx.fillStyle='rgba(10,16,23,.88)';cx.lineWidth=Math.max(1,s*.17);
+    rrect(-s*.5,-s*.62,s,s*1.0,s*.22);cx.stroke();cx.fillRect(-s*.32,-s*.38,s*.64,s*.26);
+    cx.beginPath();cx.arc(-s*.28,s*.66,s*.1,0,7);cx.arc(s*.28,s*.66,s*.1,0,7);cx.fill()}
+  cx.restore();
 }
 // ---- mapa real de fondo (OpenFreeMap, gratuito y sin clave) bajo el lienzo; si no carga, se usa el trazado esquemático ----
 let BM=null,BMOK=false,BMFAIL=false,bmKey='';
@@ -652,7 +661,7 @@ function draw(){
   if($('ls').checked){
     const MAJOR=new Set(['17000','71801','51003','03216','22100','31412','10600','60911','15211','50500','54413','04040','78400','60000']);
     S.stations.forEach(s=>{const[p,q]=T(s.x,s.y),m=MAJOR.has(s.c);if(p<-20||q<-20||p>W+20||q>H+20)return;
-      cx.fillStyle=m?'#5d7893':'#3a516a';cx.beginPath();cx.arc(p,q,(m?3.2:2.2)*Math.min(1.8,.8+V.z/4),0,7);cx.fill();
+      cx.fillStyle=m?'#f2f6fa':'#c9d4df';cx.strokeStyle='rgba(8,12,18,.7)';cx.lineWidth=1;cx.beginPath();cx.arc(p,q,(m?3.4:2.3)*Math.min(1.8,.8+V.z/4),0,7);cx.fill();cx.stroke();
       if(m||V.z>=2.2){cx.fillStyle=m?'#7e95ab':'#5b7289';cx.font=(m?11:10)+'px system-ui';cx.fillText(s.n.replace(/ - .*| Delicias| Pirineus|Chamartín|Atocha|Santa Justa| Nord|M\. Zambrano|J\. Sorolla/g,''),p+6,q-5)}
       if(ST3D[s.c]){cx.fillStyle='#2b6cb0';cx.fillRect(p+6,q+1,22,12);cx.fillStyle='#fff';cx.font='bold 9px system-ui';cx.fillText('3D',p+11,q+10)}});
   }
@@ -681,11 +690,20 @@ function draw(){
     S.cercanias.trains.forEach(c=>{const[p,q]=T(c[1],c[2]);if(p<-10||q<-10||p>W+10||q>H+10)return;
       cx.beginPath();cx.arc(p,q,3.2,0,7);cx.stroke();if(V.z>=3.5)cx.fillText(c[0],p+6,q+3)})}
   // trenes
+  {const st0=sel&&S.trains.find(x=>x.n===sel);   // trayecto del tren seleccionado: línea azul clara con flechas de sentido
+   const cr=st0&&st0.line&&(S.corridors||[]).find(c=>c.name===st0.line);
+   if(cr){const stm={};S.stations.forEach(x=>stm[x.c]=x);const pts=cr.stations.filter(k=>stm[k]).map(k=>T(stm[k].x,stm[k].y));
+     if(pts.length>1){cx.save();cx.strokeStyle='rgba(8,12,18,.85)';cx.lineWidth=6;cx.lineJoin='round';cx.beginPath();pts.forEach((c,i)=>i?cx.lineTo(c[0],c[1]):cx.moveTo(c[0],c[1]));cx.stroke();
+       cx.strokeStyle='#8ec5ff';cx.lineWidth=3.2;cx.beginPath();pts.forEach((c,i)=>i?cx.lineTo(c[0],c[1]):cx.moveTo(c[0],c[1]));cx.stroke();
+       cx.fillStyle='#fff';for(let i=1;i<pts.length;i++){const[x0,y0]=pts[i-1],[x1,y1]=pts[i],L=Math.hypot(x1-x0,y1-y0);if(L<40)continue;
+         const an=Math.atan2(y1-y0,x1-x0);for(let d=22;d<L-10;d+=60){const px=x0+(x1-x0)*d/L,py=y0+(y1-y0)*d/L;cx.save();cx.translate(px,py);cx.rotate(an);cx.beginPath();cx.moveTo(4,0);cx.lineTo(-3,-3.2);cx.lineTo(-3,3.2);cx.closePath();cx.fill();cx.restore()}}
+       cx.restore()}}}
   S.trains.forEach(t=>{const p=t._p,q=t._q;if(p<-30||q<-30||p>W+30||q>H+30)return;
     const vis=visible(t);if(!vis&&opf){drawTrain(t,p,q,.12);return}
     if(t.cmd==='STOP'){cx.strokeStyle=COL.STOP;cx.globalAlpha=1-pulse;cx.lineWidth=2;cx.beginPath();cx.arc(p,q,8+pulse*18,0,7);cx.stroke();cx.globalAlpha=1}
     drawTrain(t,p,q,t.incoming?.55:1);
     if(sel===t.n){cx.strokeStyle='#fff';cx.lineWidth=2;cx.beginPath();cx.arc(p,q,13,0,7);cx.stroke()}
+    if(t.line&&((t.line.length<=6&&V.z>=2.2)||sel===t.n||hover===t)){const lb=t.line.length>26?t.line.slice(0,25)+'…':t.line,ly=q-13*Math.min(1.8,Math.max(1,V.z/3+.8));cx.font='bold 10px system-ui';cx.textAlign='center';cx.lineWidth=3;cx.strokeStyle='rgba(8,12,18,.9)';cx.strokeText(lb,p,ly);cx.fillStyle='#fff';cx.fillText(lb,p,ly);cx.textAlign='start'}
     if(t.cmd!=='NONE'||hover===t||sel===t.n||V.z>=2.8){cx.fillStyle='#d6e1ec';cx.font='10px system-ui';cx.fillText(t.n+(t.by&&t.by.length?'  '+t.by.filter(x=>x!=='B5').join('·'):''),p+11,q+3)}});
   // escala
   const target=90*kmpx,nice=[.1,.2,.5,1,2,5,10,20,50,100,200,500].reduce((b,v)=>Math.abs(v-target)<Math.abs(b-target)?v:b);
