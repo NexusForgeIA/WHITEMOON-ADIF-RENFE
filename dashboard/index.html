@@ -265,13 +265,13 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   .panel,#chain,#log,#cabins{overflow:visible;max-height:none}
   #right{display:contents}
   /* Tres columnas sin huecos: izquierda (defensas) | centro (mapa, peligros, registro) | derecha (retrasos, cola, cabinas) */
-  #pun{grid-column:1/4;grid-row:3}#mapwrap{grid-column:1/3;grid-row:4}
-  #rtop{grid-column:3;grid-row:4;display:flex;flex-direction:column;gap:10px;min-width:0}#rtop .panel{flex:none}#rtop #cabins{flex:1 1 auto}
+  #wat{grid-column:1/4;grid-row:3;min-width:0}#pun{grid-column:1/4;grid-row:4}#mapwrap{grid-column:1/3;grid-row:5}
+  #rtop{grid-column:3;grid-row:5;display:flex;flex-direction:column;gap:10px;min-width:0}#rtop .panel{flex:none}#rtop #cabins{flex:1 1 auto}
   /* Defensa en profundidad: franja horizontal inferior a todo el ancho, tarjetas iguales que se reparten el espacio (sin huecos) */
   #chain{grid-column:1/-1;grid-row:8;display:block}#attr{grid-row:9}
   #chain #bars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:stretch}@media(min-width:1300px){#chain #bars{grid-template-columns:repeat(8,1fr)}}#chain #bars>*{margin:0;min-width:0}#chain #bars .arrow{display:none}
   #chain .bar{overflow:hidden}#chain .bar .t{flex-direction:column;align-items:flex-start;gap:4px}#chain .bar .t i{white-space:nowrap;max-width:100%}
-  #wat{grid-column:1/4;grid-row:5;min-width:0}#hzp{grid-column:1/4;grid-row:6;min-width:0}#log{grid-column:1/4;grid-row:7;display:flex;flex-direction:column}#log .more{margin-top:auto}
+  #hzp{grid-column:1/4;grid-row:6;min-width:0}#log{grid-column:1/4;grid-row:7;display:flex;flex-direction:column}#log .more{margin-top:auto}
   body.full #attr{display:none}body.full #wat{display:none}body.full #pun{display:none}body.full #rtop{display:contents}body.full #hzp{grid-column:auto;grid-row:auto}body.full #hz{display:block}body.full #cabins{display:none}
   #hz{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:start}#hz .hzc{margin:0}#hz>.empty,#hz>.ll,#hz>div:not(.hzc){grid-column:1/-1}
   /* el mapa ocupa todo el alto de su fila (la fila la fija la columna derecha si es más alta): nunca queda hueco bajo él */
@@ -416,8 +416,8 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   <div id="ovl"><div id="acting"></div><div id="outs"></div></div><div id="infnote" hidden></div><div class="scale" id="scale"></div>
 </section>
 
-<section class="panel" id="pun" hidden><h2>Puntualidad de la red <span class="pmut" id="punsub"></span></h2><div class="pseg" id="pseg" role="group" aria-label="Segmento"></div><div id="punk"></div><div id="pund"></div></section>
 <section class="panel" id="wat"><h2>Vigilancia contextual <span class="pmut" id="watsub">informativa · no actúa sobre las barreras</span></h2><div id="watree"></div><div id="watl"></div><div class="wsrc" id="watsrc"></div></section>
+<section class="panel" id="pun" hidden><h2>Puntualidad de la red <span class="pmut" id="punsub"></span></h2><div class="pseg" id="pseg" role="group" aria-label="Segmento"></div><div id="punk"></div><div id="pund"></div></section>
 <footer id="attr" style="grid-column:1/-1;color:var(--mut);font-size:11px;padding:2px 4px">Fotos de trenes: Wikimedia Commons (B. Leris CC BY 2.0; C. Teixidor Cadenas y Triplecaña CC BY-SA 4.0) · Origen de los datos: Renfe Operadora (CC BY 4.0; datos normalizados y combinados con sus horarios) · Red Eléctrica (REData) · IGN (CC-BY 4.0) · AEMET · NASA FIRMS · Herramienta consultiva, sin certificar; no sustituye a los sistemas de seguridad de Adif ni de los operadores.</footer>
 <button id="fullx">✕ Cerrar vista completa</button>
 <div id="tvov" hidden></div>
