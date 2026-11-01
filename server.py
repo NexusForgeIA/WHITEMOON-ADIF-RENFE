@@ -10,7 +10,7 @@ Superficies:
   /tablet    app de cabina (PWA, requiere HTTPS)  POST /api/tablet/pos · /api/tablet/ack  (cabecera X-Driver-Token)
 Variables: RAILGUARD_TOKEN -> los POST del panel exigen X-Token; emitir/revocar tokens de maquinista exige que exista.
 """
-import argparse, base64, hmac, json, math, os, random, threading, time, urllib.parse, urllib.request
+import argparse, base64, hashlib, hmac, json, math, os, random, threading, time, urllib.parse, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import gzip
@@ -27,6 +27,7 @@ from news import News
 import persist
 import punctuality
 import watch as watchmod
+import stats as statsmod
 from visits import Visits
 import systems
 import forecast
@@ -720,11 +721,13 @@ EXTRAS = None
 SYNC = None
 _remote = persist.from_env()
 if _remote:     # cachés en Supabase: sobreviven a los reinicios de Render. La descarga se acota para no retrasar el arranque.
-    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache_v2.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json", "punct_history_av.json", "punct_history_conv.json", "punct_history_cer.json", "visits.json")})
+    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache_v2.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json", "punct_history_av.json", "punct_history_conv.json", "punct_history_cer.json", "visits.json", "stats_daily.json")})
     _t = threading.Thread(target=SYNC.restore, daemon=True)
     _t.start()
     _t.join(60)
 VISITS = Visits(os.path.join(ROOT, "data", "visits.json"))
+STATS = statsmod.Daily(os.path.join(ROOT, "data", "stats_daily.json"))
+BOOK = statsmod.TrainBook()
 PUNCT = {"all": punctuality.History(os.path.join(ROOT, "data", "punct_history.json")),
          "av": punctuality.History(os.path.join(ROOT, "data", "punct_history_av.json")),
          "conv": punctuality.History(os.path.join(ROOT, "data", "punct_history_conv.json")),
@@ -735,9 +738,21 @@ class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
 
-    def _send(self, code, body, ctype="application/json"):
+    def _send(self, code, body, ctype="application/json", etag=False):
         b = body if isinstance(body, bytes) else json.dumps(body, ensure_ascii=False).encode()
+        if etag and code == 200:     # ETag débil sobre el cuerpo: si el cliente ya lo tiene, 304 sin cuerpo
+            tag = '"' + hashlib.sha1(b).hexdigest()[:20] + '"'
+            if self.headers.get("If-None-Match") == tag:
+                self.send_response(304)
+                self.send_header("ETag", tag)
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                return
+            self._etag = tag
         self.send_response(code)
+        if getattr(self, "_etag", None):
+            self.send_header("ETag", self._etag)
+            self._etag = None
         self.send_header("Content-Type", ctype + "; charset=utf-8")
         self.send_header("Content-Length", str(len(b)))
         self.send_header("Cache-Control", "no-store")
@@ -769,10 +784,10 @@ class H(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split("?")[0]
         # abiertos con su propia autenticación o necesarios para la monitorización: salud, canal de centros y app de cabina
-        if path not in ("/api/health", "/api/centre/snapshot", "/manifest.webmanifest", "/sw.js", "/icon.svg", "/logo.png", "/og-image.png", "/favicon.png", "/basemap.json", "/vendor/maplibre/maplibre-gl.js", "/vendor/maplibre/maplibre-gl.css") and not path.startswith("/tablet") and not self._viewer_ok():
+        if path not in ("/api/health", "/healthz", "/readyz", "/api/centre/snapshot", "/manifest.webmanifest", "/sw.js", "/icon.svg", "/logo.png", "/og-image.png", "/favicon.png", "/basemap.json", "/vendor/maplibre/maplibre-gl.js", "/vendor/maplibre/maplibre-gl.css") and not path.startswith("/tablet") and not self._viewer_ok():
             return
         if path == "/api/snapshot":
-            return self._send(200, APP.snapshot())
+            return self._send(200, APP.snapshot(), etag=True)
         if path == "/api/systems":
             return self._send(200, APP.systems())
         if path == "/api/safety_systems":
@@ -818,11 +833,30 @@ class H(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "public, max-age=300")
             self.end_headers()
             return self.wfile.write(raw)
+        if path == "/api/stats":
+            from urllib.parse import parse_qs, urlparse
+            q = parse_qs(urlparse(self.path).query)
+            g = lambda k: (q.get(k) or [""])[0]
+            w = g("w") if g("w") in statsmod.WINDOWS else "7d"
+            kind = g("kind") or "top"
+            if kind == "station" and g("code"):
+                return self._send(200, STATS.station(g("code"), w))
+            if kind == "train" and g("n"):
+                return self._send(200, STATS.train(g("n"), w))
+            return self._send(200, STATS.top(w))
+        if path == "/api/train/status":
+            from urllib.parse import parse_qs, urlparse
+            return self._send(200, BOOK.status((parse_qs(urlparse(self.path).query).get("n") or [""])[0]))
         if path == "/api/train":
             from urllib.parse import parse_qs, urlparse
             n = (parse_qs(urlparse(self.path).query).get("n") or [""])[0]
             d = APP.train_detail(n)
             return self._send(200, d) if d else self._send(404, {"ok": False, "msg": "tren desconocido"})
+        if path == "/healthz":     # vivo: el proceso responde
+            return self._send(200, {"ok": True})
+        if path == "/readyz":      # listo: el ciclo de datos avanza (misma regla que /api/health)
+            age = time.time() - APP.last
+            return self._send(200 if age < 15 else 503, {"ok": age < 15, "age_s": round(age, 1)})
         if path == "/api/health":
             age = time.time() - APP.last
             return self._send(200 if age < 15 else 503, {"ok": age < 15, "cycle": APP.engine.cycle, "age_s": round(age, 1), "feed": getattr(APP.feed, "stats", None),
@@ -920,6 +954,15 @@ def main():
         VISITS.save()
         if a.source == "renfe":
             rows = [(t.n, t.ret, t.cat) for t in APP.engine.trains]
+            try:   # histórico por estación/tren y estado de cada tren (informativo; un fallo aquí no afecta al resto)
+                est = APP.engine.est
+                STATS.add([(t.n, t.ret, t.cat, t.sig, (est.get(t.sig) or {}).get("n")) for t in APP.engine.trains])
+                STATS.save()
+                BOOK.update([{"n": t.n, "from": (est.get(t.ant) or {}).get("n"), "to": (est.get(t.sig) or {}).get("n"),
+                              "dest": (est.get(t.des) or {}).get("n"), "ret": t.ret, "finishing": bool(t.sig and t.sig == t.des)}
+                             for t in APP.engine.trains])
+            except Exception as ex:
+                print("[stats]", repr(ex)[:120])
             for sg, h in PUNCT.items():
                 crow = APP.cercanias.delay_rows() if sg == "cer" and APP.cercanias else rows
                 if sg != "cer" or crow:

@@ -14,3 +14,4 @@ data/traffic_cache.json
 data/infra_cache_v2.json
 data/news_cache.json
 data/visits.json
+data/stats_daily.json
