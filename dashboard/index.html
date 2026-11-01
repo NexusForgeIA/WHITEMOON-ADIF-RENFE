@@ -373,7 +373,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
 
 <section class="panel" id="mapwrap"><div id="bm"></div><div id="bmattr" hidden>© <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> · © <a href="https://openmaptiles.org" target="_blank" rel="noopener">OpenMapTiles</a> · Datos © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div><canvas id="cv"></canvas><div id="tip"></div><aside id="card" hidden></aside>
   <div class="tb"><button id="zi" title="Acercar">+</button><button id="zo" title="Alejar">−</button><button id="zr" title="Ajustar a toda la red">⌂</button>
-    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lcl" hidden title="Cercanías: posición de parada, sin velocidad; solo informativo"><input type="checkbox" id="lc" checked>Cercanías <span id="lcn"></span></label><label title="Dibuja el contorno de España y países vecinos"><input type="checkbox" id="lbm" checked>Mapa</label><label title="Resalta las líneas de alta velocidad (AVE) y su nombre"><input type="checkbox" id="lave" checked>AVE</label><label title="Limitaciones temporales de velocidad publicadas por Adif (informativo)"><input type="checkbox" id="llt" checked>LTV <span id="ltn"></span></label><label title="Cuarteles/comandancias de la Guardia Civil y sedes de Cruz Roja (OpenStreetMap, no oficial). Pulse uno para ver su ficha"><input type="checkbox" id="lem" checked>Emergencias <span id="emn"></span></label><label title="Incidencias de carretera de la DGT: obras, cortes, retenciones y accidentes (no es tráfico ferroviario). Pulse una para ver su ficha"><input type="checkbox" id="lrd" checked>Tráfico DGT <span id="rdn"></span></label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
+    <label><input type="checkbox" id="lv" checked>Vías</label><label><input type="checkbox" id="ls" checked>Estaciones</label><label><input type="checkbox" id="ltr" checked>Estelas</label><label><input type="checkbox" id="lr" checked>Radio 3 km</label><label><input type="checkbox" id="lf" checked>Previsión</label><label id="lcl" hidden title="Cercanías: posición de parada, sin velocidad; solo informativo"><input type="checkbox" id="lc" checked>Cercanías <span id="lcn"></span></label><label title="Dibuja el contorno de España y países vecinos"><input type="checkbox" id="lbm" checked>Mapa</label><label title="Resalta las líneas de alta velocidad (AVE) y su nombre"><input type="checkbox" id="lave" checked>AVE</label><label title="Limitaciones temporales de velocidad publicadas por Adif (informativo)"><input type="checkbox" id="llt" checked>LTV <span id="ltn"></span></label><label title="Cuarteles/comandancias de la Guardia Civil y sedes de Cruz Roja (OpenStreetMap, no oficial). Pulse uno para ver su ficha"><input type="checkbox" id="lem" checked>Emergencias <span id="emn"></span></label><label title="Incidencias de carretera de la DGT: obras, cortes, retenciones y accidentes (no es tráfico ferroviario). Pulse una para ver su ficha"><input type="checkbox" id="lrd" checked>Tráfico DGT <span id="rdn"></span></label><label id="lil" hidden><input type="checkbox" id="li" checked>Red real</label><label id="lpl" hidden><input type="checkbox" id="lp" checked>Señales y desvíos</label>
     <button id="lgb" title="Qué significan los colores y las etiquetas del mapa">? Leyenda</button><select id="opf" title="Filtrar por operador"><option value="">Todos los operadores</option></select></div>
   <div class="legend"><span><s style="background:var(--ok)"></s>libre</span><span><s style="background:var(--cau)"></s>precaución</span><span><s style="background:var(--res)"></s>restringido</span><span><s style="background:var(--stop)"></s>STOP</span><span><s style="background:#1e5bff;border-radius:50%"></s>Guardia Civil</span><span><s style="background:#5aa9ff;border-radius:50%"></s>Cruz Roja</span>
     <span style="color:#e8f1ff">┅ AVE alta velocidad</span><span>▶ rumbo</span><span style="color:#ff9f43">━ LZB→ETCS</span><span style="color:#4aa8ff">━ ETCS</span><span style="color:#8ea0b6">━ ASFA/otras</span><span title="Línea recta entre estaciones: esquema, no la geometría real de la vía">trazado esquemático</span></div>
@@ -385,6 +385,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
     <div class="lr"><i style="background:var(--stop);"></i><em>STOP</em><span>Peligro inminente: freno de emergencia y bloque enclavado. Solo lo libera una persona con doble autorización (B7).</span></div>
     <div class="lr"><i class="tri"></i><em>Icono de tren</em><span>Color por estado de seguridad si hay barrera activa; en operación normal, por retraso: verde &lt; 5 min, ámbar 5–14, salmón 15–59 y aro rojo desde 60. El triángulo marca el rumbo; sin triángulo, rumbo desconocido. Atenuado = tren entrante o fuera del operador filtrado.</span></div>
     <div class="lt">Líneas y señalización (Vías / Red real)</div>
+    <div class="lr"><i class="ln" style="border-top:3px solid #9bb0c4;opacity:.8"></i><em>Estela</em><span>Recorrido reciente del tren (últimos minutos, solo en este navegador): la cola que se desvanece queda detrás, así se ve el sentido de marcha. Se desactiva en «Estelas».</span></div>
     <div class="lr"><i class="ln" style="border-top:3px solid #4aa8ff;"></i><em>ETCS</em><span>Línea con ETCS (protección continua).</span></div>
     <div class="lr"><i class="ln" style="border-top:3px solid #ff9f43;"></i><em>LZB→ETCS</em><span>Línea con LZB en transición a ETCS.</span></div>
     <div class="lr"><i class="ln" style="border-top:3px solid #8ea0b6;"></i><em>ASFA / otras</em><span>Señalización puntual (ASFA) u otra sin clasificar.</span></div>
@@ -463,7 +464,7 @@ async function load(){try{
   if(CENTRE&&!tok()&&!askedTok){askedTok=true;try{const v=prompt('Token de su centro de control');if(v)localStorage.setItem(KEY,v)}catch(e){}}
   const r=await fetch(CENTRE?'/api/centre/snapshot':'/api/snapshot',{cache:'no-store',headers:CENTRE?hdr():{}});
   if(r.status===401){const b=$('banner');b.style.display='block';b.textContent='Token de centro no válido: pulse 🔑 para introducirlo';return}
-  S=await r.json();{const c=S.cercanias;if($('lcl')){$('lcl').hidden=!c;if(c)$('lcn').textContent='('+(c.ok?c.count:'sin datos')+')'}}render()}catch(e){const b=$('banner');b.style.display='block';b.textContent='Sin conexión con el servidor de supervisión';renderOuts([{sev:'CRIT',title:'Sin conexión con el supervisor de RailGuard',system:'Servidor de supervisión',detail:'Este panel no recibe datos nuevos',trains:[],applying:'Los trenes siguen protegidos por su ATP de a bordo (B0) y por el enclavamiento ya aplicado; los centros pierden visión hasta reconectar.',covering:[{id:'B0',healthy:true},{id:'B5',healthy:true}]}])}}
+  S=await r.json();trailPush(S);{const c=S.cercanias;if($('lcl')){$('lcl').hidden=!c;if(c)$('lcn').textContent='('+(c.ok?c.count:'sin datos')+')'}}render()}catch(e){const b=$('banner');b.style.display='block';b.textContent='Sin conexión con el servidor de supervisión';renderOuts([{sev:'CRIT',title:'Sin conexión con el supervisor de RailGuard',system:'Servidor de supervisión',detail:'Este panel no recibe datos nuevos',trains:[],applying:'Los trenes siguen protegidos por su ATP de a bordo (B0) y por el enclavamiento ya aplicado; los centros pierden visión hasta reconectar.',covering:[{id:'B0',healthy:true},{id:'B5',healthy:true}]}])}}
 const fmt=ms=>new Date(ms).toLocaleTimeString('es-ES',{timeZone:'Europe/Madrid'});
 
 
@@ -559,6 +560,18 @@ function zoomAt(f,mx,my){const z=Math.max(.6,Math.min(80,V.z*f)),k=z/V.z,W=base.
 function visible(t){return !opf||t.op===opf}
 // Icono de tren estilo «radar»: cuadrado redondeado con glifo de tren. Color: estado de seguridad si hay barrera activa;
 // en operación normal, por retraso (verde < 5 min, ámbar 5–14, salmón 15–59; aro rojo desde 60). El triángulo marca el rumbo.
+// ---- estelas: recorrido reciente de cada tren (solo en el navegador, hasta 16 posiciones) para ver el sentido de marcha ----
+const TRL=new Map();
+function trailPush(S){try{const now=Date.now(),seen=new Set();(S.trains||[]).forEach(t=>{seen.add(t.n);let a=TRL.get(t.n);if(!a){a=[];TRL.set(t.n,a)}
+    const l=a[a.length-1];if(!l||Math.hypot(t.x-l[0],t.y-l[1])>(S.unit_km?0.05/(S.unit_km||1):0.05)){a.push([t.x,t.y,now]);if(a.length>16)a.shift()}});
+  for(const k of TRL.keys())if(!seen.has(k))TRL.delete(k)}catch(e){}}
+function drawTrails(W,H){
+  if(!$('ltr')||!$('ltr').checked)return;cx.save();cx.lineCap='round';cx.lineJoin='round';
+  S.trains.forEach(t=>{const a=TRL.get(t.n);if(!a||a.length<2||!visible(t))return;const p0=t._p,q0=t._q;if(p0<-40||q0<-40||p0>W+40||q0>H+40)return;
+    const col=t.cmd!=='NONE'?COL[t.cmd]:dcol(t.ret||0),pts=a.map(c=>T(c[0],c[1]));pts.push([p0,q0]);
+    for(let i=1;i<pts.length;i++){const f=i/pts.length;cx.globalAlpha=.08+.55*f;cx.strokeStyle=col;cx.lineWidth=1+2.2*f*Math.min(1.6,.8+V.z/4);
+      cx.beginPath();cx.moveTo(pts[i-1][0],pts[i-1][1]);cx.lineTo(pts[i][0],pts[i][1]);cx.stroke()}});
+  cx.restore()}
 const dcol=r=>r>=15?'#ee7a5f':r>=5?'#f5a623':'#2fb344';
 function rrect(x,y,w,h,r){cx.beginPath();if(cx.roundRect)cx.roundRect(x,y,w,h,r);else cx.rect(x,y,w,h)}
 function drawTrain(t,p,q,a){
@@ -696,6 +709,7 @@ function draw(){
        cx.fillStyle='#fff';for(let i=1;i<pts.length;i++){const[x0,y0]=pts[i-1],[x1,y1]=pts[i],L=Math.hypot(x1-x0,y1-y0);if(L<40)continue;
          const an=Math.atan2(y1-y0,x1-x0);for(let d=22;d<L-10;d+=60){const px=x0+(x1-x0)*d/L,py=y0+(y1-y0)*d/L;cx.save();cx.translate(px,py);cx.rotate(an);cx.beginPath();cx.moveTo(4,0);cx.lineTo(-3,-3.2);cx.lineTo(-3,3.2);cx.closePath();cx.fill();cx.restore()}}
        cx.restore()}}}
+  drawTrails(W,H);
   S.trains.forEach(t=>{const p=t._p,q=t._q;if(p<-30||q<-30||p>W+30||q>H+30)return;
     const vis=visible(t);if(!vis&&opf){drawTrain(t,p,q,.12);return}
     if(t.cmd==='STOP'){cx.strokeStyle=COL.STOP;cx.globalAlpha=1-pulse;cx.lineWidth=2;cx.beginPath();cx.arc(p,q,8+pulse*18,0,7);cx.stroke();cx.globalAlpha=1}
