@@ -415,6 +415,7 @@ class Engine:
         self.est = est
         self.enabled = set(enabled or BARRIERS)
         self.log_path = log_path
+        self.audit = None      # audit.Audit: si existe, sustituye al fichero plano (registro encadenado)
         self.cycle = 0
         self.now_ms = 0
         self.prev = {}
@@ -449,7 +450,12 @@ class Engine:
     def log(self, kind, msg, **data):
         e = {"t": self.now_ms, "kind": kind, "msg": msg, **data}
         self.events.appendleft(e)
-        if self.log_path:
+        if self.audit:
+            try:
+                self.audit.append(e)
+            except OSError:
+                pass
+        elif self.log_path:
             os.makedirs(os.path.dirname(self.log_path) or ".", exist_ok=True)
             with open(self.log_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(e, ensure_ascii=False) + "\n")

@@ -525,7 +525,7 @@ function render(){
   // peligros
   renderHazards();renderActing();
   // log
-  const lg=$('log');lg.replaceChildren(h('h2',null,'Registro de eventos (auditoría: data/events.jsonl)'),...S.events.slice(0,FULL?60:7).map(e=>h('div',e.kind,null,[h('span','k',fmt(e.t)),h('span','k',evk(e)),document.createTextNode(evm(e))])),...(FULL?[]:[moreBtn('Ver el registro completo ›',logModal)]));
+  const lg=$('log');lg.replaceChildren(h('h2',null,'Registro de eventos · auditoría encadenada'),auditBadge(),...S.events.slice(0,FULL?60:7).map(e=>h('div',e.kind,null,[h('span','k',fmt(e.t)),h('span','k',evk(e)),document.createTextNode(evm(e))])),...(FULL?[]:[moreBtn('Ver el registro completo ›',logModal)]));
   aux();draw();try{enhance()}catch(e){console.error(e)}
 }
 
@@ -1065,7 +1065,7 @@ function kpiDelay(){const rows=delayList().map(t=>({main:t.n,sev:t.ret>=30?'REST
   showDM('Trenes con retraso ('+rows.length+')','Retraso ≥ '+DLY_MIN+' min según el feed de Renfe, solo viajes en curso, por llegada estimada más cercana. Pulse uno para verlo en el mapa.',rows)}
 function logModal(){const rows=(S.events||[]).map(e=>{const m=(e.msg||'').match(/\b(T-\d+|\d{5})\b/g)||[];const tr=m.find(n=>(S.trains||[]).some(t=>t.n===n));
   return{main:fmt(e.t),sev:e.kind==='HAZARD'?'RESTRICT':e.kind==='CLEAR'||e.kind==='RELEASE'?'NONE':'CAUTION',text:evk(e)+' · '+evm(e),go:tr?'ver tren ›':'',fn:tr?()=>focusTrain(tr):()=>{}}});
-  showDM('Registro de eventos','Auditoría (data/events.jsonl). Los más recientes primero.',rows)}
+  showDM('Registro de eventos','Auditoría encadenada (cada registro lleva el hash del anterior). Los más recientes primero.',rows)}
 let fcTab=false,avTab=false;
 let FULL=false;
 function drawAv(C,AL){const bx=$('av');bx.replaceChildren(h('div',null,'Avisos oficiales de Renfe para Cercanías/Rodalies. Informativo: no interviene en la seguridad.'));bx.firstChild.id='fcnote';
@@ -1326,6 +1326,17 @@ function histBox(kind,key,label){
   fetch('/api/stats?kind='+kind+'&'+(kind==='station'?'code=':'n=')+encodeURIComponent(key)+'&w=7d',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{HSC[k]={t:Date.now(),j};paint(j)}).catch(()=>paint(null));
   return bx;
 }
+// ---- sello de integridad del registro (cadena de hash SHA-256) ----
+let AUD=null;
+async function loadAudit(){try{const r=await fetch('/api/audit/verify',{cache:'no-store'});if(r.ok)AUD=await r.json()}catch(e){}}
+function auditBadge(){
+  const d=h('div','nt');d.style.cssText='display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 6px;font-size:11.5px';
+  const ok=AUD&&AUD.ok,tx=!AUD?'Verificando cadena…':ok?'Cadena íntegra · '+AUD.n+' registros':'⚠ Cadena rota'+(AUD.bad_seq?' en el registro '+AUD.bad_seq:'')+' · '+(AUD.why||'');
+  const b=h('span',null,(ok?'✔ ':'')+tx);b.style.cssText='padding:2px 8px;border-radius:999px;border:1px solid '+(ok?'#1f7a4d':AUD?'#a33':'#3b5068')+';color:'+(ok?'#6fe0a4':AUD?'#ff8a8a':'var(--mut)');
+  b.title='Cada evento incluye el hash SHA-256 del anterior: alterar, borrar o reordenar un registro rompe la cadena. Es evidencia de integridad; no identifica a la persona autora.';
+  const a=h('a',null,'⬇ Descargar (.jsonl)');a.href='/api/audit/export?format=jsonl&limit=20000';a.style.cssText='color:#8cc8ff;text-decoration:none';a.setAttribute('download','railguard_auditoria.jsonl');
+  d.append(b,a);return d}
+loadAudit();setInterval(loadAudit,60000);
 // ---- ficha de tren ----
 const card=$('card');let cardN=null,cardTimer=null;
 const fmtDelay=m=>m>0?(m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'):m<0?'adelantado '+(-m)+' min':'a tiempo';

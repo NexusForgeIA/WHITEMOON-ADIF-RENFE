@@ -28,6 +28,7 @@ import persist
 import punctuality
 import watch as watchmod
 import stats as statsmod
+from audit import Audit
 from visits import Visits
 import systems
 import forecast
@@ -77,6 +78,7 @@ class App:
         else:
             self.est, self.base = {}, {}
         self.engine = Engine(self.est, cfg=cfg, log_path=os.path.join(ROOT, "data", "events.jsonl"))
+        self.engine.audit = Audit(os.path.join(ROOT, "data", "audit.jsonl"))
         self.engine.set_lines([dict(c) for c in _load("infrastructure.json")["corridors"]])
         if self.feed:
             self.engine.est.update(self.feed.est)
@@ -721,7 +723,7 @@ EXTRAS = None
 SYNC = None
 _remote = persist.from_env()
 if _remote:     # cachés en Supabase: sobreviven a los reinicios de Render. La descarga se acota para no retrasar el arranque.
-    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache_v2.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json", "punct_history_av.json", "punct_history_conv.json", "punct_history_cer.json", "visits.json", "stats_daily.json")})
+    SYNC = persist.Sync(_remote, {os.path.join(ROOT, "data", f): f for f in ("infra_cache_v2.json", "ltv_cache.json", "emergency_cache.json", "punct_history.json", "punct_history_av.json", "punct_history_conv.json", "punct_history_cer.json", "visits.json", "stats_daily.json", "audit.jsonl")})
     _t = threading.Thread(target=SYNC.restore, daemon=True)
     _t.start()
     _t.join(60)
@@ -833,6 +835,24 @@ class H(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "public, max-age=300")
             self.end_headers()
             return self.wfile.write(raw)
+        if path == "/api/audit/verify":
+            return self._send(200, APP.engine.audit.verify())
+        if path == "/api/audit/export":
+            q = urllib.parse.parse_qs(self.path.partition("?")[2])
+            g = lambda k: (q.get(k) or [""])[0]
+            num = lambda v: int(v) if v.lstrip("-").isdigit() else None
+            recs = APP.engine.audit.export(num(g("from")), num(g("to")), min(num(g("limit")) or 5000, 20000))
+            if g("format") == "jsonl":
+                body = ("\n".join(json.dumps(r, ensure_ascii=False, separators=(",", ":")) for r in recs) + "\n").encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+                self.send_header("Content-Disposition", 'attachment; filename="railguard_auditoria.jsonl"')
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            return self._send(200, {"verify": APP.engine.audit.verify(), "n": len(recs), "records": recs})
         if path == "/api/stats":
             from urllib.parse import parse_qs, urlparse
             q = parse_qs(urlparse(self.path).query)
