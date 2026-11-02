@@ -72,6 +72,29 @@ header .hban #pbanner:empty{display:none}
 .nwc .nz{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nwc .nr:hover .nz{text-decoration:underline}
 .nwc .ns{font-size:11px;color:var(--mut);white-space:nowrap;text-align:right}
 @keyframes nwp{50%{opacity:.7}}
+/* --- cards con el lenguaje de la «vista de tren»: icono grande, titular y cifra clave --- */
+#wat .wi{grid-template-columns:44px 1fr auto;gap:2px 12px;padding:11px 14px;border-radius:14px;align-items:center;background:linear-gradient(90deg,#101b28,#0c141d)}
+#wat .wi .ic{grid-row:1/3;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#16263a}
+#wat .wi.s0 .ic{background:#4a1319}#wat .wi.s1 .ic{background:#4a2c12}#wat .wi.s2 .ic{background:#3d3512}
+#wat .wi b{font-size:14.5px;grid-column:2}#wat .wi small{grid-column:2;font-size:12px;line-height:1.4}
+#wat .wi .sv{grid-column:3;grid-row:1;padding:2px 10px;border-radius:99px;border:1px solid #35506b;font-weight:800}
+#wat .wi.s0 .sv{background:#d6182a;border-color:#d6182a;color:#fff}#wat .wi.s1 .sv{background:#7a3d10;border-color:#a8581a;color:#ffd9b0}
+#wat .wi.red{border-color:#b3202c;border-left-color:#e5484d;background:linear-gradient(90deg,#3a0f15,#1a0b10 70%);box-shadow:0 0 0 1px #5a1820 inset}
+#wat .wi.red .ic{background:#d6182a;animation:nwp 1.6s ease-in-out infinite}
+#wat .wi.red b{color:#ffd6d9;font-size:16px}
+#wat .wi a{color:#8cc8ff;text-decoration:none;font-weight:600}
+#enb{display:none;gap:12px;align-items:center;padding:10px 16px;border-radius:14px;background:linear-gradient(90deg,#8d1320,#c11a2b);border:1px solid #ff6b76;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 0 22px #d6182a66}
+#enb .ei{font-size:26px;animation:nwp 1.4s ease-in-out infinite}#enb small{display:block;font-weight:400;opacity:.92;font-size:12px}
+#prk .rg>div{border-radius:14px}
+#prk .rr.wr{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"art id em" "art sm em";align-items:center;gap:0 12px;padding:10px 12px;margin:6px 0;border:1px solid var(--line);border-radius:12px;background:linear-gradient(90deg,#101b28,#0c141d)}
+#prk .rr.wr>span:first-child{display:contents}
+#prk .rr.wr .art{grid-area:art;width:86px;line-height:0}#prk .rr.wr b{grid-area:id;font-size:15px}#prk .rr.wr em{grid-area:em;font-size:20px;font-style:normal;font-weight:800}#prk .rr.wr small{grid-area:sm}
+#prk .rr:not(.wr){display:grid;grid-template-columns:1fr auto;gap:0 10px;padding:9px 12px;margin:6px 0;border:1px solid var(--line);border-radius:12px;background:linear-gradient(90deg,#101b28,#0c141d)}
+#prk .rr:not(.wr) em{font-size:18px;font-style:normal;font-weight:800;grid-row:1/3;grid-column:2;align-self:center}#prk .rr:not(.wr) span{font-weight:700}
+.nwc .nr{padding:9px 12px;margin:6px 0;border:1px solid #172433;border-radius:12px;background:linear-gradient(90deg,#101b28,#0c141d)}
+.nwc .nr:first-of-type{border-top:1px solid #172433}
+.nwc .nz{font-size:13.5px}
+
 @media(max-width:900px){.kpis{margin-left:0;flex:1 1 100%}.kpi{flex:1}.nwc .nr{grid-template-columns:auto 1fr;gap:4px 8px}.nwc .nz{grid-column:1/-1;white-space:normal}.nwc .ns{grid-column:1/-1;text-align:left}header .hrow #adm{margin-left:0}}
 .arrow{align-self:center;color:var(--mut);font-size:11px;line-height:14px}
 .human{border-left-color:var(--acc)}
@@ -354,7 +377,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   <button id="abb" class="sysb" title="Qué datos son reales, qué es simulado y qué límites tiene este sistema">ℹ Fuentes</button>
   <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas</button>
   <button id="adm" title="Token de administración (RAILGUARD_TOKEN)">🔑</button></div>
-  <div class="hban"><div id="banner" class="banner"></div><div id="pbanner"></div><div id="actb" class="banner" style="display:none;cursor:help"></div></div>
+  <div class="hban"><div id="enb" role="alert"></div><div id="banner" class="banner"></div><div id="pbanner"></div><div id="actb" class="banner" style="display:none;cursor:help"></div></div>
   <div id="nwb" class="nwc" style="display:none"></div>
 </header>
 
@@ -487,10 +510,16 @@ function renderOuts(list){
   if(info.length){const m=h('div','oi','ℹ '+info.map(o=>o.title).join(' · '));m.title='Cobertura no disponible (no es una avería). Pulse para ver cómo se compensa.';m.onclick=openSys;kids.push(m)}
   box.replaceChildren(...kids)}
 const WSEV={'muy alta':0,'alta':1,'media':2,'baja':3};
-function renderWatch(){const w=S.watch||[],box=$('watl');if(!box)return;
+const WICO={energia:'⚡','red-electrica':'⚡',meteo:'⛈',sismo:'🌍',incendio:'🔥',bloqueo:'⛔',detenido:'⛔','salto-retraso':'⏱',flota:'🚆'};
+function renderEnergyBar(){const b=$('enb');if(!b)return;const e=(S.watch||[]).filter(i=>i.type==='energia'&&i.sev==='muy alta'||i.type==='red-electrica'&&i.sev==='muy alta');
+  if(!e.length){b.style.display='none';return}
+  b.style.display='flex';b.replaceChildren(h('span','ei','⚡'),h('div',null,null,[document.createTextNode('ALERTA DE ENERGÍA · '+e.map(i=>i.title.replace(/^Apagón · /,'')).join(', ')),h('small',null,'Posible apagón detectado por titulares de medios y Red Eléctrica. Sin confirmar por el operador eléctrico; puede afectar a la alimentación de la red ferroviaria. Ver detalle abajo.')]));
+  b.onclick=()=>{const w=$('wat');if(w)w.scrollIntoView({behavior:'smooth',block:'start'})}}
+function renderWatch(){try{renderEnergyBar()}catch(e){}const w=S.watch||[],box=$('watl');if(!box)return;
   const r=S.ree,st=S.extras_status||{};
   $('watree').replaceChildren(...(r&&r.demandMW?[(()=>{const d=h('span','ree',null,[document.createTextNode('⚡ Demanda eléctrica '),h('b',null,Math.round(r.demandMW).toLocaleString('es-ES')+' MW'),document.createTextNode(r.deviation==null?'':' · '+(r.deviation>=0?'+':'')+(r.deviation*100).toFixed(1)+' % vs previsión')]);d.title='Red Eléctrica (REData). Una caída brusca frente a lo previsto puede indicar un apagón';return d})()]:[]));
-  box.replaceChildren(...(w.length?w.map(i=>{const s=WSEV[i.sev]??3,d=h('div','wi s'+s,null,[h('span','sv',i.sev),h('b',null,i.title),h('small',null,i.detail+(i.trains&&i.trains.length&&i.type!=='detenido'&&i.type!=='salto-retraso'?'':''))]);return d}):[h('div','wok','✓ Sin situaciones que vigilar ahora mismo (trenes parados fuera de estación, saltos de retraso, avisos meteorológicos, terremotos, focos de calor, red eléctrica)')]));
+  box.replaceChildren(...(w.length?w.map(i=>{const s=WSEV[i.sev]??3,red=i.type==='energia'&&s===0,d=h('div','wi s'+s+(red?' red':''),null,[h('span','ic',WICO[i.type]||'●'),h('span','sv',red?'ALERTA ROJA':i.sev),h('b',null,i.title),h('small',null,i.detail)]);
+    if(i.links&&i.links.length){const a=h('a',null,' Ver titular ›');a.href=i.links[0];a.target='_blank';a.rel='noopener';d.lastChild.appendChild(a)}return d}):[h('div','wok','✓ Sin situaciones que vigilar ahora mismo (trenes parados fuera de estación, saltos de retraso, avisos meteorológicos, terremotos, focos de calor, red eléctrica)')]));
   const names={ree:'Red Eléctrica',ign:'IGN terremotos',aemet:'AEMET avisos',firms:'NASA FIRMS'};
   $('watsrc').replaceChildren(...Object.keys(names).filter(k=>st[k]).map(k=>{const o=st[k],sp=h('span',o.ok===false?'bad':null,names[k]+(o.ok===false?' ✗':o.ok?' ✓':' …'));sp.title=(o.license||'')+(o.err?'\nError: '+o.err:'');return sp}).flatMap((e,i)=>i?[document.createTextNode(' · '),e]:[e]));
   $('wat').hidden=!(S.watch&&S.mode==='live'||r||Object.keys(st).length)}
@@ -826,14 +855,14 @@ async function loadPunct(){try{paintSeg();const r=await fetch('/api/punct?seg='+
 loadPunct();setInterval(loadPunct,30000);
 // ---- ranking histórico (estaciones y trenes con más retraso; ventana hoy / 7 días / 30 días) ----
 let RKW='7d';try{RKW=localStorage.getItem('rkw')||'7d'}catch(e){}
-function rkArt(x){const t=(S&&S.trains||[]).find(v=>v.n===x.id),op=t&&t.op&&t.op!=='?'?((S.operators||[]).find(o=>o.id===t.op)||{}).name:'';return trainArt((t&&t.product)||x.cat||'',op||'',46)}
+function rkArt(x){const t=(S&&S.trains||[]).find(v=>v.n===x.id),op=t&&t.op&&t.op!=='?'?((S.operators||[]).find(o=>o.id===t.op)||{}).name:'';return trainArt((t&&t.product)||x.cat||'',op||'',86)}
 async function loadRank(){const bx=$('prk');if(!bx)return;
   try{const r=await fetch('/api/stats?kind=top&w='+RKW,{cache:'no-store'});if(!r.ok)throw 0;const k=await r.json();
     const cm=x=>x==null?'—':String(x).replace('.',','),WL={'1d':'Hoy','7d':'7 días','30d':'30 días'};
     const col=(t,rows,fn)=>'<div><h4>'+t+'</h4>'+(rows.length?rows.map(fn).join(''):'<div class="nt">Acumulando datos: se necesitan unas horas de muestras.</div>')+'</div>';
     bx.innerHTML='<div class="rh"><h3>Histórico de retrasos</h3>'+Object.keys(WL).map(w=>'<button data-w="'+w+'" class="'+(w===RKW?'on':'')+'">'+WL[w]+'</button>').join('')+'</div><div class="rg">'
       +col('Estaciones con más retraso medio (próxima parada)',k.stations,x=>'<div class="rr"><span title="'+x.label+'">'+x.label+'</span><em>+'+cm(x.mean_min)+' min</em><small>'+cm(x.pct_delayed)+' % con retraso</small></div>')
-      +col('Trenes con más retraso medio',k.trains,x=>'<div class="rr wr" style="cursor:pointer" data-n="'+x.id+'"><span style="display:flex;align-items:center;gap:8px"><span style="width:46px;flex:none;line-height:0">'+rkArt(x)+'</span><b>'+x.id+'</b></span><em>+'+cm(x.mean_min)+' min</em><small>'+cm(x.pct_delayed)+' % · máx '+x.max_min+'</small></div>')
+      +col('Trenes con más retraso medio',k.trains,x=>'<div class="rr wr" style="cursor:pointer" data-n="'+x.id+'"><span><span class="art">'+rkArt(x)+'</span><b>'+x.id+'</b></span><em>+'+cm(x.mean_min)+' min</em><small>'+cm(x.pct_delayed)+' % · máx '+x.max_min+'</small></div>')
       +'</div><div class="nt">Calculado por RailGuard con el feed público de Renfe: una muestra por minuto de cada tren con retraso conocido. Informativo; el retraso real a la llegada puede diferir.</div>';
     bx.querySelectorAll('button').forEach(b=>b.onclick=()=>{RKW=b.dataset.w;try{localStorage.setItem('rkw',RKW)}catch(e){}loadRank()});
     bx.querySelectorAll('.wr').forEach(e=>e.onclick=()=>{if(typeof focusTrain==='function')focusTrain(e.dataset.n)})

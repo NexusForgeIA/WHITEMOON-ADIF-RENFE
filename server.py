@@ -31,6 +31,7 @@ import stats as statsmod
 from audit import Audit
 import exercise as exmod
 import hazmap
+import energia as energymod
 from visits import Visits
 import systems
 import forecast
@@ -444,7 +445,7 @@ class App:
                                 "trains": cnt.get(o["id"], 0)} for o in self.operators]
                               + [{"id": i, "name": i, "type": "?", "verified": False, "trains": n} for i, n in cnt.items() if i not in known])
             s["drivers"] = self.drivers.listing()
-            s["watch"] = self.watch_items if self.feed else []
+            s["watch"] = (ENERGY.alerts() if ENERGY else []) + (self.watch_items if self.feed else [])
             _x = EXTRAS.snapshot() if (EXTRAS and self.feed) else {}
             s["ree"], s["extras_status"] = _x.get("ree"), _x.get("status")
             s["proximity_km"] = self.engine.cfg["proximity_km"]
@@ -726,6 +727,7 @@ LTV = None
 EMG = None
 TRAF = None
 NEWS = None
+ENERGY = None
 EXTRAS = None
 SYNC = None
 _remote = persist.from_env()
@@ -939,7 +941,7 @@ class H(BaseHTTPRequestHandler):
 
 
 def main():
-    global APP, INFRA, LTV, EMG, TRAF, NEWS, EXTRAS
+    global APP, INFRA, LTV, EMG, TRAF, NEWS, EXTRAS, ENERGY
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", help="'renfe' (feed oficial) o URL con el esquema de /api/estado")
     ap.add_argument("--gtfs", help="google_transit.zip de Renfe (ruta o URL); necesario para parada anterior, destino y producto")
@@ -968,6 +970,8 @@ def main():
     if a.source == "renfe" and os.environ.get("RG_NEWS", "1") != "0":
         NEWS = News(os.path.join(ROOT, "data", "news_cache.json"))
         NEWS.start()
+        ENERGY = energymod.Energia(os.path.join(ROOT, "data", "energia_cache.json"))
+        ENERGY.start()
 
     if SYNC:
         SYNC.start()
