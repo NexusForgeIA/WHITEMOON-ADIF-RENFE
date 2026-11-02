@@ -960,6 +960,17 @@ function chainChips(g,t){
   if(back.length){kids.push(h('small',null,'respaldo vigilando'));back.forEach(b=>kids.push(h('span','chip ok',b)))}
   kids.push(h('small',null,'persona'));kids.push(h('span','chip hum',cmd==='STOP'?'B6 informado · B7 exige 2 autorizaciones':'B6 · sin intervención'));
   return h('div','chips',null,kids)}
+// «¿Por qué?»: qué detecta, regla, datos medidos y sugerencia. Ayuda a la persona operadora; no es una orden.
+const WHYOPEN=new Set();
+function whyBox(x){const w=x&&x.why;if(!w)return h('span');
+  const d=h('details','why'),wk=x.barrier+'|'+x.code+'|'+x.trains.join(',');d.open=WHYOPEN.has(wk);d.addEventListener('toggle',()=>{d.open?WHYOPEN.add(wk):WHYOPEN.delete(wk)});d.style.cssText='margin-top:6px;font-size:12px';
+  const sm=h('summary',null,'¿Por qué? · '+(w.kind==='directo'?'dato medido':'estimación'));sm.style.cssText='cursor:pointer;color:#8cc8ff';d.appendChild(sm);
+  const row=(k,v)=>{const e=h('div');e.style.cssText='margin:3px 0;line-height:1.4';e.append(h('b',null,k+': '),document.createTextNode(v));return e};
+  d.append(row('Qué detecta',w.detects),row('Regla',w.rule));
+  (w.data||[]).forEach(r=>d.appendChild(row(r[0],r[1])));
+  d.append(row('Sugerencia',w.recommend));
+  const n=h('div','nt','Lo calcula RailGuard con los datos públicos disponibles. La decisión es siempre de la persona operadora; no es una orden.');n.style.cssText='color:var(--mut);font-size:11px;margin-top:4px';d.appendChild(n);
+  d.onclick=e=>e.stopPropagation();return d}
 function renderHazards(){
   const hz=$('hz');hz.replaceChildren();const gs=groupHazards();
   if(!gs.length){hz.appendChild(h('div','empty','Sin peligros detectados.'));{const l=llBox();if(l)hz.appendChild(l)}return}
@@ -967,7 +978,7 @@ function renderHazards(){
   gs.slice(0,FULL?30:3).forEach(g=>{const t=by[g.n],sev=['','CAUTION','RESTRICT','STOP'][g.sev];
     const main=g.hz.slice().sort((a,b)=>(SEVN[b.sev]||0)-(SEVN[a.sev]||0))[0];
     hz.appendChild(h('div','hzc '+sev,null,[h('div','t',null,[h('em',null,sev),h('span',null,'Tren '+g.n)]),h('div','m',main.msg+(g.hz.length>1?'  (+'+(g.hz.length-1)+' más)':'')),chainChips(g,t),
-      h('div','a',null,[h('b',null,'Aplicado: '),document.createTextNode(ACTION[t?t.cmd:'NONE'])])]))});
+      h('div','a',null,[h('b',null,'Aplicado: '),document.createTextNode(ACTION[t?t.cmd:'NONE'])]),whyBox(main)]))});
   if(!FULL&&gs.length>3)hz.appendChild(moreBtn('Ver los '+gs.length+' trenes con peligros ›',()=>kpiModal('trains','Trenes con peligros activos',t=>t.cmd!=='NONE')));if(FULL&&gs.length>30)hz.appendChild(h('div','empty','… y '+(gs.length-30)+' trenes más con avisos.'));{const l=llBox();if(l)hz.appendChild(l)}}
 function llBox(){const L=S.learned_limits||[];if(!L.length)return null;
   const nm=c=>{const s=(S.stations||[]).find(x=>x.c===c);return s?s.n:c};

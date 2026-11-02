@@ -28,6 +28,7 @@ interfaz de actuación (`actuators`) que debe conectarse a esos sistemas.
 from __future__ import annotations
 
 import json
+import explain
 import math
 import os
 from collections import defaultdict, deque
@@ -516,7 +517,7 @@ class Engine:
                 self.counts[h.barrier] += 1
                 self.last_fire[h.barrier] = now_ms
                 self.log("HAZARD", f"[{h.barrier}] {SEV_NAME[h.sev]} {','.join(h.trains)}: {h.msg}",
-                         barrier=h.barrier, sev=SEV_NAME[h.sev], trains=list(h.trains))
+                         barrier=h.barrier, sev=SEV_NAME[h.sev], trains=list(h.trains), code=h.code, data=h.data)
         for gone in self._active_keys - keys:
             self.log("CLEAR", f"Condición despejada: {gone}")
         self._active_keys = keys
@@ -795,7 +796,7 @@ class Engine:
             "corridors": [{k: v for k, v in c.items() if k != "_m"} for c in self.lines],
             "segments": [list(s) for s in self.seen_segs],
             "hazards": [{"barrier": h.barrier, "sev": SEV_NAME[h.sev], "trains": list(h.trains),
-                         "seg": ctx_name(self.est, h.seg), "msg": h.msg, "code": h.code} for h in sorted(self.hazards, key=lambda h: -h.sev)],
+                         "seg": ctx_name(self.est, h.seg), "msg": h.msg, "code": h.code, "why": explain.build(h)} for h in sorted(self.hazards, key=lambda h: -h.sev)],
             "locked": [ctx_name(self.est, s) for s in getattr(self, "locked", ())],
             "locked_pairs": [list(s) for s in getattr(self, "locked", ())],
             "learned_limits": self.profile.probable_limits(self.now_ms, self._ref_of)[:40],
