@@ -30,6 +30,7 @@ import watch as watchmod
 import stats as statsmod
 from audit import Audit
 import exercise as exmod
+import hazmap
 from visits import Visits
 import systems
 import forecast
@@ -841,6 +842,10 @@ class H(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "public, max-age=300")
             self.end_headers()
             return self.wfile.write(raw)
+        if path == "/api/hazards/hourly":
+            q = urllib.parse.parse_qs(self.path.partition("?")[2])
+            d = (q.get("days") or ["7"])[0]
+            return self._send(200, hazmap.hourly(APP.engine.audit.records(), min(int(d), 30) if d.isdigit() and int(d) > 0 else 7))
         if path == "/api/exercise":
             return self._send(200, APP.ex.view(APP.engine.now_ms))
         if path == "/api/audit/verify":

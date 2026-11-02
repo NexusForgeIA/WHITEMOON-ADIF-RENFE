@@ -436,7 +436,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   <div class="frm"><input id="di" placeholder="Id (seudónimo)"><input id="dt" placeholder="Nº tren"><select id="do"></select><button id="dg">Emitir</button></div>
   <div class="tokbox" id="tk"></div><div id="drv"></div></div></section>
 </div>
-  <section class="panel" id="hzp"><h2 class="tabs"><button id="tabhz" class="on">Peligros activos</button><button id="tabfc" title="Previsión de posibles conflictos en los próximos 20 min (informativa)">🔮 Previsión <span id="fcn"></span></button><button id="tabav" title="Avisos oficiales de Renfe Cercanías/Rodalies (informativo)" hidden>🚆 Avisos <span id="avn"></span></button></h2><div id="hz"></div><div id="fc" hidden></div><div id="av" hidden></div></section>
+  <section class="panel" id="hzp"><h2 class="tabs"><button id="tabhz" class="on">Peligros activos</button><button id="tabfc" title="Previsión de posibles conflictos en los próximos 20 min (informativa)">🔮 Previsión <span id="fcn"></span></button><button id="tabav" title="Avisos oficiales de Renfe Cercanías/Rodalies (informativo)" hidden>🚆 Avisos <span id="avn"></span></button></h2><div id="hz"></div><div id="fc" hidden></div><div id="av" hidden></div><details id="hmx" style="margin-top:10px"><summary class="xsum">Malla horaria de peligros <span>▾</span></summary><div id="hmb" class="nt"></div></details></section>
 </aside>
 
 <section class="panel" id="log"></section>
@@ -1377,6 +1377,19 @@ function auditBadge(){
   const a=h('a',null,'⬇ Descargar (.jsonl)');a.href='/api/audit/export?format=jsonl&limit=20000';a.style.cssText='color:#8cc8ff;text-decoration:none';a.setAttribute('download','railguard_auditoria.jsonl');
   d.append(b,a);return d}
 loadAudit();setInterval(loadAudit,60000);
+// ---- malla horaria de peligros (informativo, desde el registro de auditoría) ----
+let HMD=7;
+async function loadHM(){const d=$('hmx');if(!d||!d.open)return;try{const r=await (await fetch('/api/hazards/hourly?days='+HMD)).json();renderHM(r)}catch(e){}}
+function renderHM(r){const b=$('hmb');const seg=h('div',null,null);seg.style.cssText='display:flex;gap:6px;margin:6px 0';
+  [[1,'Hoy'],[7,'7 días'],[30,'30 días']].forEach(([v,l])=>{const x=h('button',null,l);x.style.cssText='padding:3px 9px;border-radius:999px;border:1px solid '+(HMD===v?'#2b6cb0':'#3b5068')+';background:'+(HMD===v?'#12304f':'transparent')+';color:'+(HMD===v?'#cfe6ff':'var(--mut)')+';cursor:pointer';x.onclick=()=>{HMD=v;loadHM()};seg.appendChild(x)});
+  const mx=Math.max(1,...r.hours.map(x=>x.n)),C={CAUTION:'#e0b84a',RESTRICT:'#ee8a3c',STOP:'#e5484d'};
+  const chart=h('div',null,null);chart.style.cssText='display:flex;align-items:flex-end;gap:2px;height:80px;margin:6px 0 2px';
+  r.hours.forEach(x=>{const col=h('div',null,null);col.style.cssText='flex:1;display:flex;flex-direction:column-reverse;height:100%;justify-content:flex-start';col.title=String(x.h).padStart(2,'0')+':00 · '+x.n+' peligro'+(x.n===1?'':'s')+' (STOP '+x.STOP+', restricción '+x.RESTRICT+', precaución '+x.CAUTION+')';
+    ['STOP','RESTRICT','CAUTION'].forEach(k=>{if(x[k]){const s=h('div',null,null);s.style.cssText='background:'+C[k]+';height:'+(x[k]/mx*100)+'%;min-height:2px';col.appendChild(s)}});chart.appendChild(col)});
+  const ax=h('div',null,null);ax.style.cssText='display:flex;justify-content:space-between;font-size:10px;color:var(--mut)';['00','06','12','18','23'].forEach(t=>ax.appendChild(h('span',null,t+'h')));
+  const note=h('div','nt',r.total?r.total+' peligros detectados · hora punta: '+String(r.peak).padStart(2,'0')+':00 (hora de Madrid). Excluye trenes de simulación.':'Sin peligros registrados en este periodo.');note.style.marginTop='4px';
+  b.replaceChildren(seg,chart,ax,note)}
+document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='hmx')loadHM()},true);setInterval(loadHM,60000);
 // ---- ejercicio: tiempos de respuesta (solo simulación) ----
 let EXR=null;
 async function loadEx(){if(S&&S.mode!=='sim')return;try{EXR=await (await fetch('/api/exercise')).json();renderEx()}catch(e){}}
