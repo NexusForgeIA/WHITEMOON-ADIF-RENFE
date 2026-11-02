@@ -368,7 +368,7 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   <h2 style="margin-top:12px">Mensajes entre centros</h2><div id="msgs" style="max-height:130px;overflow:auto"></div>
   <div class="frm"><select id="mto"></select><input id="mtx" maxlength="300" placeholder="Mensaje" style="flex:1;width:auto"><button id="msend">Enviar</button></div>
   <details class="ops"><summary>Operadores en España</summary><div class="empty" style="cursor:default">Pulse uno para filtrar el mapa.</div><div id="oplist" style="display:block;border:0;cursor:default"></div></details>
-  <div id="simctl" style="display:none"><h2 style="margin-top:16px">Inyectar fallo (simulación)</h2><div class="ctl" id="scn"></div>
+  <div id="simctl" style="display:none"><h2 style="margin-top:16px">Inyectar fallo (simulación)</h2><div class="ctl" id="scn"></div><div id="exb" class="nt" style="margin:6px 0"></div>
   <div class="ctl"><button id="reset">Reiniciar simulación</button></div></div>
   </details>
 </section>
@@ -1375,6 +1375,18 @@ function auditBadge(){
   const a=h('a',null,'⬇ Descargar (.jsonl)');a.href='/api/audit/export?format=jsonl&limit=20000';a.style.cssText='color:#8cc8ff;text-decoration:none';a.setAttribute('download','railguard_auditoria.jsonl');
   d.append(b,a);return d}
 loadAudit();setInterval(loadAudit,60000);
+// ---- ejercicio: tiempos de respuesta (solo simulación) ----
+let EXR=null;
+async function loadEx(){if(S&&S.mode!=='sim')return;try{EXR=await (await fetch('/api/exercise')).json();renderEx()}catch(e){}}
+function renderEx(){const b=$('exb');if(!b||!EXR)return;
+  const GC={Excelente:'#6fe0a4',Bien:'#9fe070',Aceptable:'#f0c75e',Lento:'#ff9a6a','Sin respuesta':'#ff8a8a'};
+  const f=v=>v==null?'—':v+' s';
+  const row=(r,live)=>h('div',null,null,[h('b',null,r.id+' '),document.createTextNode((live?'en curso · ':'')+'detecta '+f(r.detect_s)+' · responde '+f(r.response_s)+(r.action?' ('+r.action+')':'')+' · resuelve '+f(r.resolve_s)+' · '),(()=>{const g=h('b',null,live&&r.response_s==null?'esperando acción':r.grade);g.style.color=GC[r.grade]||'var(--mut)';return g})()]);
+  const kids=[h('b',null,'Ejercicio · tiempos de respuesta')];
+  EXR.running.forEach(r=>kids.push(row(r,true)));EXR.done.slice(0,5).forEach(r=>kids.push(row(r,false)));
+  if(kids.length===1)kids.push(h('div',null,'Inyecta un fallo y reconoce, restringe o rearma el tren: se mide cuánto tardas. Excelente <30 s · Bien <60 s · Aceptable <120 s.'));
+  b.replaceChildren(...kids);b.style.cssText='margin:6px 0;font-size:11.5px;line-height:1.5'}
+loadEx();setInterval(loadEx,2000);
 // ---- ficha de tren ----
 const card=$('card');let cardN=null,cardTimer=null;
 const fmtDelay=m=>m>0?(m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'):m<0?'adelantado '+(-m)+' min':'a tiempo';

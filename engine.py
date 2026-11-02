@@ -416,6 +416,7 @@ class Engine:
         self.est = est
         self.enabled = set(enabled or BARRIERS)
         self.log_path = log_path
+        self.listener = None   # callable(evento): observadores (p. ej. evaluación de ejercicios)
         self.audit = None      # audit.Audit: si existe, sustituye al fichero plano (registro encadenado)
         self.cycle = 0
         self.now_ms = 0
@@ -451,6 +452,11 @@ class Engine:
     def log(self, kind, msg, **data):
         e = {"t": self.now_ms, "kind": kind, "msg": msg, **data}
         self.events.appendleft(e)
+        if self.listener:
+            try:
+                self.listener(e)
+            except Exception:
+                pass
         if self.audit:
             try:
                 self.audit.append(e)

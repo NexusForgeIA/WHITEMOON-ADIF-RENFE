@@ -29,6 +29,7 @@ import punctuality
 import watch as watchmod
 import stats as statsmod
 from audit import Audit
+import exercise as exmod
 from visits import Visits
 import systems
 import forecast
@@ -79,6 +80,8 @@ class App:
             self.est, self.base = {}, {}
         self.engine = Engine(self.est, cfg=cfg, log_path=os.path.join(ROOT, "data", "events.jsonl"))
         self.engine.audit = Audit(os.path.join(ROOT, "data", "audit.jsonl"))
+        self.ex = exmod.Exercises(log=self.engine.log)
+        self.engine.listener = self.ex.event
         self.engine.set_lines([dict(c) for c in _load("infrastructure.json")["corridors"]])
         if self.feed:
             self.engine.est.update(self.feed.est)
@@ -115,6 +118,7 @@ class App:
         for n, t in self.base.items():
             self._add_sim(n, t)
         self.engine.prev.clear()
+        self.ex.reset()
         self.t_reset = time.time()
 
     def _add_sim(self, n, t):
@@ -285,6 +289,7 @@ class App:
                     self._add_sim(t["n"], t)
                 scenarios.once(sid, self.sim)
                 self.engine.log("SCENARIO", f"Inyectado: {sid}")
+                self.ex.start(sid, self.engine.now_ms)
             else:
                 self.active.discard(sid)
                 for t in scenarios.synthetic(sid, self.est):
@@ -294,6 +299,7 @@ class App:
                     self.demo_tablets.discard(t["n"])
                     self.engine.forget(t["n"])
                 self.engine.log("SCENARIO", f"Retirado: {sid}")
+                self.ex.stop(sid, self.engine.now_ms)
             return True, "ok"
 
     # ---------- canal privado de cabina ----------
@@ -835,6 +841,8 @@ class H(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "public, max-age=300")
             self.end_headers()
             return self.wfile.write(raw)
+        if path == "/api/exercise":
+            return self._send(200, APP.ex.view(APP.engine.now_ms))
         if path == "/api/audit/verify":
             return self._send(200, APP.engine.audit.verify())
         if path == "/api/audit/export":
