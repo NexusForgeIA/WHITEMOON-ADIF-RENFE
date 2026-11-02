@@ -948,7 +948,11 @@ const BN=id=>((S.barriers||[]).find(b=>b.id===id)||{}).name||id;
 const ACTION={STOP:'Freno de emergencia ordenado · bloque enclavado · trenes cercanos restringidos',RESTRICT:'Restricción de velocidad ordenada por B5',CAUTION:'Precaución ordenada por B5: reducir velocidad y vigilar',NONE:'Solo aviso: ninguna orden activa todavía'};
 const SEVN={STOP:3,RESTRICT:2,CAUTION:1};
 const ORDER=['B0','B1','B2','B3','B4','SYS'];
-function groupHazards(){const g={};S.hazards.forEach(x=>x.trains.forEach(n=>{(g[n]=g[n]||{n,sev:0,hz:[]});g[n].sev=Math.max(g[n].sev,SEVN[x.sev]||0);g[n].hz.push(x)}));return Object.values(g).sort((a,b)=>b.sev-a.sev||a.n.localeCompare(b.n))}
+let HZMIN=1;try{HZMIN=+localStorage.getItem('rg_hzmin')||1}catch(e){}
+function hzFilter(){const row=h('div',null,null);row.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px;font-size:11.5px;align-items:center';row.appendChild(h('span','nt','Criticidad:'));
+  [[1,'Todas'],[2,'Restricción o más'],[3,'Solo STOP']].forEach(([v,l])=>{const b=h('button',HZMIN===v?'on':'',l);b.style.cssText='padding:3px 9px;border-radius:999px;border:1px solid '+(HZMIN===v?'#2b6cb0':'#3b5068')+';background:'+(HZMIN===v?'#12304f':'transparent')+';color:'+(HZMIN===v?'#cfe6ff':'var(--mut)')+';cursor:pointer';b.onclick=()=>{HZMIN=v;try{localStorage.setItem('rg_hzmin',v)}catch(e){}renderHazards()};row.appendChild(b)});
+  const hid=(S.hazards||[]).filter(x=>(SEVN[x.sev]||0)<HZMIN).length;if(hid){const m=h('span','nt','· '+hid+' oculto'+(hid>1?'s':'')+' por el filtro');row.appendChild(m)}return row}
+function groupHazards(){const g={};S.hazards.filter(x=>(SEVN[x.sev]||0)>=HZMIN).forEach(x=>x.trains.forEach(n=>{(g[n]=g[n]||{n,sev:0,hz:[]});g[n].sev=Math.max(g[n].sev,SEVN[x.sev]||0);g[n].hz.push(x)}));return Object.values(g).sort((a,b)=>b.sev-a.sev||a.n.localeCompare(b.n))}
 function chainChips(g,t){
   const det=[...new Set(g.hz.map(x=>x.barrier))].sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b));
   const cmd=t?t.cmd:'NONE',kids=[h('small',null,'detecta')];
@@ -970,8 +974,8 @@ function whyBox(x){const w=x&&x.why;if(!w)return h('span');
   const n=h('div','nt','Lo calcula RailGuard con los datos públicos disponibles. La decisión es siempre de la persona operadora; no es una orden.');n.style.cssText='color:var(--mut);font-size:11px;margin-top:4px';d.appendChild(n);
   d.onclick=e=>e.stopPropagation();return d}
 function renderHazards(){
-  const hz=$('hz');hz.replaceChildren();const gs=groupHazards();
-  if(!gs.length){hz.appendChild(h('div','empty','Sin peligros detectados.'));{const l=llBox();if(l)hz.appendChild(l)}return}
+  const hz=$('hz');hz.replaceChildren();hz.appendChild(hzFilter());const gs=groupHazards();
+  if(!gs.length){hz.appendChild(h('div','empty',HZMIN>1&&(S.hazards||[]).length?'Ningún peligro con esta criticidad.':'Sin peligros detectados.'));{const l=llBox();if(l)hz.appendChild(l)}return}
   const by={};S.trains.forEach(t=>by[t.n]=t);
   gs.slice(0,FULL?30:3).forEach(g=>{const t=by[g.n],sev=['','CAUTION','RESTRICT','STOP'][g.sev];
     const main=g.hz.slice().sort((a,b)=>(SEVN[b.sev]||0)-(SEVN[a.sev]||0))[0];
