@@ -828,13 +828,14 @@ async function loadPunct(){try{paintSeg();const r=await fetch('/api/punct?seg='+
 loadPunct();setInterval(loadPunct,30000);
 // ---- ranking histórico (estaciones y trenes con más retraso; ventana hoy / 7 días / 30 días) ----
 let RKW='7d';try{RKW=localStorage.getItem('rkw')||'7d'}catch(e){}
+function rkArt(x){const t=(S&&S.trains||[]).find(v=>v.n===x.id),op=t&&t.op&&t.op!=='?'?((S.operators||[]).find(o=>o.id===t.op)||{}).name:'';return trainArt((t&&t.product)||x.cat||'',op||'',46)}
 async function loadRank(){const bx=$('prk');if(!bx)return;
   try{const r=await fetch('/api/stats?kind=top&w='+RKW,{cache:'no-store'});if(!r.ok)throw 0;const k=await r.json();
     const cm=x=>x==null?'—':String(x).replace('.',','),WL={'1d':'Hoy','7d':'7 días','30d':'30 días'};
     const col=(t,rows,fn)=>'<div><h4>'+t+'</h4>'+(rows.length?rows.map(fn).join(''):'<div class="nt">Acumulando datos: se necesitan unas horas de muestras.</div>')+'</div>';
     bx.innerHTML='<div class="rh"><h3>Histórico de retrasos</h3>'+Object.keys(WL).map(w=>'<button data-w="'+w+'" class="'+(w===RKW?'on':'')+'">'+WL[w]+'</button>').join('')+'</div><div class="rg">'
       +col('Estaciones con más retraso medio (próxima parada)',k.stations,x=>'<div class="rr"><span title="'+x.label+'">'+x.label+'</span><em>+'+cm(x.mean_min)+' min</em><small>'+cm(x.pct_delayed)+' % con retraso</small></div>')
-      +col('Trenes con más retraso medio',k.trains,x=>'<div class="rr wr" style="cursor:pointer" data-n="'+x.id+'"><span><b>'+x.id+'</b></span><em>+'+cm(x.mean_min)+' min</em><small>'+cm(x.pct_delayed)+' % · máx '+x.max_min+'</small></div>')
+      +col('Trenes con más retraso medio',k.trains,x=>'<div class="rr wr" style="cursor:pointer" data-n="'+x.id+'"><span style="display:flex;align-items:center;gap:8px"><span style="width:46px;flex:none;line-height:0">'+rkArt(x)+'</span><b>'+x.id+'</b></span><em>+'+cm(x.mean_min)+' min</em><small>'+cm(x.pct_delayed)+' % · máx '+x.max_min+'</small></div>')
       +'</div><div class="nt">Calculado por RailGuard con el feed público de Renfe: una muestra por minuto de cada tren con retraso conocido. Informativo; el retraso real a la llegada puede diferir.</div>';
     bx.querySelectorAll('button').forEach(b=>b.onclick=()=>{RKW=b.dataset.w;try{localStorage.setItem('rkw',RKW)}catch(e){}loadRank()});
     bx.querySelectorAll('.wr').forEach(e=>e.onclick=()=>{if(typeof focusTrain==='function')focusTrain(e.dataset.n)})

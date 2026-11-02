@@ -118,7 +118,14 @@ class Daily:
                 for k in keys:
                     acc, used = self._sum(kind, k, w, now)
                     if acc[0] >= minn:
-                        out.append({"id": k, "label": label(k), **self._out(acc, used)})
+                        row = {"id": k, "label": label(k), **self._out(acc, used)}
+                        if kind == "tr":      # categoría más reciente conocida (para dibujar el tren)
+                            for dk in self._keys(w, now):
+                                r = self.days.get(dk, {}).get("tr", {}).get(k)
+                                if r and len(r) > 4 and r[4]:
+                                    row["cat"] = r[4]
+                                    break
+                        out.append(row)
                 out.sort(key=lambda r: (-r["mean_min"], -r["pct_delayed"]))
                 return out[:limit]
             return {"window": w if w in WINDOWS else "7d",
