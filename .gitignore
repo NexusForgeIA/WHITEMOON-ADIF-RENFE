@@ -17,3 +17,4 @@ data/visits.json
 data/stats_daily.json
 data/audit.jsonl
 data/energia_cache.json
+data/redata_cache.json

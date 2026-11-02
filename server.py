@@ -32,6 +32,7 @@ from audit import Audit
 import exercise as exmod
 import hazmap
 import energia as energymod
+import redata as redatamod
 from visits import Visits
 import systems
 import forecast
@@ -445,8 +446,9 @@ class App:
                                 "trains": cnt.get(o["id"], 0)} for o in self.operators]
                               + [{"id": i, "name": i, "type": "?", "verified": False, "trains": n} for i, n in cnt.items() if i not in known])
             s["drivers"] = self.drivers.listing()
-            s["watch"] = (ENERGY.alerts() if ENERGY else []) + (self.watch_items if self.feed else [])
+            s["watch"] = (ENERGY.alerts() if ENERGY else []) + (REDATA.alerts() if REDATA else []) + (self.watch_items if self.feed else [])
             _x = EXTRAS.snapshot() if (EXTRAS and self.feed) else {}
+            s["redata"] = REDATA.view()["systems"] if REDATA else None
             s["ree"], s["extras_status"] = _x.get("ree"), _x.get("status")
             s["proximity_km"] = self.engine.cfg["proximity_km"]
             s["proximity_mode"] = self.engine.cfg["proximity_mode"]
@@ -728,6 +730,7 @@ EMG = None
 TRAF = None
 NEWS = None
 ENERGY = None
+REDATA = None
 EXTRAS = None
 SYNC = None
 _remote = persist.from_env()
@@ -848,6 +851,8 @@ class H(BaseHTTPRequestHandler):
             q = urllib.parse.parse_qs(self.path.partition("?")[2])
             d = (q.get("days") or ["7"])[0]
             return self._send(200, hazmap.hourly(APP.engine.audit.records(), min(int(d), 30) if d.isdigit() and int(d) > 0 else 7))
+        if path == "/api/redata":
+            return self._send(200, REDATA.view() if REDATA else {"systems": {}, "status": {"state": "desactivado"}, "catalog": redatamod.CATALOG})
         if path == "/api/exercise":
             return self._send(200, APP.ex.view(APP.engine.now_ms))
         if path == "/api/audit/verify":
@@ -941,7 +946,7 @@ class H(BaseHTTPRequestHandler):
 
 
 def main():
-    global APP, INFRA, LTV, EMG, TRAF, NEWS, EXTRAS, ENERGY
+    global APP, INFRA, LTV, EMG, TRAF, NEWS, EXTRAS, ENERGY, REDATA
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", help="'renfe' (feed oficial) o URL con el esquema de /api/estado")
     ap.add_argument("--gtfs", help="google_transit.zip de Renfe (ruta o URL); necesario para parada anterior, destino y producto")
@@ -967,6 +972,8 @@ def main():
         from extras import Extras
         EXTRAS = Extras()
         EXTRAS.start()
+        REDATA = redatamod.RedData(cache=os.path.join(ROOT, "data", "redata_cache.json"))
+        REDATA.start()
     if a.source == "renfe" and os.environ.get("RG_NEWS", "1") != "0":
         NEWS = News(os.path.join(ROOT, "data", "news_cache.json"))
         NEWS.start()
