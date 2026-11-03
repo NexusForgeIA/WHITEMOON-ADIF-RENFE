@@ -500,15 +500,15 @@ function renderOuts(list){
   box.replaceChildren(...kids)}
 const WSEV={'muy alta':0,'alta':1,'media':2,'baja':3};
 const WICO={energia:'⚡','red-electrica':'⚡',meteo:'⛈',sismo:'🌍',incendio:'🔥',bloqueo:'⛔',detenido:'⛔','salto-retraso':'⏱',flota:'🚆'};
-function renderEnergyBar(){const b=$('enb');if(!b)return;const e=(S.watch||[]).filter(i=>i.type==='energia'&&i.sev==='muy alta'||i.type==='red-electrica'&&i.sev==='muy alta');
+function renderEnergyBar(){const b=$('enb');if(!b)return;const e=(S.watch||[]).filter(i=>i.type==='red-electrica'&&i.sev==='muy alta');
   if(!e.length){b.style.display='none';return}
-  b.style.display='flex';b.replaceChildren(h('span','ei','⚡'),h('div',null,null,[document.createTextNode('ALERTA DE ENERGÍA · '+e.map(i=>i.title.replace(/^Apagón · /,'')).join(', ')),h('small',null,'Posible apagón detectado por titulares de medios y Red Eléctrica. Sin confirmar por el operador eléctrico; puede afectar a la alimentación de la red ferroviaria. Ver detalle abajo.')]));
+  b.style.display='flex';b.replaceChildren(h('span','ei','⚡'),h('div',null,null,[document.createTextNode('ALERTA DE ENERGÍA · '+e.map(i=>i.title.replace(/^Apagón · /,'')).join(', ')),h('small',null,'Posible anomalía detectada en los datos de Red Eléctrica. Sin confirmar por el operador eléctrico; puede afectar a la alimentación de la red ferroviaria. Ver detalle abajo.')]));
   b.onclick=()=>{const w=$('wat');if(w)w.scrollIntoView({behavior:'smooth',block:'start'})}}
 function renderRedata(){const b=$("watsys");if(!b)return;const R=S.redata,k=R?Object.keys(R):[];if(!k.length){b.replaceChildren();return}
   b.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px';
   b.replaceChildren(...k.map(id=>{const x=R[id],dv=x.deviation,bad=dv!=null&&dv<=-0.25,c=h('div',null,null,[h('small',null,x.name),h('b',null,x.mwh.toLocaleString('es-ES')+' MWh'),h('small',null,x.date.slice(8)+'/'+x.date.slice(5,7)+(dv==null?'':' · '+(dv>=0?'+':'')+(dv*100).toFixed(0)+' % vs media'))]);
     c.style.cssText='display:flex;flex-direction:column;padding:7px 12px;border-radius:12px;border:1px solid '+(bad?'#b3202c':'var(--line)')+';background:'+(bad?'#3a0f15':'#0e1620')+';min-width:118px';c.title='Red Eléctrica (REData): demanda diaria del sistema eléctrico. Canarias, Baleares, Ceuta y Melilla solo publican datos diarios con retraso: no sirven para ver un apagón a tiempo.';return c}))}
-function renderWatch(){try{renderEnergyBar();renderRedata()}catch(e){}const w=S.watch||[],box=$('watl');if(!box)return;
+function renderWatch(){try{renderEnergyBar();renderRedata()}catch(e){}const w=(S.watch||[]).filter(i=>i.type!=='energia'),box=$('watl');if(!box)return;
   const r=S.ree,st=S.extras_status||{};
   $('watree').replaceChildren(...(r&&r.demandMW?[(()=>{const d=h('span','ree',null,[document.createTextNode('⚡ Demanda eléctrica '),h('b',null,Math.round(r.demandMW).toLocaleString('es-ES')+' MW'),document.createTextNode(r.deviation==null?'':' · '+(r.deviation>=0?'+':'')+(r.deviation*100).toFixed(1)+' % vs previsión')]);d.title='Red Eléctrica (REData). Una caída brusca frente a lo previsto puede indicar un apagón';return d})()]:[]));
   box.replaceChildren(...(w.length?w.map(i=>{const s=WSEV[i.sev]??3,red=i.type==='energia'&&s===0,d=h('div','wi s'+s+(red?' red':''),null,[h('span','ic',WICO[i.type]||'●'),h('span','sv',red?'ALERTA ROJA':i.sev),h('b',null,i.title),h('small',null,i.detail)]);

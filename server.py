@@ -446,7 +446,7 @@ class App:
                                 "trains": cnt.get(o["id"], 0)} for o in self.operators]
                               + [{"id": i, "name": i, "type": "?", "verified": False, "trains": n} for i, n in cnt.items() if i not in known])
             s["drivers"] = self.drivers.listing()
-            s["watch"] = (ENERGY.alerts() if ENERGY else []) + (REDATA.alerts() if REDATA else []) + (self.watch_items if self.feed else [])
+            s["watch"] = (REDATA.alerts() if REDATA else []) + (self.watch_items if self.feed else [])
             _x = EXTRAS.snapshot() if (EXTRAS and self.feed) else {}
             s["redata"] = REDATA.view()["systems"] if REDATA else None
             s["ree"], s["extras_status"] = _x.get("ree"), _x.get("status")
@@ -977,8 +977,7 @@ def main():
     if a.source == "renfe" and os.environ.get("RG_NEWS", "1") != "0":
         NEWS = News(os.path.join(ROOT, "data", "news_cache.json"))
         NEWS.start()
-        ENERGY = energymod.Energia(os.path.join(ROOT, "data", "energia_cache.json"))
-        ENERGY.start()
+        # Avisos de apagón por titulares de prensa desactivados (energia.py queda sin arrancar); solo datos de Red Eléctrica (REData)
 
     if SYNC:
         SYNC.start()
