@@ -58,21 +58,6 @@ header .hrow #adm{margin-left:auto;padding:7px 11px}
 header .hban{flex:1 1 100%;display:flex;flex-direction:column;gap:6px}header .hban:empty{display:none}
 header .hban .banner,header .hban #pbanner{max-width:none!important;white-space:normal!important;border-radius:10px;padding:7px 12px}
 header .hban #pbanner:empty{display:none}
-/* Noticias en medios: tarjeta con filas ordenadas */
-.nwc{flex:1 1 100%;background:#0c141d;border:1px solid #2f4257;border-left:4px solid #5b7a99;border-radius:12px;padding:10px 14px;text-align:left;font-weight:400}
-.nwc.hot{border-color:#7a2a33;border-left-color:var(--stop);background:linear-gradient(90deg,#2a1218,#0c141d 55%)}
-.nwc .nh{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px}
-.nwc .nt{font-weight:700;font-size:13px;letter-spacing:.02em}
-.nwc .nk{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;background:#16263a;color:#cfe4ff}.nwc.hot .nk.u{background:#b00012;color:#fff}
-.nwc .nn{flex:1 1 260px;font-size:11px;color:var(--mut)}
-.nwc .nx{background:none;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer}.nwc .nx:hover{color:#fff;border-color:#35506b}
-.nwc .nr{display:grid;grid-template-columns:116px 82px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 4px;border-top:1px solid #172433;color:inherit;text-decoration:none;font-size:12.5px}
-.nwc .nr:first-of-type{border-top:0}.nwc .nr:hover{background:#111d2a;border-radius:8px}
-.nwc .nb{justify-self:start;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:800;letter-spacing:.05em;white-space:nowrap}
-.nwc .nb.u{background:#d6182a;color:#fff;animation:nwp 2s ease-in-out infinite}.nwc .nb.s{background:#16263a;color:#9fb3c8;border:1px solid #2a3f55}
-.nwc .nc{justify-self:start;font-size:11px;font-weight:600;white-space:nowrap}.nwc .nc.acc{color:#ff8a94}.nwc .nc.inc{color:#ffb25e}.nwc .nc.cor{color:#f2d56b}
-.nwc .nz{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nwc .nr:hover .nz{text-decoration:underline}
-.nwc .ns{font-size:11px;color:var(--mut);white-space:nowrap;text-align:right}
 @keyframes nwp{50%{opacity:.7}}
 /* --- cards con el lenguaje de la «vista de tren»: icono grande, titular y cifra clave --- */
 #wat .wi{grid-template-columns:44px 1fr auto;gap:2px 12px;padding:11px 14px;border-radius:14px;align-items:center;background:linear-gradient(90deg,#101b28,#0c141d)}
@@ -93,11 +78,8 @@ header .hban #pbanner:empty{display:none}
 #prk .rr.wr .art{grid-area:art;width:86px;line-height:0}#prk .rr.wr b{grid-area:id;font-size:15px}#prk .rr.wr em{grid-area:em;font-size:20px;font-style:normal;font-weight:800}#prk .rr.wr small{grid-area:sm}
 #prk .rr:not(.wr){display:grid;grid-template-columns:1fr auto;gap:0 10px;padding:9px 12px;margin:6px 0;border:1px solid var(--line);border-radius:12px;background:linear-gradient(90deg,#101b28,#0c141d)}
 #prk .rr:not(.wr) em{font-size:18px;font-style:normal;font-weight:800;grid-row:1/3;grid-column:2;align-self:center}#prk .rr:not(.wr) span{font-weight:700}
-.nwc .nr{padding:9px 12px;margin:6px 0;border:1px solid #172433;border-radius:12px;background:linear-gradient(90deg,#101b28,#0c141d)}
-.nwc .nr:first-of-type{border-top:1px solid #172433}
-.nwc .nz{font-size:13.5px}
 
-@media(max-width:900px){.kpis{margin-left:0;flex:1 1 100%}.kpi{flex:1}.nwc .nr{grid-template-columns:auto 1fr;gap:4px 8px}.nwc .nz{grid-column:1/-1;white-space:normal}.nwc .ns{grid-column:1/-1;text-align:left}header .hrow #adm{margin-left:0}}
+@media(max-width:900px){.kpis{margin-left:0;flex:1 1 100%}.kpi{flex:1}header .hrow #adm{margin-left:0}}
 .arrow{align-self:center;color:var(--mut);font-size:11px;line-height:14px}
 .human{border-left-color:var(--acc)}
 #mapwrap{position:relative;padding:0;overflow:hidden}canvas{width:100%;height:100%;display:block}
@@ -386,7 +368,6 @@ body.full #tabhz,body.full #tabfc,body.full #tabav{pointer-events:none}
   <button id="sysb" class="sysb" title="Funcionamiento y estado de cada sistema de seguridad">🛡 Sistemas</button>
   <button id="adm" title="Token de administración (RAILGUARD_TOKEN)">🔑</button></div>
   <div class="hban"><div id="enb" role="alert"></div><div id="banner" class="banner"></div><div id="pbanner"></div><div id="actb" class="banner" style="display:none;cursor:help"></div></div>
-  <div id="nwb" class="nwc" style="display:none"></div>
 </header>
 
 <section id="cab" aria-label="Tren en foco"></section>
@@ -904,24 +885,6 @@ function openPoi(i){EMS={n:i.id};cardN=null;clearInterval(cardTimer);
 let RDD=null,RDS=null;const RDC={acc:'#e040fb',ret:'#ff4081',obr:'#b08d57',cor:'#b08d57',vel:'#9aa5b1',met:'#4dd0e1',cal:'#4dd0e1',otr:'#9aa5b1'};let RDK={};
 function loadRoad(){fetch('/api/trafico',{cache:'no-store'}).then(r=>r.json()).then(j=>{RDD=j.items&&j.items.length?j.items:null;RDK=j.kinds||{};const e=$('rdn');if(e)e.textContent=RDD?'('+RDD.length+')':(j.ready?'(0)':'(cargando…)');if(typeof draw==='function')draw()}).catch(()=>{})}
 setTimeout(loadRoad,5000);setInterval(loadRoad,300000);
-var NWD=[];
-function nwEsc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-var NWX=false;
-function renderNews(){var b=$('nwb');if(!b)return;var now=Date.now()/1000,L=NWD.filter(function(i){return now-i.ts<6*3600&&i.k!=='otr'});
- if(!L.length){b.style.display='none';return}
- var U=L.filter(function(i){return i.l==='ult'&&now-i.ts<2*3600}),O=L.filter(function(i){return U.indexOf(i)<0});
- var K={inc:'🔥 Incendio',acc:'⚠ Accidente',cor:'⛔ Corte'},all=U.concat(O),max=NWX?12:4,rows=U.slice(0,3).concat(O).slice(0,Math.max(max,Math.min(3,U.length)));
- var ok=function(u){return /^https?:\/\//i.test(u||'')?u:'#'};
- b.style.display='block';b.className='nwc'+(U.length?' hot':'');
- b.innerHTML='<div class="nh"><span class="nt">📰 Noticias en medios</span>'+(U.length?'<span class="nk u">'+U.length+' de última hora</span>':'')+'<span class="nk">'+L.length+' titulares</span>'
-  +'<span class="nn">Titulares de medios (RSS públicos y Google Noticias) · no es un aviso oficial de Adif/Renfe</span>'
-  +(all.length>4?'<button class="nx" type="button" id="nwtg">'+(NWX?'Ver menos':'Ver más ('+Math.min(12,all.length)+')')+'</button>':'')+'</div>'
-  +rows.map(function(i){var m=Math.max(1,Math.round((now-i.ts)/60)),u=U.indexOf(i)>=0;
-   return '<a class="nr" href="'+nwEsc(ok(i.u))+'" target="_blank" rel="noopener"><span class="nb '+(u?'u':'s')+'">'+(u?'ÚLTIMA HORA':'SEGUIMIENTO')+'</span><span class="nc '+nwEsc(i.k)+'">'+(u?(K[i.k]||''):'')+'</span><span class="nz" title="'+nwEsc(i.t)+'">'+nwEsc(i.t)+'</span><span class="ns">'+nwEsc(i.s)+' · hace '+(m<90?m+' min':Math.round(m/60)+' h')+'</span></a>'}).join('');
- var tg=$('nwtg');if(tg)tg.onclick=function(){NWX=!NWX;renderNews()}}
-function loadNews(){fetch('/api/noticias',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){NWD=j.items||[];renderNews()}).catch(function(){})}
-setTimeout(loadNews,4000);setInterval(loadNews,120000);
-
 const midR=i=>({x:(i.x+(i.x1==null?i.x:i.x1))/2,y:(i.y+(i.y1==null?i.y:i.y1))/2});
 function nearRoad(t,r){if(!RDD||!t)return[];return RDD.map(i=>({i,d:kmTo(t,midR(i))})).filter(o=>o.d<=r).sort((a,b)=>a.d-b.d)}
 function openRoad(i){RDS={id:i.id};EMS=null;cardN=null;clearInterval(cardTimer);
